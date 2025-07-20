@@ -1,0 +1,2359 @@
+<!DOCTYPE html>
+<html lang="en" class="dark">
+  <head>
+    <meta charset="UTF-8" />
+    <meta
+      name="viewport"
+      content="width=device-width, initial-scale=1.0, user-scalable=no"
+    />
+    <title>Textile Machinery Monitor</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <link
+      href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&family=JetBrains+Mono:wght@400;500;600&display=swap"
+      rel="stylesheet"
+    />
+    <script>
+      tailwind.config = {
+        darkMode: "class",
+        theme: {
+          extend: {
+            fontFamily: {
+              sans: ["Inter", "system-ui", "sans-serif"],
+              mono: ["JetBrains Mono", "monospace"],
+            },
+            colors: {
+              blue: {
+                50: "#e0f2fe",
+                100: "#bae6fd",
+                200: "#7dd3fc",
+                300: "#38bdf8",
+                400: "#0ea5e9",
+                500: "#0284c7",
+                600: "#0369a1",
+                700: "#0c4a6e",
+                800: "#075985",
+                900: "#0a456e",
+                950: "#082f49",
+              },
+              cyan: {
+                400: "#22d3ee",
+                500: "#06b6d4",
+                600: "#0891b2",
+              },
+              slate: {
+                750: "#2a3441",
+                850: "#1a202c",
+              },
+            },
+            screens: {
+              xs: "475px",
+            },
+            animation: {
+              "fade-in": "fadeIn 0.5s ease-in-out",
+              "fade-in-up": "fadeInUp 0.6s ease-out",
+              "slide-in": "slideIn 0.4s ease-out",
+              "pulse-slow": "pulse 3s cubic-bezier(0.4, 0, 0.6, 1) infinite",
+              "bounce-subtle": "bounceSubtle 2s infinite",
+              glow: "glow 2s ease-in-out infinite alternate",
+            },
+            keyframes: {
+              fadeIn: {
+                "0%": { opacity: "0" },
+                "100%": { opacity: "1" },
+              },
+              fadeInUp: {
+                "0%": { opacity: "0", transform: "translateY(10px)" },
+                "100%": { opacity: "1", transform: "translateY(0)" },
+              },
+              slideIn: {
+                "0%": { transform: "translateX(-100%)" },
+                "100%": { transform: "translateX(0)" },
+              },
+              bounceSubtle: {
+                "0%, 100%": { transform: "translateY(0)" },
+                "50%": { transform: "translateY(-2px)" },
+              },
+              glow: {
+                "0%": { boxShadow: "0 0 5px rgba(56, 189, 248, 0.5)" },
+                "100%": { boxShadow: "0 0 20px rgba(56, 189, 248, 0.8)" },
+              },
+            },
+          },
+        },
+      };
+    </script>
+    <style>
+      body {
+        font-family: "Inter", system-ui, sans-serif;
+      }
+
+      .heatmap-cell {
+        transition: all 0.2s ease;
+        position: relative;
+      }
+
+      .heatmap-cell:active {
+        transform: scale(1.1);
+        z-index: 20;
+        filter: brightness(1.2);
+      }
+
+      @media (min-width: 768px) {
+        .heatmap-cell:hover {
+          transform: scale(1.15);
+          z-index: 20;
+          filter: brightness(1.2);
+          box-shadow: 0 4px 15px rgba(56, 189, 248, 0.4);
+        }
+      }
+
+      .heatmap-cell::before {
+        content: "";
+        position: absolute;
+        top: 0;
+        left: 0;
+        right: 0;
+        bottom: 0;
+        background: linear-gradient(
+          45deg,
+          transparent 30%,
+          rgba(255, 255, 255, 0.1) 50%,
+          transparent 70%
+        );
+        opacity: 0;
+        transition: opacity 0.2s ease;
+      }
+
+      @media (min-width: 768px) {
+        .heatmap-cell:hover::before {
+          opacity: 1;
+        }
+      }
+
+      .no-scrollbar::-webkit-scrollbar {
+        display: none;
+      }
+
+      .no-scrollbar {
+        -ms-overflow-style: none;
+        scrollbar-width: none;
+      }
+
+      .glass-effect {
+        backdrop-filter: blur(10px);
+        background: rgba(30, 41, 59, 0.8);
+        border: 1px solid rgba(56, 189, 248, 0.2);
+      }
+
+      .gradient-border {
+        background: linear-gradient(
+          145deg,
+          rgba(56, 189, 248, 0.1),
+          rgba(14, 165, 233, 0.1)
+        );
+        border: 1px solid transparent;
+        background-clip: padding-box;
+      }
+
+      .metric-card {
+        background: linear-gradient(
+          135deg,
+          rgba(30, 41, 59, 0.9) 0%,
+          rgba(51, 65, 85, 0.9) 100%
+        );
+        border: 1px solid rgba(56, 189, 248, 0.2);
+        transition: all 0.3s ease;
+      }
+
+      .metric-card:hover {
+        transform: translateY(-1px);
+        box-shadow: 0 8px 20px rgba(0, 0, 0, 0.25);
+        border-color: rgba(56, 189, 248, 0.3);
+      }
+
+      @media (min-width: 768px) {
+        .metric-card:hover {
+          transform: translateY(-2px);
+          box-shadow: 0 10px 25px rgba(0, 0, 0, 0.3);
+          border-color: rgba(56, 189, 248, 0.4);
+        }
+      }
+
+      .status-indicator {
+        position: relative;
+        overflow: hidden;
+      }
+
+      .status-indicator::after {
+        content: "";
+        position: absolute;
+        top: 0;
+        left: -100%;
+        width: 100%;
+        height: 100%;
+        background: linear-gradient(
+          90deg,
+          transparent,
+          rgba(255, 255, 255, 0.3),
+          transparent
+        );
+        transition: left 0.4s ease;
+      }
+
+      @media (min-width: 768px) {
+        .status-indicator:hover::after {
+          left: 100%;
+        }
+      }
+
+      .machine-card {
+        position: relative;
+        transition: all 0.3s ease;
+      }
+
+      .hero-bg {
+        background: linear-gradient(
+            135deg,
+            rgba(15, 23, 42, 0.9) 0%,
+            rgba(30, 41, 59, 0.8) 50%,
+            rgba(51, 65, 85, 0.9) 100%
+          ),
+          url('data:image/svg+xml,<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 1200 800"><defs><pattern id="grid" width="40" height="40" patternUnits="userSpaceOnUse"><path d="M 40 0 L 0 0 0 40" fill="none" stroke="rgba(56,189,248,0.1)" stroke-width="1"/></pattern></defs><rect width="100%" height="100%" fill="url(%23grid)"/><circle cx="200" cy="150" r="80" fill="rgba(34,211,238,0.1)"/><circle cx="800" cy="400" r="120" fill="rgba(56,189,248,0.08)"/><circle cx="1000" cy="200" r="60" fill="rgba(14,165,233,0.12)"/></svg>');
+        background-size: cover;
+        background-position: center;
+        background-attachment: fixed;
+      }
+
+      .textile-pattern {
+        background-image: radial-gradient(
+            circle at 25% 25%,
+            rgba(56, 189, 248, 0.1) 0%,
+            transparent 50%
+          ),
+          radial-gradient(
+            circle at 75% 75%,
+            rgba(34, 211, 238, 0.1) 0%,
+            transparent 50%
+          ),
+          linear-gradient(45deg, rgba(14, 165, 233, 0.05) 25%, transparent 25%),
+          linear-gradient(-45deg, rgba(56, 189, 248, 0.05) 25%, transparent 25%);
+        background-size: 200px 200px, 300px 300px, 50px 50px, 50px 50px;
+        animation: textileMove 20s ease-in-out infinite;
+      }
+
+      @keyframes textileMove {
+        0%,
+        100% {
+          background-position: 0% 0%, 100% 100%, 0% 0%, 0% 0%;
+        }
+        50% {
+          background-position: 100% 100%, 0% 0%, 25px 25px, -25px 25px;
+        }
+      }
+
+      .scroll-smooth {
+        scroll-behavior: smooth;
+      }
+
+      .tab-content {
+        transition: opacity 0.3s ease-in-out;
+      }
+
+      .tab-content.hidden {
+        display: none;
+      }
+
+      .nav-link.active {
+        color: #22d3ee;
+      }
+
+      .hamburger-line {
+        transform-origin: center;
+        transition: all 0.3s ease-in-out;
+      }
+
+      .hamburger-icon.active .hamburger-line:nth-child(1) {
+        transform: rotate(45deg) translateY(8px);
+      }
+
+      .hamburger-icon.active .hamburger-line:nth-child(2) {
+        opacity: 0;
+      }
+
+      .hamburger-icon.active .hamburger-line:nth-child(3) {
+        transform: rotate(-45deg) translateY(-8px);
+      }
+
+      .zoom-slider {
+        background: linear-gradient(to right, #334155 0%, #475569 100%);
+        outline: none;
+        border: 1px solid #64748b;
+        box-shadow: inset 0 1px 3px rgba(0, 0, 0, 0.4);
+      }
+
+      .zoom-slider::-webkit-slider-track {
+        width: 100%;
+        height: 8px;
+        background: linear-gradient(to right, #334155 0%, #475569 100%);
+        border-radius: 4px;
+        border: 1px solid #64748b;
+        box-shadow: inset 0 1px 3px rgba(0, 0, 0, 0.4);
+      }
+
+      .zoom-slider::-moz-range-track {
+        width: 100%;
+        height: 8px;
+        background: linear-gradient(to right, #334155 0%, #475569 100%);
+        border-radius: 4px;
+        border: 1px solid #64748b;
+        box-shadow: inset 0 1px 3px rgba(0, 0, 0, 0.4);
+      }
+
+      .zoom-slider::-webkit-slider-thumb {
+        appearance: none;
+        width: 16px;
+        height: 16px;
+        border-radius: 50%;
+        background: linear-gradient(45deg, #06b6d4, #0ea5e9);
+        cursor: pointer;
+        border: 2px solid #0f172a;
+        box-shadow: 0 2px 4px rgba(0, 0, 0, 0.3);
+        transition: all 0.2s ease;
+      }
+
+      .zoom-slider::-webkit-slider-thumb:hover {
+        transform: scale(1.2);
+        box-shadow: 0 0 8px rgba(6, 182, 212, 0.6);
+      }
+
+      .zoom-slider::-moz-range-thumb {
+        width: 16px;
+        height: 16px;
+        border-radius: 50%;
+        background: linear-gradient(45deg, #06b6d4, #0ea5e9);
+        cursor: pointer;
+        border: 2px solid #0f172a;
+        box-shadow: 0 2px 4px rgba(0, 0, 0, 0.3);
+      }
+
+      .custom-scrollbar::-webkit-scrollbar {
+        width: 8px;
+      }
+
+      .custom-scrollbar::-webkit-scrollbar-track {
+        background: rgba(30, 41, 59, 0.3);
+        border-radius: 4px;
+      }
+
+      .custom-scrollbar::-webkit-scrollbar-thumb {
+        background: linear-gradient(135deg, #334155, #475569);
+        border-radius: 4px;
+        border: 1px solid rgba(56, 189, 248, 0.2);
+      }
+
+      .custom-scrollbar::-webkit-scrollbar-thumb:hover {
+        background: linear-gradient(135deg, #475569, #64748b);
+        border-color: rgba(56, 189, 248, 0.4);
+      }
+    </style>
+  </head>
+  <body
+    class="bg-gradient-to-br from-slate-900 via-slate-850 to-blue-950 text-gray-100 font-sans scroll-smooth"
+  >
+    <nav
+      class="fixed top-0 left-0 right-0 z-50 glass-effect border-b border-blue-800/30 backdrop-blur-xl"
+    >
+      <div class="max-w-7xl mx-auto px-4 lg:px-6">
+        <div class="flex items-center justify-between h-16 lg:h-20">
+          <div class="flex items-center space-x-3">
+            <div
+              class="w-8 h-8 lg:w-10 lg:h-10 bg-gradient-to-br from-cyan-400 to-blue-500 rounded-lg flex items-center justify-center shadow-lg"
+            >
+              <svg
+                class="w-5 h-5 lg:w-6 lg:h-6 text-white"
+                fill="none"
+                stroke="currentColor"
+                viewBox="0 0 24 24"
+              >
+                <path
+                  stroke-linecap="round"
+                  stroke-linejoin="round"
+                  stroke-width="2"
+                  d="M9 3v2m6-2v2M9 19v2m6-2v2M5 9H3m2 6H3m18-6h-2m2 6h-2M7 19h10a2 2 0 002-2V7a2 2 0 00-2-2H7a2 2 0 00-2 2v10a2 2 0 002 2zM9 9h6v6H9V9z"
+                ></path>
+              </svg>
+            </div>
+            <span
+              class="text-lg lg:text-xl font-bold bg-gradient-to-r from-blue-400 to-cyan-400 bg-clip-text text-transparent"
+            >
+              TextileMonitor
+            </span>
+          </div>
+
+          <div class="hidden md:flex items-center space-x-8">
+            <a
+              href="#"
+              onclick="showTab('home')"
+              class="nav-link text-blue-200 hover:text-cyan-400 transition-colors duration-300 font-medium"
+              data-tab="home"
+            >
+              Home
+            </a>
+            <a
+              href="#about"
+              onclick="goToAbout()"
+              class="text-blue-200 hover:text-cyan-400 transition-colors duration-300 font-medium"
+            >
+              About
+            </a>
+            <button
+              onclick="showTab('monitor')"
+              class="px-6 py-2 bg-gradient-to-r from-blue-600 to-cyan-600 hover:from-blue-700 hover:to-cyan-700 rounded-lg text-white font-medium transition-all duration-300 transform hover:scale-105 shadow-lg"
+            >
+              Launch Monitor
+            </button>
+          </div>
+
+          <button
+            id="mobileNavBtn"
+            class="md:hidden p-2 rounded-lg glass-effect border border-blue-800/30 z-50 relative"
+            onclick="toggleMobileNav()"
+          >
+            <div class="hamburger-icon">
+              <span
+                class="hamburger-line block w-6 h-0.5 bg-blue-300 transition-all duration-300 ease-in-out"
+              ></span>
+              <span
+                class="hamburger-line block w-6 h-0.5 bg-blue-300 transition-all duration-300 ease-in-out mt-1.5"
+              ></span>
+              <span
+                class="hamburger-line block w-6 h-0.5 bg-blue-300 transition-all duration-300 ease-in-out mt-1.5"
+              ></span>
+            </div>
+          </button>
+        </div>
+      </div>
+
+      <div
+        id="mobileNavOverlay"
+        class="md:hidden fixed inset-0 bg-black/50 z-40 opacity-0 pointer-events-none transition-opacity duration-300 ease-in-out"
+        onclick="toggleMobileNav()"
+      ></div>
+
+      <div
+        id="mobileNavMenu"
+        class="md:hidden fixed top-0 right-0 h-screen w-80 max-w-[85vw] bg-slate-900 border-l border-blue-800/30 transform translate-x-full transition-transform duration-300 ease-in-out z-50 shadow-2xl overflow-hidden"
+      >
+        <div class="p-6 h-full flex flex-col bg-slate-900">
+          <div class="flex items-center justify-between mb-8 pt-4">
+            <h3 class="text-xl font-bold text-blue-300">Menu</h3>
+            <button
+              onclick="toggleMobileNav()"
+              class="p-2 rounded-lg hover:bg-blue-800/20 transition-colors duration-200"
+            >
+              <svg
+                class="w-6 h-6 text-blue-300"
+                fill="none"
+                stroke="currentColor"
+                viewBox="0 0 24 24"
+              >
+                <path
+                  stroke-linecap="round"
+                  stroke-linejoin="round"
+                  stroke-width="2"
+                  d="M6 18L18 6M6 6l12 12"
+                ></path>
+              </svg>
+            </button>
+          </div>
+
+          <nav class="space-y-6 flex-1">
+            <a
+              href="#"
+              onclick="showTab('home'); toggleMobileNav();"
+              class="nav-link block text-blue-200 hover:text-cyan-400 transition-colors duration-300 font-medium py-3 px-4 rounded-lg hover:bg-blue-800/20"
+              data-tab="home"
+            >
+              <div class="flex items-center space-x-3">
+                <svg
+                  class="w-5 h-5"
+                  fill="none"
+                  stroke="currentColor"
+                  viewBox="0 0 24 24"
+                >
+                  <path
+                    stroke-linecap="round"
+                    stroke-linejoin="round"
+                    stroke-width="2"
+                    d="M3 12l2-2m0 0l7-7 7 7M5 10v10a1 1 0 001 1h3m10-11l2 2m-2-2v10a1 1 0 01-1 1h-3m-6 0a1 1 0 001-1v-4a1 1 0 011-1h2a1 1 0 011 1v4a1 1 0 001 1m-6 0h6"
+                  ></path>
+                </svg>
+                <span>Home</span>
+              </div>
+            </a>
+            <a
+              href="#about"
+              onclick="goToAbout(); toggleMobileNav();"
+              class="block text-blue-200 hover:text-cyan-400 transition-colors duration-300 font-medium py-3 px-4 rounded-lg hover:bg-blue-800/20"
+            >
+              <div class="flex items-center space-x-3">
+                <svg
+                  class="w-5 h-5"
+                  fill="none"
+                  stroke="currentColor"
+                  viewBox="0 0 24 24"
+                >
+                  <path
+                    stroke-linecap="round"
+                    stroke-linejoin="round"
+                    stroke-width="2"
+                    d="M13 16h-1v-4h-1m1-4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z"
+                  ></path>
+                </svg>
+                <span>About</span>
+              </div>
+            </a>
+          </nav>
+
+          <div class="mt-auto">
+            <button
+              onclick="showTab('monitor'); toggleMobileNav();"
+              class="w-full px-6 py-3 bg-gradient-to-r from-blue-600 to-cyan-600 hover:from-blue-700 hover:to-cyan-700 rounded-lg text-white font-medium transition-all duration-300 shadow-lg"
+            >
+              Launch Monitor
+            </button>
+          </div>
+        </div>
+      </div>
+    </nav>
+
+    <main class="min-h-screen pt-16 lg:pt-20">
+      <div id="homeTab" class="tab-content">
+        <section
+          class="min-h-screen flex items-center justify-center hero-bg textile-pattern relative overflow-hidden"
+        >
+          <div
+            class="absolute inset-0 bg-gradient-to-b from-transparent via-slate-900/20 to-slate-900/40"
+          ></div>
+
+          <div
+            class="relative z-10 max-w-7xl mx-auto px-4 lg:px-6 py-20 lg:py-0"
+          >
+            <div class="grid lg:grid-cols-2 gap-12 lg:gap-16 items-center">
+              <div class="animate-fade-in-up">
+                <h1 class="text-4xl lg:text-6xl xl:text-7xl font-bold mb-6">
+                  <span
+                    class="bg-gradient-to-r from-blue-400 via-cyan-400 to-blue-500 bg-clip-text text-transparent"
+                  >
+                    Advanced Textile
+                  </span>
+                  <br />
+                  <span class="text-white">Machinery Monitor</span>
+                </h1>
+
+                <p
+                  class="text-lg lg:text-xl text-blue-200/80 mb-8 lg:mb-10 leading-relaxed max-w-2xl"
+                >
+                  Real-time monitoring and analytics for textile production
+                  lines. Track machine performance, monitor sensor data, and
+                  optimize efficiency with our advanced industrial IoT
+                  dashboard.
+                </p>
+
+                <div class="flex flex-col sm:flex-row gap-4 lg:gap-6">
+                  <button
+                    onclick="showTab('monitor')"
+                    class="px-8 py-4 bg-gradient-to-r from-blue-600 to-cyan-600 hover:from-blue-700 hover:to-cyan-700 rounded-xl text-white font-semibold transition-all duration-300 transform hover:scale-105 shadow-xl hover:shadow-blue-500/25"
+                  >
+                    Launch Monitor
+                  </button>
+                  <button
+                    onclick="scrollToAbout()"
+                    class="px-8 py-4 glass-effect border border-blue-400/30 hover:border-cyan-400/50 rounded-xl text-blue-200 hover:text-cyan-400 font-semibold transition-all duration-300 transform hover:scale-105"
+                  >
+                    Learn More
+                  </button>
+                </div>
+
+                <div class="grid grid-cols-3 gap-6 lg:gap-8 mt-12 lg:mt-16">
+                  <div class="text-center">
+                    <div
+                      class="text-2xl lg:text-3xl font-bold text-cyan-400 mb-2"
+                    >
+                      12+
+                    </div>
+                    <div class="text-sm lg:text-base text-blue-200/70">
+                      Machines
+                    </div>
+                  </div>
+                  <div class="text-center">
+                    <div
+                      class="text-2xl lg:text-3xl font-bold text-emerald-400 mb-2"
+                    >
+                      24/7
+                    </div>
+                    <div class="text-sm lg:text-base text-blue-200/70">
+                      Monitoring
+                    </div>
+                  </div>
+                  <div class="text-center">
+                    <div
+                      class="text-2xl lg:text-3xl font-bold text-amber-400 mb-2"
+                    >
+                      Real-time
+                    </div>
+                    <div class="text-sm lg:text-base text-blue-200/70">
+                      Analytics
+                    </div>
+                  </div>
+                </div>
+              </div>
+
+              <div class="animate-fade-in relative">
+                <div class="relative">
+                  <div
+                    class="absolute inset-0 bg-gradient-to-r from-blue-600/20 to-cyan-600/20 rounded-2xl blur-3xl transform rotate-6"
+                  ></div>
+                  <div
+                    class="relative bg-gradient-to-br from-slate-800/90 to-slate-900/90 rounded-2xl p-6 lg:p-8 border border-blue-400/20 backdrop-blur-sm"
+                  >
+                    <div class="flex items-center justify-between mb-6">
+                      <div class="flex items-center space-x-3">
+                        <div class="w-3 h-3 bg-red-500 rounded-full"></div>
+                        <div class="w-3 h-3 bg-amber-500 rounded-full"></div>
+                        <div class="w-3 h-3 bg-emerald-500 rounded-full"></div>
+                      </div>
+                      <div class="text-blue-300/60 text-sm font-mono">
+                        textile-monitor.app
+                      </div>
+                    </div>
+
+                    <div class="space-y-4">
+                      <div
+                        class="flex items-center justify-between p-4 bg-slate-700/50 rounded-lg"
+                      >
+                        <div class="flex items-center space-x-3">
+                          <div
+                            class="w-4 h-4 bg-emerald-500 rounded-full animate-pulse"
+                          ></div>
+                          <span class="text-blue-200 font-medium"
+                            >Machine M001</span
+                          >
+                        </div>
+                        <span class="text-emerald-400 font-mono">98.2%</span>
+                      </div>
+
+                      <div
+                        class="flex items-center justify-between p-4 bg-slate-700/50 rounded-lg"
+                      >
+                        <div class="flex items-center space-x-3">
+                          <div
+                            class="w-4 h-4 bg-amber-500 rounded-full animate-pulse"
+                          ></div>
+                          <span class="text-blue-200 font-medium"
+                            >Machine M002</span
+                          >
+                        </div>
+                        <span class="text-amber-400 font-mono">87.5%</span>
+                      </div>
+
+                      <div
+                        class="flex items-center justify-between p-4 bg-slate-700/50 rounded-lg"
+                      >
+                        <div class="flex items-center space-x-3">
+                          <div
+                            class="w-4 h-4 bg-emerald-500 rounded-full animate-pulse"
+                          ></div>
+                          <span class="text-blue-200 font-medium"
+                            >Machine M003</span
+                          >
+                        </div>
+                        <span class="text-emerald-400 font-mono">94.8%</span>
+                      </div>
+                    </div>
+
+                    <div class="mt-6 pt-6 border-t border-blue-400/20">
+                      <div class="grid grid-cols-2 gap-4 text-center">
+                        <div>
+                          <div class="text-xl font-bold text-cyan-400">
+                            156.2k
+                          </div>
+                          <div class="text-xs text-blue-200/70">
+                            Units Produced
+                          </div>
+                        </div>
+                        <div>
+                          <div class="text-xl font-bold text-emerald-400">
+                            99.1%
+                          </div>
+                          <div class="text-xs text-blue-200/70">
+                            Overall Efficiency
+                          </div>
+                        </div>
+                      </div>
+                    </div>
+                  </div>
+                </div>
+              </div>
+            </div>
+          </div>
+        </section>
+
+        <section
+          id="about"
+          class="py-20 lg:py-32 bg-gradient-to-b from-slate-900/50 to-slate-800/50 relative"
+        >
+          <div class="max-w-7xl mx-auto px-4 lg:px-6">
+            <div class="text-center mb-16 lg:mb-20">
+              <h2 class="text-3xl lg:text-5xl font-bold mb-6">
+                <span
+                  class="bg-gradient-to-r from-blue-400 to-cyan-400 bg-clip-text text-transparent"
+                >
+                  About TextileMonitor
+                </span>
+              </h2>
+              <p
+                class="text-lg lg:text-xl text-blue-200/80 max-w-3xl mx-auto leading-relaxed"
+              >
+                Industry-leading textile machinery monitoring solution designed
+                for modern manufacturing environments.
+              </p>
+            </div>
+
+            <div class="grid lg:grid-cols-3 gap-8 lg:gap-12">
+              <div
+                class="metric-card rounded-2xl p-6 lg:p-8 text-center animate-fade-in-up"
+              >
+                <div
+                  class="w-16 h-16 bg-gradient-to-r from-blue-600 to-cyan-600 rounded-2xl flex items-center justify-center mx-auto mb-6"
+                >
+                  <svg
+                    class="w-8 h-8 text-white"
+                    fill="none"
+                    stroke="currentColor"
+                    viewBox="0 0 24 24"
+                  >
+                    <path
+                      stroke-linecap="round"
+                      stroke-linejoin="round"
+                      stroke-width="2"
+                      d="M9 19v-6a2 2 0 00-2-2H5a2 2 0 00-2 2v6a2 2 0 002 2h2a2 2 0 002-2zm0 0V9a2 2 0 012-2h2a2 2 0 012 2v10m-6 0a2 2 0 002 2h2a2 2 0 002-2m0 0V5a2 2 0 012-2h2a2 2 0 012 2v14a2 2 0 01-2 2h-2a2 2 0 01-2-2z"
+                    ></path>
+                  </svg>
+                </div>
+                <h3 class="text-xl lg:text-2xl font-bold text-blue-300 mb-4">
+                  Real-time Analytics
+                </h3>
+                <p class="text-blue-200/70 leading-relaxed">
+                  Monitor machine performance, efficiency metrics, and
+                  production data in real-time with advanced visualization
+                  tools.
+                </p>
+              </div>
+
+              <div
+                class="metric-card rounded-2xl p-6 lg:p-8 text-center animate-fade-in-up"
+                style="animation-delay: 200ms"
+              >
+                <div
+                  class="w-16 h-16 bg-gradient-to-r from-emerald-600 to-green-600 rounded-2xl flex items-center justify-center mx-auto mb-6"
+                >
+                  <svg
+                    class="w-8 h-8 text-white"
+                    fill="none"
+                    stroke="currentColor"
+                    viewBox="0 0 24 24"
+                  >
+                    <path
+                      stroke-linecap="round"
+                      stroke-linejoin="round"
+                      stroke-width="2"
+                      d="M12 6V4m0 2a2 2 0 100 4m0-4a2 2 0 110 4m-6 8a2 2 0 100-4m0 4a2 2 0 100 4m0-4v2m0-6V4m6 6v10m6-2a2 2 0 100-4m0 4a2 2 0 100 4m0-4v2m0-6V4"
+                    ></path>
+                  </svg>
+                </div>
+                <h3 class="text-xl lg:text-2xl font-bold text-emerald-300 mb-4">
+                  Smart Alerts
+                </h3>
+                <p class="text-blue-200/70 leading-relaxed">
+                  Receive intelligent notifications for temperature, pressure,
+                  and vibration anomalies to prevent downtime.
+                </p>
+              </div>
+
+              <div
+                class="metric-card rounded-2xl p-6 lg:p-8 text-center animate-fade-in-up"
+                style="animation-delay: 400ms"
+              >
+                <div
+                  class="w-16 h-16 bg-gradient-to-r from-amber-600 to-orange-600 rounded-2xl flex items-center justify-center mx-auto mb-6"
+                >
+                  <svg
+                    class="w-8 h-8 text-white"
+                    fill="none"
+                    stroke="currentColor"
+                    viewBox="0 0 24 24"
+                  >
+                    <path
+                      stroke-linecap="round"
+                      stroke-linejoin="round"
+                      stroke-width="2"
+                      d="M13 10V3L4 14h7v7l9-11h-7z"
+                    ></path>
+                  </svg>
+                </div>
+                <h3 class="text-xl lg:text-2xl font-bold text-amber-300 mb-4">
+                  Efficiency Optimization
+                </h3>
+                <p class="text-blue-200/70 leading-relaxed">
+                  Maximize production efficiency with data-driven insights and
+                  predictive maintenance recommendations.
+                </p>
+              </div>
+            </div>
+          </div>
+        </section>
+      </div>
+
+      <div id="monitorTab" class="tab-content hidden">
+        <section
+          class="min-h-screen bg-gradient-to-br from-slate-900 via-slate-850 to-blue-950"
+        >
+          <div
+            id="mobileMenuOverlay"
+            class="fixed inset-0 bg-black/50 z-40 hidden lg:hidden"
+            onclick="toggleMobileMenu()"
+          ></div>
+
+          <div
+            id="app"
+            class="flex flex-col animate-fade-in"
+            style="height: 100vh"
+          >
+            <header
+              class="glass-effect border-b border-blue-800/30 px-4 lg:px-6 py-3 lg:py-4 flex-shrink-0 backdrop-blur-xl"
+            >
+              <div class="flex items-center justify-between">
+                <div class="animate-fade-in-up">
+                  <h1
+                    class="text-xl lg:text-3xl font-bold bg-gradient-to-r from-blue-400 via-cyan-400 to-blue-500 bg-clip-text text-transparent"
+                  >
+                    Textile Monitor
+                  </h1>
+                  <div class="flex items-center space-x-4 mt-1">
+                    <div
+                      id="currentWeek"
+                      class="text-xs lg:text-sm text-blue-300/80 font-medium bg-slate-800/30 px-2 py-1 rounded border border-blue-800/20"
+                    >
+                      Week 1 - 2025
+                    </div>
+                    <p
+                      class="text-xs lg:text-sm text-emerald-400 font-medium hidden xs:block"
+                    >
+                      Live Monitoring Active
+                    </p>
+                  </div>
+                </div>
+                <div
+                  class="flex items-center space-x-2 lg:space-x-6 animate-fade-in-up"
+                >
+                  <button
+                    id="mobileMenuBtn"
+                    class="lg:hidden p-2 rounded-lg glass-effect border border-blue-800/30"
+                    onclick="toggleMobileMenu()"
+                  >
+                    <svg
+                      class="w-5 h-5 text-blue-300"
+                      fill="none"
+                      stroke="currentColor"
+                      viewBox="0 0 24 24"
+                    >
+                      <path
+                        stroke-linecap="round"
+                        stroke-linejoin="round"
+                        stroke-width="2"
+                        d="M4 6h16M4 12h16M4 18h16"
+                      ></path>
+                    </svg>
+                  </button>
+                  <div class="metric-card px-2 lg:px-4 py-1 lg:py-2 rounded-lg">
+                    <span
+                      class="text-blue-300/80 text-xs lg:text-sm font-medium hidden xs:inline"
+                      >Update:</span
+                    >
+                    <span
+                      id="lastUpdate"
+                      class="text-cyan-400 font-mono ml-1 lg:ml-2 text-xs lg:text-sm font-semibold"
+                      >--:--:--</span
+                    >
+                  </div>
+                  <div
+                    class="items-center space-x-2 lg:space-x-3 metric-card px-2 lg:px-4 py-1 lg:py-2 rounded-lg hidden xs:flex"
+                  >
+                    <div
+                      class="w-2 h-2 lg:w-3 lg:h-3 bg-emerald-500 rounded-full animate-pulse-slow shadow-lg shadow-emerald-500/50"
+                    ></div>
+                    <span class="text-xs lg:text-sm text-blue-200 font-medium"
+                      >Connected</span
+                    >
+                  </div>
+                </div>
+              </div>
+            </header>
+
+            <main class="flex-1 overflow-hidden flex flex-col lg:flex-row">
+              <aside
+                id="machineListSidebar"
+                class="fixed lg:relative top-0 left-0 w-full lg:w-72 h-full lg:h-auto bg-slate-900/95 lg:bg-transparent glass-effect border-r border-blue-800/30 overflow-y-auto custom-scrollbar lg:animate-slide-in z-50 lg:z-auto transform -translate-x-full lg:translate-x-0 lg:transition-transform lg:duration-300 lg:ease-in-out"
+              >
+                <div class="p-4 lg:p-6">
+                  <div class="flex items-center justify-between lg:hidden mb-4">
+                    <h3 class="text-lg font-semibold text-blue-300">
+                      Machines
+                    </h3>
+                    <button
+                      onclick="toggleMobileMenu()"
+                      class="p-2 rounded-lg glass-effect border border-blue-800/30"
+                    >
+                      <svg
+                        class="w-5 h-5 text-blue-300"
+                        fill="none"
+                        stroke="currentColor"
+                        viewBox="0 0 24 24"
+                      >
+                        <path
+                          stroke-linecap="round"
+                          stroke-linejoin="round"
+                          stroke-width="2"
+                          d="M6 18L18 6M6 6l12 12"
+                        ></path>
+                      </svg>
+                    </button>
+                  </div>
+                  <h3
+                    class="text-sm font-semibold text-blue-300 uppercase tracking-wider mb-4 lg:mb-6 flex items-center hidden lg:flex"
+                  >
+                    <div
+                      class="w-2 h-2 bg-cyan-400 rounded-full mr-3 animate-pulse"
+                    ></div>
+                    Machines
+                  </h3>
+                  <div
+                    id="machineList"
+                    class="space-y-2 lg:space-y-3 relative"
+                  ></div>
+                </div>
+              </aside>
+
+              <div class="flex-1 flex flex-col overflow-hidden">
+                <div
+                  class="glass-effect border-b border-blue-800/30 px-3 lg:px-6 py-2 lg:py-4 flex flex-col xl:flex-row xl:items-center xl:justify-between gap-3 flex-shrink-0"
+                >
+                  <div class="flex flex-wrap items-center gap-2 lg:gap-3">
+                    <div
+                      class="flex items-center space-x-1 lg:space-x-2 flex-shrink-0"
+                    >
+                      <button
+                        onclick="zoomOut()"
+                        class="px-2 lg:px-3 py-1.5 lg:py-2 bg-gradient-to-r from-amber-600 to-amber-700 hover:from-amber-700 hover:to-amber-800 rounded-lg text-xs lg:text-sm font-medium transition-all duration-300 transform hover:scale-105"
+                      >
+                        -
+                      </button>
+                      <div class="flex items-center space-x-2 mx-2">
+                        <input
+                          id="zoomSlider"
+                          type="range"
+                          min="50"
+                          max="300"
+                          step="10"
+                          value="100"
+                          class="w-16 lg:w-20 h-2 bg-slate-700 rounded-lg appearance-none cursor-pointer zoom-slider"
+                          oninput="setZoomFromSlider(this.value)"
+                        />
+                      </div>
+                      <button
+                        onclick="zoomIn()"
+                        class="px-2 lg:px-3 py-1.5 lg:py-2 bg-gradient-to-r from-emerald-600 to-emerald-700 hover:from-emerald-700 hover:to-emerald-800 rounded-lg text-xs lg:text-sm font-medium transition-all duration-300 transform hover:scale-105"
+                      >
+                        +
+                      </button>
+                      <button
+                        onclick="resetZoom()"
+                        class="px-2 lg:px-4 py-1.5 lg:py-2 bg-gradient-to-r from-blue-600 to-blue-700 hover:from-blue-700 hover:to-blue-800 rounded-lg text-xs lg:text-sm font-medium transition-all duration-300 transform hover:scale-105"
+                      >
+                        Reset
+                      </button>
+                    </div>
+                    <div
+                      class="flex items-center space-x-1 lg:space-x-2 flex-shrink-0"
+                    >
+                      <button
+                        onclick="panLeft()"
+                        class="px-2 lg:px-3 py-1.5 lg:py-2 bg-gradient-to-r from-cyan-600 to-cyan-700 hover:from-cyan-700 hover:to-cyan-800 rounded-lg text-xs lg:text-sm font-medium transition-all duration-300 transform hover:scale-105"
+                      >
+                        ←
+                      </button>
+                      <button
+                        onclick="panRight()"
+                        class="px-2 lg:px-3 py-1.5 lg:py-2 bg-gradient-to-r from-cyan-600 to-cyan-700 hover:from-cyan-700 hover:to-cyan-800 rounded-lg text-xs lg:text-sm font-medium transition-all duration-300 transform hover:scale-105"
+                      >
+                        →
+                      </button>
+                      <button
+                        onclick="panUp()"
+                        class="px-2 lg:px-3 py-1.5 lg:py-2 bg-gradient-to-r from-cyan-600 to-cyan-700 hover:from-cyan-700 hover:to-cyan-800 rounded-lg text-xs lg:text-sm font-medium transition-all duration-300 transform hover:scale-105"
+                      >
+                        ↑
+                      </button>
+                      <button
+                        onclick="panDown()"
+                        class="px-2 lg:px-3 py-1.5 lg:py-2 bg-gradient-to-r from-cyan-600 to-cyan-700 hover:from-cyan-700 hover:to-cyan-800 rounded-lg text-xs lg:text-sm font-medium transition-all duration-300 transform hover:scale-105"
+                      >
+                        ↓
+                      </button>
+                      <button
+                        onclick="resetPosition()"
+                        class="px-2 lg:px-4 py-1.5 lg:py-2 bg-gradient-to-r from-purple-600 to-purple-700 hover:from-purple-700 hover:to-purple-800 rounded-lg text-xs lg:text-sm font-medium transition-all duration-300 transform hover:scale-105"
+                      >
+                        Home
+                      </button>
+                      <button
+                        onclick="goToCurrentTime()"
+                        class="px-2 lg:px-4 py-1.5 lg:py-2 bg-gradient-to-r from-emerald-600 to-emerald-700 hover:from-emerald-700 hover:to-emerald-800 rounded-lg text-xs lg:text-sm font-medium transition-all duration-300 transform hover:scale-105"
+                      >
+                        Now
+                      </button>
+                    </div>
+                    <div
+                      class="text-xs lg:text-sm text-blue-300/80 flex items-center space-x-2 flex-shrink-0"
+                    >
+                      <span class="font-medium hidden xs:inline">Zoom:</span>
+                      <span
+                        id="zoomLevel"
+                        class="text-cyan-400 font-mono font-semibold bg-slate-800/50 px-1.5 lg:px-2 py-1 rounded text-xs lg:text-sm"
+                        >100%</span
+                      >
+                    </div>
+                  </div>
+                  <div
+                    class="flex flex-wrap items-center gap-4 lg:gap-8 text-xs lg:text-sm"
+                  >
+                    <div class="flex items-center space-x-1 lg:space-x-2 group">
+                      <div
+                        class="w-3 h-3 lg:w-4 lg:h-4 bg-emerald-500 rounded-md shadow-lg transition-transform group-hover:scale-110"
+                      ></div>
+                      <span class="text-blue-200 font-medium">Normal</span>
+                    </div>
+                    <div class="flex items-center space-x-1 lg:space-x-2 group">
+                      <div
+                        class="w-3 h-3 lg:w-4 lg:h-4 bg-amber-500 rounded-md shadow-lg transition-transform group-hover:scale-110"
+                      ></div>
+                      <span class="text-blue-200 font-medium">Warning</span>
+                    </div>
+                    <div class="flex items-center space-x-1 lg:space-x-2 group">
+                      <div
+                        class="w-3 h-3 lg:w-4 lg:h-4 bg-red-500 rounded-md shadow-lg transition-transform group-hover:scale-110"
+                      ></div>
+                      <span class="text-blue-200 font-medium">Critical</span>
+                    </div>
+                    <div class="flex items-center space-x-1 lg:space-x-2 group">
+                      <div
+                        class="w-3 h-3 lg:w-4 lg:h-4 bg-slate-600 rounded-md shadow-lg transition-transform group-hover:scale-110"
+                      ></div>
+                      <span class="text-blue-200 font-medium">Offline</span>
+                    </div>
+                  </div>
+                </div>
+
+                <div
+                  id="heatmapContainer"
+                  class="flex-1 overflow-auto no-scrollbar relative bg-gradient-to-br from-slate-900/50 to-blue-950/50"
+                >
+                  <div id="heatmapWrapper" class="p-3 lg:p-6 min-w-max">
+                    <div class="mb-4 lg:mb-6">
+                      <div class="flex items-center">
+                        <div
+                          class="w-16 lg:w-20 text-xs lg:text-sm text-blue-300 font-semibold"
+                        >
+                          Shifts
+                        </div>
+                        <div
+                          id="shiftTimeline"
+                          class="flex-1 flex rounded-lg overflow-hidden shadow-lg"
+                        ></div>
+                      </div>
+                    </div>
+
+                    <div
+                      id="heatmapGrid"
+                      class="rounded-lg overflow-hidden shadow-2xl"
+                    ></div>
+                  </div>
+                </div>
+              </div>
+
+              <aside
+                id="sensorDetailsSidebar"
+                class="fixed lg:relative top-0 right-0 w-full lg:w-96 h-full lg:h-auto bg-slate-900/95 lg:bg-transparent glass-effect border-l border-blue-800/30 overflow-y-auto custom-scrollbar lg:animate-slide-in z-50 lg:z-auto transform translate-x-full lg:translate-x-0 lg:transition-transform lg:duration-300 lg:ease-in-out"
+              >
+                <div class="p-4 lg:p-6">
+                  <div class="flex items-center justify-between lg:hidden mb-4">
+                    <h3 class="text-lg font-semibold text-blue-300">
+                      Sensor Data
+                    </h3>
+                    <button
+                      onclick="toggleSensorPanel()"
+                      class="p-2 rounded-lg glass-effect border border-blue-800/30"
+                    >
+                      <svg
+                        class="w-5 h-5 text-blue-300"
+                        fill="none"
+                        stroke="currentColor"
+                        viewBox="0 0 24 24"
+                      >
+                        <path
+                          stroke-linecap="round"
+                          stroke-linejoin="round"
+                          stroke-width="2"
+                          d="M6 18L18 6M6 6l12 12"
+                        ></path>
+                      </svg>
+                    </button>
+                  </div>
+                  <h3
+                    class="text-lg lg:text-xl font-bold text-blue-300 mb-4 lg:mb-6 flex items-center hidden lg:flex"
+                  >
+                    <div
+                      class="w-3 h-3 bg-cyan-400 rounded-full mr-3 animate-pulse"
+                    ></div>
+                    Sensor Readings
+                  </h3>
+                  <div id="sensorDetails" class="space-y-4 lg:space-y-6"></div>
+                </div>
+              </aside>
+
+              <button
+                id="sensorToggleBtn"
+                class="fixed bottom-4 right-4 lg:hidden p-3 bg-gradient-to-r from-blue-600 to-cyan-600 rounded-full shadow-lg z-30 transition-all duration-300 transform hover:scale-110"
+                onclick="toggleSensorPanel()"
+              >
+                <svg
+                  class="w-6 h-6 text-white"
+                  fill="none"
+                  stroke="currentColor"
+                  viewBox="0 0 24 24"
+                >
+                  <path
+                    stroke-linecap="round"
+                    stroke-linejoin="round"
+                    stroke-width="2"
+                    d="M9 19v-6a2 2 0 00-2-2H5a2 2 0 00-2 2v6a2 2 0 002 2h2a2 2 0 002-2zm0 0V9a2 2 0 012-2h2a2 2 0 012 2v10m-6 0a2 2 0 002 2h2a2 2 0 002-2m0 0V5a2 2 0 012-2h2a2 2 0 012 2v14a2 2 0 01-2 2h-2a2 2 0 01-2-2z"
+                  ></path>
+                </svg>
+              </button>
+            </main>
+          </div>
+
+          <script>
+            // --- CONFIGURATION ---
+            const MACHINES = 12;
+            const DAYS = 7;
+            const HOURS = 24;
+            const UPDATE_INTERVAL = 3000;
+
+            // --- STATE VARIABLES ---
+            let zoomLevel = 1;
+            let isDragging = false;
+            let dragStart = { x: 0, y: 0 };
+            let scrollStart = { x: 0, y: 0 };
+            let heatmapData = [];
+            let machineData = [];
+            let selectedMachineIndex = 0;
+            let isMobileMenuOpen = false;
+            let isSensorPanelOpen = false;
+
+            // --- MOBILE NAVIGATION & UI TOGGLES ---
+            function toggleMobileMenu() {
+              const sidebar = document.getElementById("machineListSidebar");
+              const overlay = document.getElementById("mobileMenuOverlay");
+              isMobileMenuOpen = !isMobileMenuOpen;
+              if (isMobileMenuOpen) {
+                sidebar.classList.remove("-translate-x-full");
+                sidebar.classList.add("translate-x-0");
+                overlay.classList.remove("hidden");
+                document.body.style.overflow = "hidden";
+              } else {
+                sidebar.classList.remove("translate-x-0");
+                sidebar.classList.add("-translate-x-full");
+                overlay.classList.add("hidden");
+                document.body.style.overflow = "";
+              }
+            }
+
+            function toggleSensorPanel() {
+              const sidebar = document.getElementById("sensorDetailsSidebar");
+              const overlay = document.getElementById("mobileMenuOverlay");
+              isSensorPanelOpen = !isSensorPanelOpen;
+              if (isSensorPanelOpen) {
+                sidebar.classList.remove("translate-x-full");
+                sidebar.classList.add("translate-x-0");
+                overlay.classList.remove("hidden");
+                document.body.style.overflow = "hidden";
+              } else {
+                sidebar.classList.remove("translate-x-0");
+                sidebar.classList.add("translate-x-full");
+                overlay.classList.add("hidden");
+                document.body.style.overflow = "";
+              }
+            }
+
+            // --- DATA INITIALIZATION & SIMULATION ---
+            function initializeData() {
+              const now = new Date();
+              const currentHour = now.getHours();
+              const currentDayIndex = DAYS - 1; // Today is the last day in our 7-day array
+
+              for (let m = 0; m < MACHINES; m++) {
+                heatmapData[m] = [];
+                for (let d = 0; d < DAYS; d++) {
+                  heatmapData[m][d] = [];
+                  for (let h = 0; h < HOURS; h++) {
+                    // A cell is in the future if it's on the current day but a future hour.
+                    const isFuture = d === currentDayIndex && h > currentHour;
+
+                    if (isFuture) {
+                      heatmapData[m][d][h] = null; // Mark as future
+                    } else {
+                      heatmapData[m][d][h] = generateRandomStatus();
+                    }
+                  }
+                }
+              }
+
+              for (let i = 0; i < MACHINES; i++) {
+                machineData.push({
+                  id: `M${String(i + 1).padStart(3, "0")}`,
+                  name: `Machine ${i + 1}`,
+                  status: ["running", "warning", "critical", "offline"][
+                    Math.floor(Math.random() * 4)
+                  ],
+                  temperature: 60 + Math.random() * 40,
+                  pressure: 80 + Math.random() * 40,
+                  vibration: Math.random() * 5,
+                  efficiency: 70 + Math.random() * 30,
+                });
+              }
+            }
+
+            function generateRandomStatus() {
+              const rand = Math.random();
+              if (rand < 0.7) return "normal";
+              if (rand < 0.85) return "warning";
+              if (rand < 0.95) return "critical";
+              return "offline";
+            }
+
+            // --- STYLING HELPERS ---
+            function getStatusColor(status) {
+              switch (status) {
+                case "normal":
+                  return "bg-emerald-500 shadow-emerald-500/30";
+                case "warning":
+                  return "bg-amber-500 shadow-amber-500/30";
+                case "critical":
+                  return "bg-red-500 shadow-red-500/30";
+                case "offline":
+                  return "bg-slate-600 shadow-slate-600/30";
+                case null:
+                  return "bg-slate-800/30 border-slate-700/50";
+                default:
+                  return "bg-slate-600 shadow-slate-600/30";
+              }
+            }
+
+            function getStatusTextColor(status) {
+              switch (status) {
+                case "normal":
+                  return "text-emerald-400";
+                case "warning":
+                  return "text-amber-400";
+                case "critical":
+                  return "text-red-400";
+                case "offline":
+                  return "text-slate-400";
+                default:
+                  return "text-slate-400";
+              }
+            }
+            
+            // --- RENDERING FUNCTIONS ---
+            function renderMachineList() {
+              const container = document.getElementById("machineList");
+              container.innerHTML = machineData
+                .map(
+                  (machine, index) => `
+                <div class="metric-card rounded-xl p-3 lg:p-4 hover:scale-[1.02] transition-all duration-300 cursor-pointer group animate-fade-in-up ${
+                  index === selectedMachineIndex
+                    ? "ring-2 ring-cyan-400 bg-gradient-to-r from-blue-800/50 to-cyan-800/30"
+                    : ""
+                }" 
+                        onclick="selectMachine(${index})" 
+                        style="animation-delay: ${index * 100}ms">
+                    <div class="flex items-center justify-between mb-2 lg:mb-3">
+                        <div>
+                            <h4 class="font-semibold text-blue-300 text-base lg:text-lg group-hover:text-cyan-400 transition-colors duration-300 ${
+                              index === selectedMachineIndex
+                                ? "text-cyan-300"
+                                : ""
+                            }">${machine.id}</h4>
+                            <p class="text-xs lg:text-sm text-blue-200/70 font-medium">${
+                              machine.name
+                            }</p>
+                        </div>
+                        <div class="w-3 h-3 lg:w-4 lg:h-4 ${getStatusColor(
+                          machine.status
+                        )} rounded-full shadow-lg status-indicator ${
+                  index === selectedMachineIndex ? "ring-2 ring-white/50" : ""
+                }"></div>
+                    </div>
+                    <div class="space-y-2">
+                        <div class="flex justify-between items-center">
+                            <span class="text-xs text-blue-200/80 font-medium">Efficiency</span>
+                            <span class="text-xs lg:text-sm font-semibold ${getStatusTextColor(
+                              "normal"
+                            )}">${machine.efficiency.toFixed(1)}%</span>
+                        </div>
+                        <div class="w-full bg-slate-700/50 rounded-full h-1.5 lg:h-2 overflow-hidden">
+                            <div class="bg-gradient-to-r from-blue-500 to-cyan-400 h-1.5 lg:h-2 rounded-full transition-all duration-1000 ease-out" 
+                                 style="width: ${machine.efficiency}%"></div>
+                        </div>
+                    </div>
+                    ${
+                      index === selectedMachineIndex
+                        ? '<div class="absolute -left-1 top-1/2 transform -translate-y-1/2 w-1 h-6 lg:h-8 bg-cyan-400 rounded-r-full animate-pulse"></div>'
+                        : ""
+                    }
+                </div>
+              `
+                )
+                .join("");
+            }
+
+            function renderShiftTimeline() {
+              const container = document.getElementById("shiftTimeline");
+              const shifts = ["Night", "Morning", "Afternoon"];
+              const shiftLetters = ["N", "M", "A"];
+              const shiftColors = [
+                "bg-gradient-to-r from-blue-900 to-blue-800",
+                "bg-gradient-to-r from-blue-700 to-blue-600",
+                "bg-gradient-to-r from-blue-800 to-blue-700",
+              ];
+
+              container.innerHTML = "";
+              for (let d = 0; d < DAYS; d++) {
+                for (let h = 0; h < HOURS; h++) {
+                  const shiftIndex = Math.floor(h / 8) % 3;
+                  const hour = document.createElement("div");
+                  hour.className = `h-6 lg:h-8 flex-1 ${shiftColors[shiftIndex]} border-r border-blue-800/30 relative group transition-all duration-300 hover:brightness-110`;
+                  hour.style.minWidth =
+                    window.innerWidth < 768 ? "30px" : "40px";
+
+                  if (h % 8 === 0) {
+                    hour.innerHTML = `
+                                <span class="absolute -top-4 lg:-top-6 left-1 text-xs text-blue-300 font-semibold">${shifts[shiftIndex]}</span>
+                                <div class="absolute inset-0 flex items-center justify-center">
+                                  <span class="text-white font-bold text-xs lg:text-sm bg-black/30 rounded-full w-5 h-5 lg:w-6 lg:h-6 flex items-center justify-center">${shiftLetters[shiftIndex]}</span>
+                                </div>
+                                <div class="absolute inset-0 bg-gradient-to-t from-transparent to-white/10 opacity-0 group-hover:opacity-100 transition-opacity duration-300"></div>
+                            `;
+                  } else {
+                    hour.innerHTML = `
+                                <div class="absolute inset-0 flex items-center justify-center">
+                                  <span class="text-white/70 font-medium text-xs opacity-60">${shiftLetters[shiftIndex]}</span>
+                                </div>
+                                <div class="absolute inset-0 bg-gradient-to-t from-transparent to-white/10 opacity-0 group-hover:opacity-100 transition-opacity duration-300"></div>
+                            `;
+                  }
+
+                  container.appendChild(hour);
+                }
+              }
+            }
+
+            function renderHeatmap() {
+              const container = document.getElementById("heatmapGrid");
+              const now = new Date();
+              const isMobile = window.innerWidth < 768;
+              const cellSize = isMobile ? 30 : 40;
+
+              let html = '<div class="flex mb-2">';
+              html += `<div class="w-12 lg:w-20"></div>`;
+
+              for (let d = 0; d < DAYS; d++) {
+                const date = new Date(
+                  now.getTime() - (DAYS - 1 - d) * 24 * 60 * 60 * 1000
+                );
+                const dayName = date.toLocaleDateString("en", {
+                  weekday: "short",
+                });
+                const dayNumber = date.getDate();
+
+                html += `<div class="flex-1 text-center text-xs lg:text-sm text-blue-300 font-bold mb-2" style="min-width: ${
+                  HOURS * cellSize
+                }px;">${dayName} ${dayNumber}</div>`;
+              }
+              html += "</div>";
+
+              html += '<div class="flex mb-3 lg:mb-4">';
+              html += `<div class="w-12 lg:w-20"></div>`;
+
+              for (let d = 0; d < DAYS; d++) {
+                html += '<div class="flex">';
+                for (let h = 0; h < HOURS; h++) {
+                  const isLastDay = d === DAYS - 1;
+                  const isCurrentHour = isLastDay && h === now.getHours();
+                  const hourDisplay = h.toString().padStart(2, "0");
+                  const textColor = isCurrentHour
+                    ? "text-emerald-400 font-bold"
+                    : "text-blue-300";
+
+                  html += `<div class="text-center text-xs font-mono font-medium ${textColor}" style="min-width: ${cellSize}px; width: ${cellSize}px;">${hourDisplay}</div>`;
+                }
+                html += "</div>";
+              }
+              html += "</div>";
+
+              html += '<div class="flex items-start">';
+              html += `<div class="w-12 lg:w-20 flex flex-col">`;
+              for (let m = 0; m < MACHINES; m++) {
+                html += `<div class="h-8 lg:h-12 flex items-center text-xs lg:text-sm text-blue-300 text-right pr-2 lg:pr-4 font-semibold">${machineData[m].id}</div>`;
+              }
+              html += "</div>";
+
+              html += "<div>";
+              for (let m = 0; m < MACHINES; m++) {
+                html += `<div class="flex h-8 lg:h-12 items-center">`;
+                for (let d = 0; d < DAYS; d++) {
+                  html += '<div class="flex">';
+                  for (let h = 0; h < HOURS; h++) {
+                    const status = heatmapData[m][d][h];
+                    const isTopRows = m <= 1;
+                    const tooltipPosition = isTopRows
+                      ? "top-full mt-2 lg:mt-3"
+                      : "bottom-full mb-2 lg:mb-3";
+                    const arrowPosition = isTopRows
+                      ? "bottom-full left-1/2 transform -translate-x-1/2 w-0 h-0 border-l-4 border-r-4 border-b-4 border-transparent border-b-slate-700"
+                      : "top-full left-1/2 transform -translate-x-1/2 w-0 h-0 border-l-4 border-r-4 border-t-4 border-transparent border-t-slate-700";
+
+                    const now = new Date();
+                    const cellDate = new Date(
+                      now.getTime() - (DAYS - 1 - d) * 24 * 60 * 60 * 1000
+                    );
+                    const dayName = cellDate.toLocaleDateString("en", {
+                      weekday: "short",
+                    });
+                    const dayNumber = cellDate.getDate();
+                    const monthName = cellDate.toLocaleDateString("en", {
+                      month: "short",
+                    });
+
+                    if (status === null) {
+                      html += `
+                                  <div class="heatmap-cell ${getStatusColor(
+                                    status
+                                  )} border border-slate-700/30 rounded-sm"
+                                       style="min-width: ${cellSize}px; width: ${cellSize}px; height: ${cellSize}px;">
+                                  </div>
+                              `;
+                    } else {
+                      html += `
+                                  <div class="heatmap-cell ${getStatusColor(
+                                    status
+                                  )} border border-blue-800/20 cursor-pointer relative group rounded-sm shadow-lg"
+                                       style="min-width: ${cellSize}px; width: ${cellSize}px; height: ${cellSize}px;"
+                                       data-machine="${m}" data-day="${d}" data-hour="${h}" onclick="selectMachine(${m})">
+                                      <div class="hidden md:group-hover:block absolute ${tooltipPosition} left-1/2 transform -translate-x-1/2 px-3 py-2 glass-effect text-xs rounded-lg whitespace-nowrap z-50 font-medium text-blue-100 animate-fade-in">
+                                          <div class="font-semibold text-cyan-400">${
+                                            machineData[m].id
+                                          } - ${machineData[m].name}</div>
+                                          <div class="text-blue-200">${dayName} ${dayNumber} ${monthName} ${h
+                        .toString()
+                        .padStart(2, "0")}:00</div>
+                                          <div class="text-xs mt-1 ${getStatusTextColor(
+                                            status
+                                          )} capitalize font-semibold">${status}</div>
+                                          <div class="absolute ${arrowPosition}"></div>
+                                      </div>
+                                  </div>
+                              `;
+                    }
+                  }
+                  html += "</div>";
+                }
+                html += "</div>";
+              }
+              html += "</div>";
+              html += "</div>";
+
+              container.innerHTML = html;
+            }
+
+            function renderSensorDetails() {
+              const selectedMachine = machineData[selectedMachineIndex];
+              const container = document.getElementById("sensorDetails");
+
+              container.innerHTML = `
+                <div class="metric-card rounded-xl p-4 lg:p-6 animate-fade-in-up">
+                    <h4 class="font-bold text-lg lg:text-xl text-blue-300 mb-4 lg:mb-6 flex items-center">
+                        <div class="w-3 h-3 ${getStatusColor(
+                          selectedMachine.status
+                        )} rounded-full mr-3 animate-pulse-slow shadow-lg"></div>
+                        ${selectedMachine.id} - ${selectedMachine.name}
+                    </h4>
+                    
+                    <div class="space-y-4 lg:space-y-6">
+                        <div class="space-y-2 lg:space-y-3">
+                            <div class="flex justify-between items-center">
+                                <span class="text-blue-200/80 font-medium text-sm lg:text-base">Temperature</span>
+                                <span class="text-cyan-400 font-bold text-lg font-mono">${selectedMachine.temperature.toFixed(
+                                  1
+                                )}°C</span>
+                            </div>
+                            <div class="w-full bg-slate-700/50 rounded-full h-2 lg:h-3 overflow-hidden">
+                                <div class="bg-gradient-to-r from-blue-500 to-cyan-400 h-2 lg:h-3 rounded-full transition-all duration-1000 ease-out animate-glow" 
+                                     style="width: ${
+                                       selectedMachine.temperature
+                                     }%"></div>
+                            </div>
+                        </div>
+                        
+                        <div class="space-y-2 lg:space-y-3">
+                            <div class="flex justify-between items-center">
+                                <span class="text-blue-200/80 font-medium text-sm lg:text-base">Pressure</span>
+                                <span class="text-cyan-400 font-bold text-lg font-mono">${selectedMachine.pressure.toFixed(
+                                  1
+                                )} PSI</span>
+                            </div>
+                            <div class="w-full bg-slate-700/50 rounded-full h-2 lg:h-3 overflow-hidden">
+                                <div class="bg-gradient-to-r from-emerald-500 to-cyan-400 h-2 lg:h-3 rounded-full transition-all duration-1000 ease-out" 
+                                     style="width: ${
+                                       selectedMachine.pressure
+                                     }%"></div>
+                            </div>
+                        </div>
+                        
+                        <div class="space-y-2 lg:space-y-3">
+                            <div class="flex justify-between items-center">
+                                <span class="text-blue-200/80 font-medium text-sm lg:text-base">Vibration</span>
+                                <span class="text-cyan-400 font-bold text-lg font-mono">${selectedMachine.vibration.toFixed(
+                                  2
+                                )} mm/s</span>
+                            </div>
+                            <div class="w-full bg-slate-700/50 rounded-full h-2 lg:h-3 overflow-hidden">
+                                <div class="bg-gradient-to-r from-amber-500 to-orange-400 h-2 lg:h-3 rounded-full transition-all duration-1000 ease-out" 
+                                     style="width: ${
+                                       selectedMachine.vibration * 20
+                                     }%"></div>
+                            </div>
+                        </div>
+                        
+                        <div class="space-y-2 lg:space-y-3">
+                            <div class="flex justify-between items-center">
+                                <span class="text-blue-200/80 font-medium text-sm lg:text-base">Efficiency</span>
+                                <span class="text-emerald-400 font-bold text-lg font-mono">${selectedMachine.efficiency.toFixed(
+                                  1
+                                )}%</span>
+                            </div>
+                            <div class="w-full bg-slate-700/50 rounded-full h-2 lg:h-3 overflow-hidden">
+                                <div class="bg-gradient-to-r from-emerald-500 to-green-400 h-2 lg:h-3 rounded-full transition-all duration-1000 ease-out" 
+                                     style="width: ${
+                                       selectedMachine.efficiency
+                                     }%"></div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="metric-card rounded-xl p-4 lg:p-6 animate-fade-in-up" style="animation-delay: 200ms">
+                    <h5 class="font-bold text-base lg:text-lg text-blue-300 mb-3 lg:mb-4 flex items-center">
+                        <div class="w-2 h-2 bg-amber-400 rounded-full mr-3 animate-pulse"></div>
+                        Recent Alerts
+                    </h5>
+                    <div class="space-y-2 lg:space-y-3">
+                        <div class="flex items-center space-x-3 p-2 lg:p-3 rounded-lg bg-amber-500/10 border border-amber-500/20">
+                            <div class="text-amber-400 text-sm lg:text-lg">⚠️</div>
+                            <span class="text-xs lg:text-sm text-amber-300 font-medium">High temperature detected</span>
+                        </div>
+                        <div class="flex items-center space-x-3 p-2 lg:p-3 rounded-lg bg-red-500/10 border border-red-500/20">
+                            <div class="text-red-400 text-sm lg:text-lg">🔴</div>
+                            <span class="text-xs lg:text-sm text-red-300 font-medium">Pressure exceeded threshold</span>
+                        </div>
+                        <div class="flex items-center space-x-3 p-2 lg:p-3 rounded-lg bg-blue-500/10 border border-blue-500/20">
+                            <div class="text-blue-400 text-sm lg:text-lg">ℹ️</div>
+                            <span class="text-xs lg:text-sm text-blue-300 font-medium">Maintenance scheduled</span>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="metric-card rounded-xl p-4 lg:p-6 animate-fade-in-up" style="animation-delay: 400ms">
+                    <h5 class="font-bold text-base lg:text-lg text-blue-300 mb-3 lg:mb-4 flex items-center">
+                        <div class="w-2 h-2 bg-emerald-400 rounded-full mr-3 animate-pulse"></div>
+                        Production Stats
+                    </h5>
+                    <div class="grid grid-cols-2 gap-3 lg:gap-4 text-sm">
+                        <div class="bg-slate-800/50 rounded-lg p-3 lg:p-4 text-center hover:bg-slate-800/70 transition-colors duration-300">
+                            <span class="text-blue-300/80 font-medium block mb-1 lg:mb-2 text-xs lg:text-sm">Output</span>
+                            <p class="text-xl lg:text-2xl font-bold text-cyan-400 font-mono">${Math.floor(
+                              selectedMachine.efficiency * 35
+                            )}</p>
+                        </div>
+                        <div class="bg-slate-800/50 rounded-lg p-3 lg:p-4 text-center hover:bg-slate-800/70 transition-colors duration-300">
+                            <span class="text-blue-300/80 font-medium block mb-1 lg:mb-2 text-xs lg:text-sm">Quality</span>
+                            <p class="text-xl lg:text-2xl font-bold text-emerald-400 font-mono">${(
+                              95 +
+                              Math.random() * 4
+                            ).toFixed(1)}%</p>
+                        </div>
+                        <div class="bg-slate-800/50 rounded-lg p-3 lg:p-4 text-center hover:bg-slate-800/70 transition-colors duration-300">
+                            <span class="text-blue-300/80 font-medium block mb-1 lg:mb-2 text-xs lg:text-sm">Downtime</span>
+                            <p class="text-xl lg:text-2xl font-bold text-amber-400 font-mono">${(
+                              (100 - selectedMachine.efficiency) /
+                              100
+                            ).toFixed(1)}h</p>
+                        </div>
+                        <div class="bg-slate-800/50 rounded-lg p-3 lg:p-4 text-center hover:bg-slate-800/70 transition-colors duration-300">
+                            <span class="text-blue-300/80 font-medium block mb-1 lg:mb-2 text-xs lg:text-sm">Speed</span>
+                            <p class="text-xl lg:text-2xl font-bold text-cyan-400 font-mono">${Math.floor(
+                              120 + selectedMachine.efficiency * 0.5
+                            )}rpm</p>
+                        </div>
+                    </div>
+                </div>
+              `;
+            }
+
+            // --- USER INTERACTION & SELECTION ---
+            function selectMachine(index) {
+              const previousIndex = selectedMachineIndex;
+              selectedMachineIndex = index;
+
+              updateMachineSelection(previousIndex, index);
+
+              const container = document.getElementById("sensorDetails");
+              container.style.opacity = "0.5";
+              container.style.transform = "translateY(10px)";
+
+              setTimeout(() => {
+                renderSensorDetails();
+                container.style.opacity = "1";
+                container.style.transform = "translateY(0)";
+              }, 150);
+
+              if (window.innerWidth < 1024) {
+                toggleMobileMenu();
+              }
+            }
+
+            function updateMachineSelection(previousIndex, newIndex) {
+              const machineCards = document.querySelectorAll(
+                '[onclick^="selectMachine("]'
+              );
+
+              if (previousIndex !== undefined && machineCards[previousIndex]) {
+                const prevCard = machineCards[previousIndex];
+                prevCard.className = prevCard.className
+                  .replace(/ring-2 ring-cyan-400/, "")
+                  .replace(
+                    /bg-gradient-to-r from-blue-800\/50 to-cyan-800\/30/,
+                    ""
+                  )
+                  .replace(/text-cyan-300/, "text-blue-300");
+
+                const prevIndicator = prevCard.querySelector(".animate-pulse");
+                if (prevIndicator && prevIndicator.classList.contains("w-1")) {
+                  prevIndicator.remove();
+                }
+
+                const prevTitle = prevCard.querySelector("h4");
+                if (prevTitle) {
+                  prevTitle.className = prevTitle.className.replace(
+                    /text-cyan-300/,
+                    "text-blue-300"
+                  );
+                }
+              }
+
+              if (machineCards[newIndex]) {
+                const newCard = machineCards[newIndex];
+                newCard.className +=
+                  " ring-2 ring-cyan-400 bg-gradient-to-r from-blue-800/50 to-cyan-800/30";
+
+                const newTitle = newCard.querySelector("h4");
+                if (newTitle) {
+                  newTitle.className = newTitle.className.replace(
+                    /text-blue-300/,
+                    "text-cyan-300"
+                  );
+                }
+
+                if (!newCard.querySelector(".w-1")) {
+                  newCard.style.position = "relative";
+                  const indicator = document.createElement("div");
+                  indicator.className =
+                    "absolute -left-1 top-1/2 transform -translate-y-1/2 w-1 h-6 lg:h-8 bg-cyan-400 rounded-r-full animate-pulse";
+                  newCard.appendChild(indicator);
+                }
+              }
+            }
+            
+            // --- ZOOM & PAN CONTROLS ---
+            function setupZoom() {
+              const container = document.getElementById("heatmapContainer");
+              const wrapper = document.getElementById("heatmapWrapper");
+
+              container.addEventListener("mousedown", (e) => {
+                if (e.button === 0) {
+                  isDragging = true;
+                  dragStart.x = e.clientX;
+                  dragStart.y = e.clientY;
+                  scrollStart.x = container.scrollLeft;
+                  scrollStart.y = container.scrollTop;
+                  container.style.cursor = "grabbing";
+                  e.preventDefault();
+                }
+              });
+
+              container.addEventListener("mousemove", (e) => {
+                if (!isDragging) return;
+                const dx = e.clientX - dragStart.x;
+                const dy = e.clientY - dragStart.y;
+                container.scrollLeft = scrollStart.x - dx;
+                container.scrollTop = scrollStart.y - dy;
+              });
+
+              container.addEventListener("mouseup", () => {
+                isDragging = false;
+                container.style.cursor = "grab";
+              });
+
+              container.addEventListener("mouseleave", () => {
+                isDragging = false;
+                container.style.cursor = "grab";
+              });
+
+              container.addEventListener("wheel", (e) => {
+                if (e.ctrlKey) {
+                  e.preventDefault();
+                  const delta = e.deltaY > 0 ? 0.9 : 1.1;
+                  zoomLevel = Math.max(0.5, Math.min(3, zoomLevel * delta));
+                  wrapper.style.transform = `scale(${zoomLevel})`;
+                  wrapper.style.transformOrigin = "top left";
+                  wrapper.style.transition = "transform 0.2s ease-out";
+                  document.getElementById(
+                    "zoomLevel"
+                  ).textContent = `${Math.round(zoomLevel * 100)}%`;
+                  updateZoomSlider();
+                } else {
+                  e.preventDefault();
+                  const scrollAmount = e.deltaY * 1.5;
+                  const currentX = container.scrollLeft;
+                  const targetX = Math.max(0, currentX + scrollAmount);
+
+                  smoothScrollTo(container, targetX, container.scrollTop, 150);
+                }
+              });
+
+              let touchStartDistance = 0;
+              let touchStartZoom = 1;
+
+              container.addEventListener("touchstart", (e) => {
+                if (e.touches.length === 2) {
+                  const touch1 = e.touches[0];
+                  const touch2 = e.touches[1];
+                  touchStartDistance = Math.hypot(
+                    touch2.clientX - touch1.clientX,
+                    touch2.clientY - touch1.clientY
+                  );
+                  touchStartZoom = zoomLevel;
+                  e.preventDefault();
+                } else if (e.touches.length === 1) {
+                  isDragging = true;
+                  dragStart.x = e.touches[0].clientX;
+                  dragStart.y = e.touches[0].clientY;
+                  scrollStart.x = container.scrollLeft;
+                  scrollStart.y = container.scrollTop;
+                }
+              });
+
+              container.addEventListener("touchmove", (e) => {
+                if (e.touches.length === 2) {
+                  const touch1 = e.touches[0];
+                  const touch2 = e.touches[1];
+                  const currentDistance = Math.hypot(
+                    touch2.clientX - touch1.clientX,
+                    touch2.clientY - touch1.clientY
+                  );
+                  const scale =
+                    (currentDistance / touchStartDistance) * touchStartZoom;
+                  zoomLevel = Math.max(0.5, Math.min(3, scale));
+                  wrapper.style.transform = `scale(${zoomLevel})`;
+                  wrapper.style.transformOrigin = "top left";
+                  document.getElementById(
+                    "zoomLevel"
+                  ).textContent = `${Math.round(zoomLevel * 100)}%`;
+                  updateZoomSlider();
+                  e.preventDefault();
+                } else if (e.touches.length === 1 && isDragging) {
+                  const dx = e.touches[0].clientX - dragStart.x;
+                  const dy = e.touches[0].clientY - dragStart.y;
+                  container.scrollLeft = scrollStart.x - dx;
+                  container.scrollTop = scrollStart.y - dy;
+                  e.preventDefault();
+                }
+              });
+
+              container.addEventListener("touchend", () => {
+                isDragging = false;
+              });
+
+              container.style.cursor = "grab";
+            }
+
+            function zoomIn() {
+              zoomLevel = Math.min(3, zoomLevel * 1.2);
+              updateZoom();
+            }
+
+            function zoomOut() {
+              zoomLevel = Math.max(0.5, zoomLevel * 0.8);
+              updateZoom();
+            }
+
+            function resetZoom() {
+              zoomLevel = 1;
+              updateZoom();
+            }
+
+            function setZoomFromSlider(value) {
+              zoomLevel = value / 100;
+              updateZoom();
+            }
+
+            function updateZoomSlider() {
+              const slider = document.getElementById("zoomSlider");
+              if (slider) {
+                slider.value = Math.round(zoomLevel * 100);
+              }
+            }
+
+            function updateZoom() {
+              const wrapper = document.getElementById("heatmapWrapper");
+              wrapper.style.transform = `scale(${zoomLevel})`;
+              wrapper.style.transformOrigin = "top left";
+              wrapper.style.transition =
+                "transform 0.4s cubic-bezier(0.4, 0, 0.2, 1)";
+              document.getElementById("zoomLevel").textContent = `${Math.round(
+                zoomLevel * 100
+              )}%`;
+
+              updateZoomSlider();
+
+              setTimeout(() => {
+                wrapper.style.transition = "";
+              }, 400);
+            }
+
+            function smoothScrollTo(
+              container,
+              targetX,
+              targetY,
+              duration = 400
+            ) {
+              const startX = container.scrollLeft;
+              const startY = container.scrollTop;
+              const distanceX = targetX - startX;
+              const distanceY = targetY - startY;
+              let startTime = null;
+
+              function animate(currentTime) {
+                if (!startTime) startTime = currentTime;
+                const elapsed = currentTime - startTime;
+                const progress = Math.min(elapsed / duration, 1);
+
+                const easeOut = 1 - Math.pow(1 - progress, 3);
+
+                container.scrollLeft = startX + distanceX * easeOut;
+                container.scrollTop = startY + distanceY * easeOut;
+
+                if (progress < 1) {
+                  requestAnimationFrame(animate);
+                }
+              }
+
+              requestAnimationFrame(animate);
+            }
+
+            function panLeft() {
+              const container = document.getElementById("heatmapContainer");
+              const targetX = Math.max(0, container.scrollLeft - 200);
+              smoothScrollTo(container, targetX, container.scrollTop);
+            }
+
+            function panRight() {
+              const container = document.getElementById("heatmapContainer");
+              const targetX = container.scrollLeft + 200;
+              smoothScrollTo(container, targetX, container.scrollTop);
+            }
+
+            function panUp() {
+              const container = document.getElementById("heatmapContainer");
+              const targetY = Math.max(0, container.scrollTop - 100);
+              smoothScrollTo(container, container.scrollLeft, targetY);
+            }
+
+            function panDown() {
+              const container = document.getElementById("heatmapContainer");
+              const targetY = container.scrollTop + 100;
+              smoothScrollTo(container, container.scrollLeft, targetY);
+            }
+
+            function resetPosition() {
+              const container = document.getElementById("heatmapContainer");
+              smoothScrollTo(container, 0, 0, 600);
+              zoomLevel = 1;
+              updateZoom();
+            }
+            
+            // --- DATA UPDATE FUNCTIONS ---
+            function updateMachineDataOnly() {
+              machineData.forEach((machine) => {
+                machine.temperature += (Math.random() - 0.5) * 2;
+                machine.temperature = Math.max(
+                  60,
+                  Math.min(100, machine.temperature)
+                );
+
+                machine.pressure += (Math.random() - 0.5) * 2;
+                machine.pressure = Math.max(
+                  80,
+                  Math.min(120, machine.pressure)
+                );
+
+                machine.vibration += (Math.random() - 0.5) * 0.1;
+                machine.vibration = Math.max(0, Math.min(5, machine.vibration));
+
+                machine.efficiency += (Math.random() - 0.5) * 1;
+                machine.efficiency = Math.max(
+                  70,
+                  Math.min(100, machine.efficiency)
+                );
+
+                if (Math.random() < 0.05) {
+                  machine.status = [
+                    "running",
+                    "warning",
+                    "critical",
+                    "offline",
+                  ][Math.floor(Math.random() * 4)];
+                }
+              });
+            }
+
+            function updateHeatmapDataOnly() {
+              const numUpdates = Math.floor(Math.random() * 3) + 1;
+              for (let i = 0; i < numUpdates; i++) {
+                const m = Math.floor(Math.random() * MACHINES);
+                const d = Math.floor(Math.random() * DAYS);
+                const h = Math.floor(Math.random() * HOURS);
+
+                // BUG FIX: Do not update future (null) cells
+                if (heatmapData[m]?.[d]?.[h] === null) {
+                    continue; 
+                }
+
+                const newStatus = generateRandomStatus();
+                heatmapData[m][d][h] = newStatus;
+
+                const cell = document.querySelector(
+                  `[data-machine="${m}"][data-day="${d}"][data-hour="${h}"]`
+                );
+                if (cell) {
+                  cell.className = cell.className
+                    .replace(/bg-\w+-\d+/g, "")
+                    .replace(/shadow-\w+-\d+\/\d+/g, "");
+                  cell.className += ` ${getStatusColor(newStatus)}`;
+                }
+              }
+            }
+
+            function updateMachineListValues() {
+              machineData.forEach((machine, index) => {
+                const machineCard = document.querySelector(
+                  `[onclick="selectMachine(${index})"]`
+                );
+                if (machineCard) {
+                  const statusDot =
+                    machineCard.querySelector(".status-indicator");
+                  const efficiencyValue = machineCard.querySelector(
+                    ".text-xs.lg\\:text-sm.font-semibold"
+                  );
+                  const progressBar =
+                    machineCard.querySelector(".bg-gradient-to-r");
+
+                  if (statusDot) {
+                    statusDot.className = statusDot.className
+                      .replace(/bg-\w+-\d+/g, "")
+                      .replace(/shadow-\w+-\d+\/\d+/g, "");
+                    statusDot.className += ` ${getStatusColor(machine.status)}`;
+                  }
+
+                  if (efficiencyValue) {
+                    efficiencyValue.textContent = `${machine.efficiency.toFixed(
+                      1
+                    )}%`;
+                  }
+
+                  if (progressBar) {
+                    progressBar.style.width = `${machine.efficiency}%`;
+                  }
+                }
+              });
+            }
+
+            function updateSensorDetailsValues() {
+              if (!machineData.length) return;
+              const selectedMachine = machineData[selectedMachineIndex];
+              const sensorDetailsContainer = document.getElementById('sensorDetails');
+              if (!sensorDetailsContainer.hasChildNodes()) return;
+
+
+              const allBars = sensorDetailsContainer.querySelectorAll(
+                ".bg-gradient-to-r"
+              );
+              const allValues = sensorDetailsContainer.querySelectorAll(
+                ".font-mono"
+              );
+
+              if (allValues.length >= 8 && allBars.length >= 4) {
+                  allValues[0].textContent = `${selectedMachine.temperature.toFixed(1)}°C`;
+                  allBars[0].style.width = `${selectedMachine.temperature}%`;
+
+                  allValues[1].textContent = `${selectedMachine.pressure.toFixed(1)} PSI`;
+                  allBars[1].style.width = `${selectedMachine.pressure}%`;
+                  
+                  allValues[2].textContent = `${selectedMachine.vibration.toFixed(2)} mm/s`;
+                  allBars[2].style.width = `${selectedMachine.vibration * 20}%`;
+
+                  allValues[3].textContent = `${selectedMachine.efficiency.toFixed(1)}%`;
+                  allBars[3].style.width = `${selectedMachine.efficiency}%`;
+                  
+                  allValues[4].textContent = Math.floor(selectedMachine.efficiency * 35);
+                  allValues[5].textContent = `${(95 + Math.random() * 4).toFixed(1)}%`;
+                  allValues[6].textContent = `${((100 - selectedMachine.efficiency) / 100).toFixed(1)}h`;
+                  allValues[7].textContent = `${Math.floor(120 + selectedMachine.efficiency * 0.5)}rpm`;
+              }
+            }
+
+            function simulateRealtimeUpdates() {
+              updateMachineDataOnly();
+              updateHeatmapDataOnly();
+              updateMachineListValues();
+              updateSensorDetailsValues();
+
+              const now = new Date();
+              const timeElement = document.getElementById("lastUpdate");
+              timeElement.textContent = now.toLocaleTimeString();
+              timeElement.classList.add("animate-pulse");
+              setTimeout(
+                () => timeElement.classList.remove("animate-pulse"),
+                1000
+              );
+            }
+            
+            // --- MAIN INITIALIZATION & NAVIGATION ---
+            function init() {
+              initializeData();
+              updateCurrentWeek();
+
+              setTimeout(() => renderMachineList(), 100);
+              setTimeout(() => renderShiftTimeline(), 200);
+              setTimeout(() => renderHeatmap(), 300);
+              setTimeout(() => renderSensorDetails(), 400);
+              setTimeout(() => setupZoom(), 500);
+
+              setInterval(simulateRealtimeUpdates, UPDATE_INTERVAL);
+
+              const now = new Date();
+              document.getElementById("lastUpdate").textContent =
+                now.toLocaleTimeString();
+
+              window.addEventListener("resize", () => {
+                setTimeout(() => {
+                  renderShiftTimeline();
+                  renderHeatmap();
+                }, 100);
+              });
+
+              window.addEventListener("orientationchange", () => {
+                setTimeout(() => {
+                  renderShiftTimeline();
+                  renderHeatmap();
+                }, 300);
+              });
+            }
+
+            function toggleMobileNav() {
+              const mobileNav = document.getElementById("mobileNavMenu");
+              const overlay = document.getElementById("mobileNavOverlay");
+              const hamburgerBtn = document.getElementById("mobileNavBtn");
+              const hamburgerIcon = hamburgerBtn.querySelector(".hamburger-icon");
+
+              const isOpen = !mobileNav.classList.contains("translate-x-full");
+
+              if (isOpen) {
+                mobileNav.classList.add("translate-x-full");
+                overlay.classList.add("opacity-0", "pointer-events-none");
+                hamburgerIcon.classList.remove("active");
+              } else {
+                mobileNav.classList.remove("translate-x-full");
+                overlay.classList.remove("opacity-0", "pointer-events-none");
+                hamburgerIcon.classList.add("active");
+              }
+            }
+
+            function scrollToAbout() {
+              const aboutSection = document.getElementById("about");
+              if (aboutSection) {
+                const elementPosition = aboutSection.offsetTop - 80;
+                window.scrollTo({
+                  top: elementPosition,
+                  behavior: "smooth",
+                });
+              }
+            }
+
+            function goToAbout() {
+              showTab("home");
+              setTimeout(() => {
+                scrollToAbout();
+              }, 300);
+            }
+
+            function showTab(tabName) {
+              const tabs = document.querySelectorAll(".tab-content");
+              const navLinks = document.querySelectorAll(".nav-link");
+
+              tabs.forEach((tab) => {
+                tab.classList.add("hidden");
+              });
+
+              navLinks.forEach((link) => {
+                link.classList.remove("active", "text-cyan-400");
+                link.classList.add("text-blue-200");
+              });
+
+              const activeTab = document.getElementById(tabName + "Tab");
+              const activeNavLinks = document.querySelectorAll(
+                `[data-tab="${tabName}"]`
+              );
+
+              if (activeTab) {
+                activeTab.classList.remove("hidden");
+              }
+
+              activeNavLinks.forEach((link) => {
+                link.classList.remove("text-blue-200");
+                link.classList.add("active", "text-cyan-400");
+              });
+              
+              if (tabName !== 'monitor') {
+                 document.body.style.overflow = '';
+              } else {
+                 document.body.style.overflow = 'hidden';
+              }
+
+
+              window.scrollTo({ top: 0, behavior: "smooth" });
+            }
+
+            function updateCurrentWeek() {
+              const now = new Date();
+              const startOfYear = new Date(now.getFullYear(), 0, 1);
+              const pastDaysOfYear = (now - startOfYear) / 86400000;
+              const weekNumber = Math.ceil(
+                (pastDaysOfYear + startOfYear.getDay() + 1) / 7
+              );
+
+              const weekElement = document.getElementById("currentWeek");
+              if (weekElement) {
+                weekElement.textContent = `Week ${weekNumber} - ${now.getFullYear()}`;
+              }
+            }
+
+            function goToCurrentTime() {
+                const container = document.getElementById("heatmapContainer");
+                if (!container) return;
+
+                const now = new Date();
+                const currentHour = now.getHours();
+                const isMobile = window.innerWidth < 768;
+                const cellSize = isMobile ? 30 : 40;
+                
+                const currentDayIndex = DAYS - 1;
+                const targetColumn = currentDayIndex * HOURS + currentHour;
+                
+                // Calculate the horizontal position of the "now" column inside the wrapper
+                const targetX = targetColumn * cellSize;
+                
+                // Calculate the scroll position needed to center the "now" column
+                const containerWidth = container.clientWidth;
+                let scrollX = (targetX * zoomLevel) - (containerWidth / 2) + ((cellSize / 2) * zoomLevel);
+
+                // Clamp scroll position to be within bounds
+                const maxScrollX = container.scrollWidth - containerWidth;
+                scrollX = Math.max(0, Math.min(scrollX, maxScrollX));
+
+                smoothScrollTo(container, scrollX, container.scrollTop, 600);
+
+                // --- Indicator Logic ---
+                const wrapper = document.getElementById("heatmapWrapper");
+                if (!wrapper) return;
+
+                const oldIndicator = document.getElementById("currentTimeIndicator");
+                if (oldIndicator) oldIndicator.remove();
+
+                const indicator = document.createElement("div");
+                indicator.id = "currentTimeIndicator";
+                indicator.className = "absolute top-0 bottom-0 w-0.5 bg-emerald-400 shadow-lg z-20 animate-pulse";
+                
+                // The indicator's position is relative to the un-scaled wrapper
+                const machineNamesWidth = isMobile ? 12*4 : 20*4; // w-12 or w-20 from tailwind
+                indicator.style.left = `${machineNamesWidth + targetX + (cellSize / 2)}px`;
+
+                const heatmapGrid = document.getElementById('heatmapGrid');
+                if(heatmapGrid) {
+                    heatmapGrid.appendChild(indicator);
+                    setTimeout(() => {
+                        if (indicator) indicator.remove();
+                    }, 5000);
+                }
+            }
+
+
+            // --- Start the application ---
+            document.addEventListener("DOMContentLoaded", () => {
+                init();
+                showTab("home");
+            });
+
+          </script>
+        </section>
+      </div>
+    </main>
+
+    <footer
+      class="bg-gradient-to-r from-slate-900 to-slate-800 border-t border-blue-800/30"
+    >
+      <div class="max-w-7xl mx-auto px-4 lg:px-6 py-12 lg:py-16">
+        <div class="grid md:grid-cols-4 gap-8 lg:gap-12">
+          <div class="md:col-span-2">
+            <div class="flex items-center space-x-3 mb-6">
+              <div
+                class="w-10 h-10 bg-gradient-to-br from-cyan-400 to-blue-500 rounded-lg flex items-center justify-center shadow-lg"
+              >
+                <svg
+                  class="w-6 h-6 text-white"
+                  fill="none"
+                  stroke="currentColor"
+                  viewBox="0 0 24 24"
+                >
+                  <path
+                    stroke-linecap="round"
+                    stroke-linejoin="round"
+                    stroke-width="2"
+                    d="M9 3v2m6-2v2M9 19v2m6-2v2M5 9H3m2 6H3m18-6h-2m2 6h-2M7 19h10a2 2 0 002-2V7a2 2 0 00-2-2H7a2 2 0 00-2 2v10a2 2 0 002 2zM9 9h6v6H9V9z"
+                  ></path>
+                </svg>
+              </div>
+              <span
+                class="text-2xl font-bold bg-gradient-to-r from-blue-400 to-cyan-400 bg-clip-text text-transparent"
+              >
+                TextileMonitor
+              </span>
+            </div>
+            <p class="text-blue-200/70 leading-relaxed mb-6 max-w-md">
+              Advanced industrial IoT monitoring solution for textile
+              manufacturing. Real-time analytics, predictive maintenance, and
+              efficiency optimization.
+            </p>
+            <div class="text-sm text-blue-300/60">
+              © 2025 TextileMonitor. Advanced Manufacturing Solutions.
+            </div>
+          </div>
+
+          <div>
+            <h4 class="text-lg font-semibold text-blue-300 mb-6">Platform</h4>
+            <ul class="space-y-3 text-blue-200/70">
+              <li>
+                <a
+                  href="#"
+                  onclick="showTab('monitor')"
+                  class="hover:text-cyan-400 transition-colors duration-300"
+                >
+                  Live Monitor
+                </a>
+              </li>
+              <li>
+                <a
+                  href="#about"
+                  onclick="goToAbout()"
+                  class="hover:text-cyan-400 transition-colors duration-300"
+                >
+                  Features
+                </a>
+              </li>
+              <li>
+                <a
+                  href="#"
+                  onclick="showTab('home')"
+                  class="hover:text-cyan-400 transition-colors duration-300"
+                >
+                  Overview
+                </a>
+              </li>
+            </ul>
+          </div>
+
+          <div>
+            <h4 class="text-lg font-semibold text-blue-300 mb-6">Technology</h4>
+            <ul class="space-y-3 text-blue-200/70">
+              <li>Industrial IoT Sensors</li>
+              <li>Real-time Data Processing</li>
+              <li>Machine Learning Analytics</li>
+              <li>Predictive Maintenance</li>
+            </ul>
+          </div>
+        </div>
+
+        <div class="border-t border-blue-800/30 mt-12 pt-8">
+          <div
+            class="flex flex-col md:flex-row items-center justify-between gap-4"
+          >
+            <div class="text-sm text-blue-300/60">
+              Built for modern textile manufacturing environments
+            </div>
+            <div class="flex items-center space-x-6 text-sm text-blue-200/70">
+              <span>Status: </span>
+              <div class="flex items-center space-x-2">
+                <div
+                  class="w-2 h-2 bg-emerald-500 rounded-full animate-pulse"
+                ></div>
+                <span class="text-emerald-400">All Systems Operational</span>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+    </footer>
+  </body>
+</html>
