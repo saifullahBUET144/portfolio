@@ -1,0 +1,539 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+  <title>Luggage Picker Simulator</title>
+
+  <link 
+    href="https://fonts.googleapis.com/css2?family=Poppins:wght@300;400;500;600;700&display=swap" 
+    rel="stylesheet"
+  />
+
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/p5.js/1.7.0/p5.js"></script>
+  <script src="https://cdn.tailwindcss.com"></script>
+  <link
+    rel="stylesheet"
+    href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css"
+  />
+  <style>
+    body {
+      font-family: 'Poppins', sans-serif;
+      background: linear-gradient(135deg, #e0e7ff, #f3f4f6);
+      transition: background 0.3s ease;
+    }
+    :root {
+      --primary: #2C3E50;
+      --secondary: #34495E;
+      --accent: #3498DB;
+      --light: #ECF0F1;
+      --dark: #2C3E50;
+      --success: #27AE60;
+      --warning: #F39C12;
+      --error: #E74C3C;
+    }
+
+    header {
+      background: linear-gradient(to right, var(--primary), var(--secondary));
+      box-shadow: 0 4px 12px rgba(0, 0, 0, 0.2);
+      animation: slideIn 0.5s ease-out;
+    }
+    @keyframes slideIn {
+      from { transform: translateY(-100%); opacity: 0; }
+      to   { transform: translateY(0); opacity: 1; }
+    }
+
+    footer {
+      background: linear-gradient(to right, var(--primary), var(--secondary));
+      box-shadow: 0 -4px 12px rgba(0, 0, 0, 0.2);
+    }
+
+    .card {
+      transition: transform 0.3s ease, box-shadow 0.3s ease;
+    }
+    .card:hover {
+      transform: translateY(-5px);
+      box-shadow: 0 8px 24px rgba(0, 0, 0, 0.15);
+    }
+
+    select, button.type-btn {
+      transition: all 0.3s ease;
+    }
+    select:hover, button.type-btn:hover {
+      background-color: #f1f5f9;
+      box-shadow: 0 0 0 3px rgba(52,152,219,0.2);
+    }
+
+    .color-btn {
+      transition: all 0.3s ease;
+      border: 2px solid transparent;
+      border-radius: 12px;
+      display: flex;
+      align-items: center;
+      padding: 8px;
+      cursor: pointer;
+      box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+    }
+    .color-btn:hover {
+      transform: scale(1.05);
+      box-shadow: 0 4px 8px rgba(0,0,0,0.2);
+    }
+    .color-btn.selected {
+      border: 2px solid #3498DB;
+      box-shadow: 0 0 10px rgba(52,152,219,0.5);
+    }
+    .color-circle {
+      width: 24px;
+      height: 24px;
+      border-radius: 50%;
+      margin-right: 8px;
+      box-shadow: inset 0 0 0 1px rgba(0,0,0,0.1);
+    }
+    
+    /* Toggle Switch Styles */
+    .toggle-switch {
+      position: relative;
+      display: inline-block;
+      width: 50px;
+      height: 24px;
+    }
+    .toggle-switch input { 
+      opacity: 0;
+      width: 0;
+      height: 0;
+    }
+    .slider {
+      position: absolute;
+      cursor: pointer;
+      top: 0;
+      left: 0;
+      right: 0;
+      bottom: 0;
+      background-color: #ccc;
+      transition: .4s;
+      border-radius: 24px;
+    }
+    .slider:before {
+      position: absolute;
+      content: "";
+      height: 16px;
+      width: 16px;
+      left: 4px;
+      bottom: 4px;
+      background-color: white;
+      transition: .4s;
+      border-radius: 50%;
+    }
+    input:checked + .slider {
+      background-color: #3498DB;
+    }
+    input:checked + .slider:before {
+      transform: translateX(26px);
+    }
+
+    #likelihoodBar {
+      transition: width 0.5s ease-in-out, background-color 0.3s ease;
+    }
+
+    .canvas-container {
+      transition: all 0.3s ease;
+      box-shadow: 0 4px 12px rgba(0,0,0,0.1);
+      margin: 0 auto;
+      max-width: 960px;
+    }
+    .canvas-container:hover {
+      box-shadow: 0 8px 24px rgba(0,0,0,0.2);
+    }
+
+    .luggage-preview {
+      display: flex;
+      justify-content: center;
+      align-items: center;
+      margin-top: 1rem;
+      height: 120px;
+      background-color: #f8fafc;
+      border-radius: 8px;
+      box-shadow: inset 0 0 5px rgba(0,0,0,0.1);
+    }
+
+    @media (max-width:740px){
+      .sm\:py-4{padding:.75rem 0!important}.sm\:px-6{padding:0 1rem!important}
+      .sm\:p-6{padding:1rem!important}.sm\:p-3{padding:.5rem!important}
+      .sm\:text-2xl{font-size:1.125rem!important}.sm\:text-lg{font-size:1rem!important}
+      .sm\:text-xl{font-size:1.125rem!important}.sm\:w-12{width:2rem!important;height:2rem!important}
+      .color-btn {padding: 6px;}
+      .color-circle {width: 18px; height: 18px;}
+    }
+  </style>
+</head>
+<body class="flex flex-col min-h-screen">
+  <header class="text-white py-3 sm:py-4 px-4 sm:px-6">
+    <div class="max-w-7xl mx-auto">
+      <h1 class="text-lg sm:text-2xl font-bold flex items-center">
+        <i class="fas fa-suitcase-rolling mr-2"></i>
+        Luggage Picker Simulator
+      </h1>
+    </div>
+  </header>
+
+  <main class="flex-grow p-3 sm:p-6">
+    <div class="max-w-7xl mx-auto space-y-6">
+      <!-- Selection Panel Section -->
+      <div class="grid md:grid-cols-2 gap-4 sm:gap-6 mx-auto" style="max-width: 960px;">
+        <!-- Color Selection -->
+        <div class="bg-white rounded-lg card p-4 sm:p-6">
+          <label class="text-lg font-semibold flex items-center mb-3">
+            <i class="fas fa-palette mr-2 text-[#3498DB]"></i>
+            Select Luggage Color
+          </label>
+          <div id="colorButtons" class="grid grid-cols-2 gap-2">
+            <!-- Color buttons will be added here by JavaScript -->
+          </div>
+        </div>
+
+        <!-- Type Selection -->
+        <div class="bg-white rounded-lg card p-4 sm:p-6">
+          <label class="text-lg font-semibold flex items-center mb-3">
+            <i class="fas fa-luggage-cart mr-2 text-[#3498DB]"></i>
+            Select Luggage Type
+          </label>
+          <div id="typeButtons" class="flex flex-wrap gap-2">
+            <button data-type="suitcase" class="type-btn px-4 py-2 text-base border rounded-lg bg-gray-50 focus:ring-2 focus:ring-[#3498DB]">Suitcase</button>
+            <button data-type="backpack" class="type-btn px-4 py-2 text-base border rounded-lg bg-gray-50 focus:ring-2 focus:ring-[#3498DB]">Backpack</button>
+            <button data-type="duffel" class="type-btn px-4 py-2 text-base border rounded-lg bg-gray-50 focus:ring-2 focus:ring-[#3498DB]">Duffel Bag</button>
+          </div>
+          <!-- Luggage Preview -->
+          <div class="luggage-preview">
+            <canvas id="selectedLuggagePreview" width="100" height="100"></canvas>
+          </div>
+        </div>
+      </div>
+
+      <!-- Simulation Canvas Section -->
+      <div class="bg-white rounded-lg card p-4 sm:p-6 canvas-container">
+        <h2 class="text-lg font-semibold flex items-center mb-4">
+          <i class="fas fa-eye mr-2 text-[#3498DB]"></i>
+          Baggage Claim Simulation
+        </h2>
+        <div class="relative bg-gray-200" style="height: min(375px,60vh);">
+          <canvas id="baggageClaim" style="position:absolute; left:0; top:0; width:100%; height:100%;"></canvas>
+        </div>
+        <!-- Highlight Toggle  -->
+        <div class="flex items-center justify-end mt-4">
+          <label class="text-base font-semibold flex items-center">
+            <i class="fas fa-circle mr-2 text-[#3498DB]"></i>
+            Highlight My Luggage
+          </label>
+          <label class="toggle-switch ml-4">
+            <input type="checkbox" id="highlightToggle">
+            <span class="slider"></span>
+          </label>
+        </div>
+      </div>
+
+      <!-- Likelihood Panel Section -->
+      <div class="bg-white rounded-lg card p-4 sm:p-6 mx-auto" style="max-width: 960px;">
+        <h3 class="text-lg font-semibold flex items-center mb-2">
+          <i class="fas fa-percentage mr-2 text-[#3498DB]"></i>
+          Spotting Likelihood
+        </h3>
+        <div class="relative pt-1">
+          <div class="overflow-hidden h-2 mb-3 rounded bg-gray-200">
+            <div id="likelihoodBar" class="h-full bg-[#3498DB]" style="width:0%;"></div>
+          </div>
+          <p class="text-xl font-bold text-center"><span id="likelihood">0</span>%</p>
+        </div>
+        <p id="explanation" class="text-sm text-gray-600 mt-2"></p>
+      </div>
+    </div>
+  </main>
+
+  <footer class="text-white py-3 sm:py-4 mt-6 sm:mt-8">
+    <div class="max-w-7xl mx-auto text-center text-base">
+      © 2025 Luggage Picker Simulator. All rights reserved.
+    </div>
+  </footer>
+
+  <script>
+    const colors = [
+      {name:"Black",hex:"#000000",rarity:0.5,emoji:"⚫"},
+      {name:"Red",hex:"#FF0000",rarity:0.6,emoji:"🔴"},
+      {name:"Blue",hex:"#0000FF",rarity:0.6,emoji:"🔵"},
+      {name:"Yellow",hex:"#FFFF00",rarity:0.6,emoji:"🟡"},
+      {name:"Green",hex:"#00FF00",rarity:0.7,emoji:"🟢"},
+      {name:"Orange",hex:"#FFA500",rarity:0.7,emoji:"🟠"},
+      {name:"Purple",hex:"#800080",rarity:0.7,emoji:"🟣"},
+      {name:"Pink",hex:"#FF69B4",rarity:0.8,emoji:"🌸"}
+    ];
+    const luggageTypes = {
+      suitcase:{name:"Suitcase",commonality:0.5},
+      backpack:{name:"Backpack",commonality:0.7},
+      duffel:{name:"Duffel Bag",commonality:0.8}
+    };
+
+    let comboOrder = [];
+    for (let c of colors) {
+      for (let t in luggageTypes) {
+        comboOrder.push({color:c,type:t});
+      }
+    }
+    for (let i=comboOrder.length-1; i>0; i--) {
+      const j = Math.floor(Math.random()*(i+1));
+      [comboOrder[i],comboOrder[j]] = [comboOrder[j],comboOrder[i]];
+    }
+
+    const BELT_SPEED = 2, LUGGAGE_SPEED = BELT_SPEED*0.8;
+    let selectedColor = colors[0], selectedType="suitcase";
+    let luggageItems=[];
+    let highlightSelected = false;
+
+    function brightnessFromHex(hex){
+      const r=parseInt(hex.slice(1,3),16),
+            g=parseInt(hex.slice(3,5),16),
+            b=parseInt(hex.slice(5,7),16);
+      return (0.299*r+0.587*g+0.114*b)/255;
+    }
+
+    // Create color buttons
+    const colorButtonsContainer = document.getElementById("colorButtons");
+    colors.forEach(c => {
+      const button = document.createElement("div");
+      button.className = "color-btn flex items-center bg-gray-50";
+      button.dataset.color = c.hex;
+      button.dataset.rarity = c.rarity;
+      
+      const colorCircle = document.createElement("div");
+      colorCircle.className = "color-circle";
+      colorCircle.style.backgroundColor = c.hex;
+      
+      const colorName = document.createElement("span");
+      colorName.className = "text-sm";
+      colorName.textContent = c.name;
+      
+      button.appendChild(colorCircle);
+      button.appendChild(colorName);
+      colorButtonsContainer.appendChild(button);
+      
+      // Event listener for color selection
+      button.addEventListener("click", () => {
+        selectedColor = colors.find(x => x.hex === c.hex);
+        updateColorButtons();
+        updateLikelihood();
+        drawSelectedLuggage();
+      });
+    });
+
+    function updateColorButtons() {
+      document.querySelectorAll(".color-btn").forEach(btn => {
+        btn.classList.remove("selected");
+        if (btn.dataset.color === selectedColor.hex) {
+          btn.classList.add("selected");
+        }
+      });
+    }
+    // Initial selection
+    updateColorButtons();
+
+    const typeButtons=document.querySelectorAll("#typeButtons button");
+    function updateTypeButtons(){
+      typeButtons.forEach(b=>{
+        b.classList.remove("ring-2","ring-[#3498DB]","bg-[#e8f4fd]");
+        if(b.dataset.type===selectedType) b.classList.add("ring-2","ring-[#3498DB]","bg-[#e8f4fd]");
+      });
+    }
+    typeButtons.forEach(b=>b.addEventListener("click",()=>{
+      selectedType=b.dataset.type; 
+      updateTypeButtons(); 
+      updateLikelihood();
+      drawSelectedLuggage();
+    }));
+    updateTypeButtons();
+
+    // Highlight toggle
+    const highlightToggle = document.getElementById("highlightToggle");
+    highlightToggle.addEventListener("change", () => {
+      highlightSelected = highlightToggle.checked;
+    });
+
+    function calculateLikelihood(){
+      const crowd=0.8+Math.random()*0.4,
+            rarity=selectedColor.rarity,
+            common=luggageTypes[selectedType].commonality,
+            bright=brightnessFromHex(selectedColor.hex),
+            vis=0.6+bright*0.8,
+            raw=rarity*common*crowd*vis;
+      return Math.min(Math.round(raw*100),100);
+    }
+    function updateLikelihood(){
+      const L=calculateLikelihood();
+      document.getElementById("likelihood").textContent=L;
+      const bar=document.getElementById("likelihoodBar");
+      bar.style.width=`${L}%`;
+      bar.style.backgroundColor=L>70?"#27AE60":L>40?"#F39C12":"#E74C3C";
+      const brightTxt=brightnessFromHex(selectedColor.hex)>0.5
+                       ?"Its brightness makes it stand out in a crowd."
+                       :"Darker tone makes it harder to spot.",
+            colorTxt=selectedColor.rarity>0.7
+                       ?"A rare color also boosts visibility."
+                       :"Common color may blend in more.",
+            typeTxt=luggageTypes[selectedType].commonality>0.7
+                       ?"Less common luggage type is easier to notice."
+                       :"Common luggage type may blend in.";
+      document.getElementById("explanation").innerHTML=
+        `The ${selectedColor.name.toLowerCase()} ${selectedType} has a ${L}% chance of being spotted.<br>`
+        +brightTxt+`<br>`+colorTxt+`<br>`+typeTxt;
+    }
+
+    // Initialize the luggage preview canvas
+    const previewCanvas = document.getElementById("selectedLuggagePreview");
+    const previewCtx = previewCanvas.getContext("2d");
+
+    // Function to draw the selected luggage in the preview
+    function drawSelectedLuggage() {
+      previewCtx.clearRect(0, 0, previewCanvas.width, previewCanvas.height);
+      
+      // Set shadow properties
+      previewCtx.shadowColor = "rgba(0,0,0,0.2)";
+      previewCtx.shadowBlur = 10;
+      previewCtx.shadowOffsetY = 5;
+      
+      // Draw the luggage based on selected type and color
+      previewCtx.save();
+      previewCtx.translate(previewCanvas.width/2, previewCanvas.height/2);
+      previewCtx.scale(1.5, 1.5);
+      
+      // Fill with selected color
+      previewCtx.fillStyle = selectedColor.hex;
+      previewCtx.strokeStyle = selectedColor.hex;
+      previewCtx.lineWidth = 2;
+      
+      switch(selectedType) {
+        case "suitcase":
+          previewCtx.fillRect(-20, -25, 40, 50);
+          previewCtx.strokeRect(-20, -25, 40, 50);
+          // Handle
+          previewCtx.fillStyle = "#666";
+          previewCtx.fillRect(-5, -15, 10, 5);
+          break;
+        case "backpack":
+          previewCtx.fillRect(-15, -20, 30, 40);
+          previewCtx.strokeRect(-15, -20, 30, 40);
+          // Straps
+          previewCtx.fillStyle = "#666";
+          previewCtx.fillRect(-5, -25, 10, 10);
+          break;
+        case "duffel":
+          previewCtx.beginPath();
+          previewCtx.ellipse(0, 0, 25, 15, 0, 0, Math.PI * 2);
+          previewCtx.fill();
+          previewCtx.stroke();
+          // Handle
+          previewCtx.fillStyle = "#666";
+          previewCtx.fillRect(-5, -20, 10, 5);
+          break;
+      }
+      
+      previewCtx.restore();
+      previewCtx.shadowColor = "transparent";
+    }
+
+    window.p5Instance = new p5(p=>{
+      p.setup=()=>{
+        const cont=document.querySelector(".relative.bg-gray-200"),
+              cnv=p.createCanvas(cont.offsetWidth,cont.offsetHeight);
+        cnv.style.width="100%"; cnv.style.height="100%"; cnv.parent(cont);
+
+        const N=comboOrder.length;
+        luggageItems = comboOrder.map((combo,i)=>( {
+          x:-50, y:p.height/2,
+          color:combo.color, type:combo.type,
+          speed:LUGGAGE_SPEED,
+          scale:p.random(0.8,1.2),
+          rotation:p.random(-0.1,0.1),
+          active:false,
+          nextEntry: i*1000
+        } ));
+
+        updateLikelihood();
+        drawSelectedLuggage(); // Draw the initial selected luggage
+
+        new ResizeObserver(es=>{
+          es.forEach(e=>{
+            if(e.target.id==="baggageClaim")
+              p.resizeCanvas(e.contentRect.width,e.contentRect.height);
+          });
+        }).observe(document.getElementById("baggageClaim"));
+      };
+
+      p.draw=()=>{
+        p.background("#f8fafc");
+        p.fill("#2C3E50"); p.noStroke();
+        p.rect(0,p.height/2+30,p.width,20);
+        p.stroke("#34495E"); p.strokeWeight(2);
+        for(let x=(p.frameCount*BELT_SPEED)%30; x<p.width; x+=30)
+          p.line(x,p.height/2+30,x,p.height/2+50);
+
+        const now = p.millis();
+        luggageItems.forEach(item=>{
+          if(!item.active && now >= item.nextEntry){
+            item.active = true;
+            item.x = -50;
+            item.nextEntry += comboOrder.length*1000;
+          }
+          if(!item.active) return;
+
+          item.x += item.speed;
+          if(item.x > p.width+50) item.active = false;
+
+          p.drawingContext.shadowColor="rgba(0,0,0,0.2)";
+          p.drawingContext.shadowBlur=10;
+          p.drawingContext.shadowOffsetY=5;
+          p.push();
+            p.translate(item.x,item.y);
+            p.rotate(item.rotation + p.sin(p.frameCount*0.05)*0.02);
+            p.scale(item.scale);
+
+            const sel = item.color.hex===selectedColor.hex && item.type===selectedType;
+            
+            // Draw highlight circle if enabled and this is the selected item
+            if(sel && highlightSelected) {
+              p.noFill();
+              p.stroke("#3498DB");
+              p.strokeWeight(5);
+              p.ellipse(0, 0, 80, 80);
+              
+              // Add pulsing effect to the highlight
+              p.stroke(p.color(52, 152, 219, 100 + 155 * Math.abs(Math.sin(p.frameCount * 0.05))));
+              p.strokeWeight(2);
+              p.ellipse(0, 0, 90, 90);
+            }
+            
+            if(sel) {
+              p.stroke(selectedColor.hex);
+              p.strokeWeight(3);
+            } else p.noStroke();
+
+            p.fill(item.color.hex);
+            switch(item.type){
+              case "suitcase":
+                p.rect(-20,-25,40,50,5);
+                p.fill("#666");p.rect(-5,-15,10,5);
+                break;
+              case "backpack":
+                p.rect(-15,-20,30,40,8);
+                p.fill("#666");p.rect(-5,-25,10,5);
+                break;
+              case "duffel":
+                p.ellipseMode(p.CENTER);
+                p.ellipse(0,0,50,30);
+                p.fill("#666");p.rect(-5,-20,10,5);
+                break;
+            }
+          p.pop();
+          p.drawingContext.shadowColor="transparent";
+        });
+      };
+    });
+  </script>
+</body>
+</html>

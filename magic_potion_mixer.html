@@ -1,0 +1,1066 @@
+<!DOCTYPE html>
+<html lang="en" class="dark">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Arcane Potion Mixer</title>
+  <script src="https://cdn.plot.ly/plotly-latest.min.js"></script>
+  <script src="https://cdn.tailwindcss.com"></script>
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/html2canvas/1.4.1/html2canvas.min.js"></script>
+  <script>
+    tailwind.config = {
+      darkMode: 'class',
+    };
+  </script>
+  <style>
+    @import url('https://fonts.googleapis.com/css2?family=Cinzel+Decorative:wght@400;700&family=Cormorant+Garamond:wght@400;600&display=swap');
+    
+    :root {
+      --primary-bg: #f8f7fc;
+      --secondary-bg: #eae6f9;
+      --accent-color: #7c3aed;
+      --text-color: #2d1f46;
+      --cauldron-color: #dcd3f2; 
+    }
+
+    body {
+      font-family: 'Cormorant Garamond', serif;
+      transition: all 0.5s ease;
+      background-image: url('data:image/svg+xml;base64,PHN2ZyB4bWxucz0iaHR0cDovL3d3dy53My5vcmcvMjAwMC9zdmciIHdpZHRoPSIxMDAlIiBoZWlnaHQ9IjEwMCUiPjxkZWZzPjxwYXR0ZXJuIGlkPSJwYXR0ZXJuIiB3aWR0aD0iNDAiIGhlaWdodD0iNDAiIHBhdHRlcm5Vbml0cz0idXNlclNwYWNlT25Vc2UiIHBhdHRlcm5UcmFuc2Zvcm09InJvdGF0ZSg0NSkiPjxyZWN0IHg9IjAiIHk9IjAiIHdpZHRoPSIyMCIgaGVpZ2h0PSI0MCIgZmlsbD0icmdiYSgyNTUsMjU1LDI1NSwwLjAzKSIvPjwvcGF0dGVybj48L2RlZnM+PHJlY3QgeD0iMCIgeT0iMCIgd2lkdGg9IjEwMCUiIGhlaWdodD0iMTAwJSIgZmlsbD0idXJsKCNwYXR0ZXJuKSIvPjwvc3ZnPg==');
+      background-color: var(--primary-bg);
+      overflow-x: hidden;
+      color: var(--text-color);
+    }
+
+    .dark {
+      --primary-bg: #0a071b;
+      --secondary-bg: #1a103c;
+      --accent-color: #6d28d9;
+      --text-color: #d1c4f7;
+      --cauldron-color: #251a43;
+    }
+
+    h1, h2, h3 {
+      font-family: 'Cinzel Decorative', cursive;
+    }
+
+    .ingredient {
+      transition: all 0.3s cubic-bezier(0.175, 0.885, 0.32, 1.275);
+      cursor: grab;
+      box-shadow: 0 4px 6px rgba(0, 0, 0, 0.2), inset 0 2px 4px rgba(255, 255, 255, 0.3);
+      color: black;
+    }
+
+    .ingredient:hover {
+      transform: translateY(-5px) scale(1.05);
+      box-shadow: 0 10px 15px rgba(0, 0, 0, 0.3), inset 0 2px 4px rgba(255, 255, 255, 0.3);
+    }
+
+    .ingredient:active {
+      cursor: grabbing;
+    }
+
+    #cauldron-container {
+      position: relative;
+      width: 300px;
+      height: 300px;
+      /* Cauldron body */
+      background: 
+      /* Rim highlight */
+      radial-gradient(ellipse at 50% 10%, #8b5a2b 0%, transparent 70%),
+      /* Bowl */
+      radial-gradient(ellipse at 50% 80%, #5c3a21 0%, #3c2415 70%, #2c1810 100%);
+      border-radius: 50% 50% 40% 40% / 40% 40% 60% 60%;
+      box-shadow: 
+      /* Inner shadow */
+      inset 0 -20px 40px rgba(0, 0, 0, 0.8),
+      /* Outer glow */
+      0 10px 20px rgba(0, 0, 0, 0.5);
+      overflow: visible;
+    }
+
+    /* Cauldron legs */
+    #cauldron-container::before {
+      content: '';
+      position: absolute;
+      bottom: -20px;
+      left: 50%;
+      transform: translateX(-50%);
+      width: 200px;
+      height: 20px;
+      background: linear-gradient(45deg, #3c2415 0%, #5c3a21 50%, #3c2415 100%);
+      border-radius: 0 0 10px 10px;
+    }
+
+    /* Cauldron handles */
+    #cauldron-container::after {
+      content: '';
+      position: absolute;
+      top: 20%;
+      left: -10px;
+      width: 20px;
+      height: 40px;
+      background: radial-gradient(ellipse at 50% 50%, #5c3a21 0%, #3c2415 100%);
+      border-radius: 10px;
+      box-shadow: 0 0 10px rgba(0, 0, 0, 0.5);
+    }
+
+    #cauldron-handles {
+      position: absolute;
+      top: 20%;
+      right: -10px;
+      width: 20px;
+      height: 40px;
+      background: radial-gradient(ellipse at 50% 50%, #5c3a21 0%, #3c2415 100%);
+      border-radius: 10px;
+      box-shadow: 0 0 10px rgba(0, 0, 0, 0.5);
+    }
+
+    /*blob*/
+    #cauldron {
+      position: absolute;
+      top: 15%;
+      left: 15%;
+      width: 70%;
+      height: 70%;
+      transition: all 0.3s ease;
+      border-radius: 50%;
+      overflow: hidden;
+    }
+
+    #bubbleChart {
+      pointer-events: none;
+      z-index: 10;
+    }
+
+    @keyframes bubble {
+      0% { opacity: 0.3; transform: translateY(5px); }
+      50% { opacity: 0.6; }
+      100% { opacity: 0.3; transform: translateY(-5px); }
+    }
+
+    .magical-button {
+      transition: all 0.3s ease;
+      position: relative;
+      overflow: hidden;
+    }
+
+    .magical-button::before {
+      content: '';
+      position: absolute;
+      top: -50%;
+      left: -50%;
+      width: 200%;
+      height: 200%;
+      background: radial-gradient(circle, rgba(255,255,255,0.2) 0%, transparent 70%);
+      transform: rotate(0deg);
+      transition: transform 1s ease;
+      pointer-events: none;
+    }
+
+    .magical-button:hover::before {
+      transform: rotate(180deg);
+    }
+
+    .theme-card {
+      transition: all 0.3s ease;
+      cursor: pointer;
+    }
+
+    .theme-card:hover {
+      transform: scale(1.05);
+    }
+
+    .fog-overlay {
+      position: fixed;
+      top: 0;
+      left: 0;
+      width: 100%;
+      height: 100%;
+      background-image: url('data:image/svg+xml;base64,PHN2ZyB4bWxucz0iaHR0cDovL3d3dy53My5vcmcvMjAwMC9zdmciIHdpZHRoPSIxMDAlIiBoZWlnaHQ9IjEwMCUiPjxkZWZzPjxmaWx0ZXIgaWQ9ImYxIiB4PSIwIiB5PSIwIj48ZmVUdXJidWxlbmNlIHR5cGU9ImZyYWN0YWxOb2lzZSIgYmFzZUZyZXF1ZW5jeT0iMC4wMSAwLjAxIiBudW1PY3RhdmVzPSIzIiBzdGl0Y2hUaWxlcz0ic3RpdGNoIi8+PGZlRGlzcGxhY2VtZW50TWFwIGluPSJTb3VyY2VHcmFwaGljIiBzY2FsZT0iMjAgMjAiLz48L2ZpbHRlcj48L2RlZnM+PHJlY3Qgd2lkdGg9IjEwMCUiIGhlaWdodD0iMTAwJSIgZmlsbD0icmdiYSgyNTUsMjU1LDI1NSwwLjAzKSIgZmlsdGVyPSJ1cmwoI2YxKSIvPjwvc3ZnPg==');
+      opacity: 0;
+      pointer-events: none;
+      transition: opacity 1s ease;
+      z-index: 20;
+    }
+
+    .fog-active .fog-overlay {
+      opacity: 0.3;
+    }
+
+    .card {
+      backdrop-filter: blur(5px);
+      background-color: rgba(255, 255, 255, 0.07);
+      border: 1px solid rgba(255, 255, 255, 0.1);
+      box-shadow: 0 8px 32px rgba(0, 0, 0, 0.3);
+    }
+
+    .modal {
+      backdrop-filter: blur(10px);
+      animation: modal-appear 0.5s ease;
+    }
+
+    @keyframes modal-appear {
+      from { opacity: 0; transform: translateY(-20px); }
+      to { opacity: 1; transform: translateY(0); }
+    }
+
+    .chart-container {
+      width: 100%;
+      height: 300px;
+      transition: all 0.5s ease;
+    }
+
+    .ingredient-badge {
+      display: inline-block;
+      margin: 5px;
+      padding: 5px 10px;
+      border-radius: 15px;
+      animation: float 3s ease-in-out infinite;
+      box-shadow: 0 5px 15px rgba(0, 0, 0, 0.3);
+      color: #000;
+    }
+
+    @keyframes float {
+      0% { transform: translateY(0px); }
+      50% { transform: translateY(-10px); }
+      100% { transform: translateY(0px); }
+    }
+
+    .save-button {
+      animation: pulse 2s infinite;
+    }
+
+    @keyframes pulse {
+      0% { box-shadow: 0 0 0 0 rgba(139, 92, 246, 0.7); }
+      70% { box-shadow: 0 0 0 10px rgba(139, 92, 246, 0); }
+      100% { box-shadow: 0 0 0 0 rgba(139, 92, 246, 0); }
+    }
+
+    .dark-theme {
+      background-color: #111827;
+      color: #f3f4f6;
+    }
+
+    .light-theme {
+      background-color: #f3f4f6;
+      color: #1f2937;
+    }
+  </style>
+</head>
+<body class="text-gray-100">
+  <div class="fog-overlay"></div>
+  <canvas id="fogCanvas" class="pointer-events-none fixed top-0 left-0 w-full h-full z-[9999]"></canvas>
+  <!-- Theme Selection Modal -->
+  <div id="themeModal" class="fixed inset-0 flex items-center justify-center z-50">
+    <div class="bg-gradient-to-br dark:from-purple-900 dark:to-indigo-900 from-purple-200 to-indigo-200 p-8 rounded-xl shadow-2xl max-w-4xl w-full modal">
+      <h2 class="text-3xl font-bold text-center mb-8">Choose Your Enchanted Laboratory</h2>
+      
+      <div class="grid grid-cols-1 md:grid-cols-3 gap-6">
+        <div class="theme-card p-4 rounded-lg border border-purple-500 bg-gradient-to-br from-purple-800 to-indigo-900 text-center" data-theme="alchemist">
+          <h3 class="text-xl font-bold mb-2">Alchemist Guild</h3>
+          <p class="text-purple-200">Professional setup with ancient scrolls and refined equipment</p>
+        </div>
+        
+        <div class="theme-card p-4 rounded-lg border border-blue-500 bg-gradient-to-br from-blue-800 to-indigo-900 text-center" data-theme="starry">
+          <h3 class="text-xl font-bold mb-2">Starry Cave</h3>
+          <p class="text-blue-200">Magical cave illuminated by the light of distant constellations</p>
+        </div>
+        
+        <div class="theme-card p-4 rounded-lg border border-emerald-500 bg-gradient-to-br from-emerald-800 to-teal-900 text-center" data-theme="forest">
+          <h3 class="text-xl font-bold mb-2">Enchanted Forest</h3>
+          <p class="text-emerald-200">Mystical forest clearing with nature's purest ingredients</p>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- Potency Modal -->
+  <div id="potencyModal" class="fixed inset-0 flex items-center justify-center z-50 hidden">
+    <div class="modal bg-gradient-to-br from-purple-900 to-indigo-900 p-8 rounded-xl shadow-2xl max-w-lg w-full text-center">
+      <h2 class="text-3xl font-bold mb-4">Potion Results</h2>
+      <div class="text-6xl font-bold mb-6"><span id="potencyScore">0</span>/100</div>
+      <p class="text-xl mb-6" id="potencyDescription">Your potion needs work...</p>
+      <div class="mb-6">
+        <h3 class="text-xl font-bold mb-2">Effects:</h3>
+        <p id="potionEffects" class="text-lg">None yet</p>
+      </div>
+      <button class="magical-button bg-gradient-to-r from-purple-600 to-indigo-600 hover:from-purple-700 hover:to-indigo-700 px-6 py-3 rounded-full text-lg font-bold" onclick="closeModal('potencyModal')">
+        Continue Brewing
+      </button>
+    </div>
+  </div>
+
+  <!-- Main Content -->
+  <div class="min-h-screen p-6 flex flex-col items-center space-y-6 transition-all duration-500 relative">
+    <header class="w-full max-w-6xl flex flex-col mb-6">
+      <div class="w-full flex justify-between items-center mb-4">
+        <h1 class="text-5xl md:text-6xl font-bold text-center w-full">
+          <span class="inline-block transform hover:scale-105 transition-transform" style="font-family: 'Cinzel Decorative', cursive;">Arcane Potion Mixer</span>
+        </h1>
+        <div class="fixed top-4 right-4 flex space-x-4 z-50">
+          <button id="toggleFog" class="magical-button bg-indigo-800 hover:bg-indigo-700 px-3 py-2 rounded-lg">
+            Toggle Mist
+          </button>
+          <button id="toggleTheme" class="magical-button bg-indigo-800 hover:bg-indigo-700 px-3 py-2 rounded-lg">
+            Light/Dark
+          </button>
+          <button id="changeTheme" class="magical-button bg-indigo-800 hover:bg-indigo-700 px-3 py-2 rounded-lg">
+            Change Lab
+          </button>
+        </div>
+      </div>
+    </header>
+
+    <div class="flex flex-col md:flex-row md:space-x-6 w-full max-w-6xl">
+      <!-- Ingredients -->
+      <div class="w-full md:w-1/3 card p-4 rounded-xl mb-6 md:mb-0">
+        <h2 class="text-2xl font-semibold mb-4 border-b border-purple-500 pb-2">Magical Ingredients</h2>
+        <p class="text-sm mb-4 text-gray-500">Drag ingredients to the cauldron (max 5)</p>
+        <div id="ingredientList" class="grid grid-cols-2 gap-3"></div>
+      </div>
+
+      <!-- Cauldron -->
+      <div class="w-full md:w-1/3 flex flex-col items-center justify-center mb-6 md:mb-0">
+        <div class="relative">
+          <div id="cauldron-container" class="cauldron-graphic mb-4">
+            <div id="cauldron-handles"></div>
+            <div id="cauldron" class="flex flex-col items-center justify-center text-center">
+              <div class="text-center relative z-10">
+                <p id="cauldronContent" class="text-black">Drop Ingredients Here</p>
+                <div id="ingredientBadges" class="mt-2"></div>
+              </div>
+            </div>
+          </div>
+
+          <div id="bubbleChart" class="absolute top-0 left-0 w-full h-full" style="display: none;"></div>
+          
+          <div class="mt-4 space-y-3 text-center">
+            <button id="mixButton" class="magical-button bg-gradient-to-r from-purple-600 to-indigo-600 hover:from-purple-700 hover:to-indigo-700 px-6 py-3 rounded-full text-lg font-bold w-full">
+              Mix Potion
+            </button>
+            
+            <div class="flex space-x-2 mt-2">
+              <button id="saveRecipe" class="magical-button save-button bg-indigo-600 hover:bg-indigo-700 px-4 py-2 rounded-lg flex-1">
+                Save Recipe
+              </button>
+              <button id="exportChart" class="magical-button bg-indigo-600 hover:bg-indigo-700 px-4 py-2 rounded-lg flex-1">
+                Export Chart
+              </button>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <!-- Charts -->
+      <div class="w-full md:w-1/3 space-y-4">
+        <div class="card p-4 rounded-xl">
+          <h2 class="text-xl font-semibold mb-2 border-b border-purple-500 pb-2">Magic Potency</h2>
+          <div id="potencyChart" class="chart-container"></div>
+        </div>
+        
+        <div class="card p-4 rounded-xl">
+          <h2 class="text-xl font-semibold mb-2 border-b border-purple-500 pb-2">Taste Profile</h2>
+          <div id="tasteChart" class="chart-container"></div>
+        </div>
+      </div>
+    </div>
+
+    <!-- Saved Recipes -->
+    <div class="w-full max-w-6xl card p-4 rounded-xl mt-4">
+      <h2 class="text-2xl font-semibold mb-4 border-b border-purple-500 pb-2">Saved Recipes</h2>
+      <div id="savedRecipes" class="grid grid-cols-1 md:grid-cols-3 gap-4">
+        <p class="text-gray-300">No saved recipes yet</p>
+      </div>
+    </div>
+  </div>
+  
+  <script>
+    // 'Sweet', 'Bitter', 'Spicy', 'Sour', 'Umami'
+    const ingredients = [
+      { id: 1, name: 'Dragon Scale', magic: 85, taste: 20, tasteProfile: ['Sweet', 'Spicy'], type: 'creature', color: '#e11d48', element: 'fire', rarity: 'rare', description: 'Smoldering scales that emit heat' },
+      { id: 2, name: 'Unicorn Hair', magic: 70, taste: 50, tasteProfile: ['Sour', 'Spicy'], type: 'creature', color: '#a855f7', element: 'light', rarity: 'rare', description: 'Shimmering silver strands of pure magic' },
+      { id: 3, name: 'Phoenix Feather', magic: 90, taste: 30, tasteProfile: ['Umami', 'Spicy'], type: 'creature', color: '#f97316', element: 'fire', rarity: 'very rare', description: 'Eternally warm and glowing' },
+      { id: 4, name: 'Mermaid Tear', magic: 65, taste: 95, tasteProfile: ['Bitter', 'Sour'], type: 'creature', color: '#38bdf8', element: 'water', rarity: 'uncommon', description: 'Sweet liquid that never evaporates' },
+      { id: 5, name: 'Goblin Snot', magic: 25, taste: 5, tasteProfile: ['Sour', 'Spicy'], type: 'creature', color: '#84cc16', element: 'earth', rarity: 'common', description: 'Disgusting but effective binding agent' },
+      { id: 6, name: 'Fairy Dust', magic: 75, taste: 80, tasteProfile: ['Sweet', 'Bitter'], type: 'creature', color: '#facc15', element: 'air', rarity: 'uncommon', description: 'Sparkles even in darkness' },
+      { id: 7, name: 'Moonwort', magic: 60, taste: 45, tasteProfile: ['Sweet', 'Sour'], type: 'herb', color: '#4ade80', element: 'nature', rarity: 'common', description: 'Herb that only grows under moonlight' },
+      { id: 8, name: 'Sapphire Dust', magic: 55, taste: 15, tasteProfile: ['Bitter', 'Umami'], type: 'mineral', color: '#0ea5e9', element: 'water', rarity: 'uncommon', description: 'Pulverized gemstone of clarity' },
+      { id: 9, name: 'Midnight Bloom', magic: 70, taste: 60, tasteProfile: ['Umami', 'Bitter'], type: 'herb', color: '#6366f1', element: 'shadow', rarity: 'rare', description: 'Flowers that only open at midnight' },
+      { id: 10, name: 'Troll Bone', magic: 40, taste: 10, tasteProfile: ['Sweet', 'Bitter'], type: 'creature', color: '#d6d3d1', element: 'earth', rarity: 'common', description: 'Dense and nearly indestructible' },
+      { id: 11, name: 'Mandrake Root', magic: 65, taste: 20, tasteProfile: ['Umami', 'Spicy'], type: 'herb', color: '#92400e', element: 'earth', rarity: 'uncommon', description: 'Screams when uprooted' },
+      { id: 12, name: 'Wyvern Venom', magic: 95, taste: 5, tasteProfile: ['Sweet', 'Sour'], type: 'creature', color: '#15803d', element: 'poison', rarity: 'very rare', description: 'Highly potent and dangerous toxin' },
+      { id: 13, name: 'Star Fragment', magic: 100, taste: 70, tasteProfile: ['Sour', 'Umami'], type: 'celestial', color: '#fef08a', element: 'astral', rarity: 'legendary', description: 'Shard of a fallen star' },
+      { id: 14, name: 'Ghost Whisper', magic: 80, taste: 40, tasteProfile: ['Bitter', 'Spicy'], type: 'ethereal', color: '#cbd5e1', element: 'spirit', rarity: 'rare', description: 'Captured echo of the beyond' },
+      { id: 15, name: 'Kraken Ink', magic: 70, taste: 15, tasteProfile: ['Umami', 'Spicy'], type: 'creature', color: '#1e293b', element: 'water', rarity: 'rare', description: 'Deepest black fluid that moves of its own accord' }
+    ];
+
+    const ingredientList = document.getElementById('ingredientList');
+    const cauldron = document.getElementById('cauldron');
+    const cauldronContent = document.getElementById('cauldronContent');
+    const ingredientBadges = document.getElementById('ingredientBadges');
+    const mixButton = document.getElementById('mixButton');
+    const saveRecipeButton = document.getElementById('saveRecipe');
+    const exportChartButton = document.getElementById('exportChart');
+    const savedRecipesContainer = document.getElementById('savedRecipes');
+    const toggleFogButton = document.getElementById('toggleFog');
+    const toggleThemeButton = document.getElementById('toggleTheme');
+    const themeModal = document.getElementById('themeModal');
+    const changeThemeButton = document.getElementById('changeTheme');
+    const potencyModal = document.getElementById('potencyModal');
+    const potencyScore = document.getElementById('potencyScore');
+    const potencyDescription = document.getElementById('potencyDescription');
+    const potionEffects = document.getElementById('potionEffects');
+
+    let selectedIngredients = [];
+    let currentTheme = 'alchemist';
+    let isDarkMode = true;
+    let isFogActive = false;
+
+    document.querySelectorAll('.theme-card').forEach(card => {
+      card.addEventListener('click', () => {
+        currentTheme = card.dataset.theme;
+        applyTheme(currentTheme);
+        themeModal.classList.add('hidden');
+      });
+    });
+
+    toggleFogButton.addEventListener('click', () => {
+      document.body.classList.toggle('fog-active');
+      isFogActive = !isFogActive;
+    });
+
+    toggleThemeButton.addEventListener('click', () => {
+      isDarkMode = !isDarkMode;
+      applyTheme(currentTheme);
+    });
+
+    changeThemeButton.addEventListener('click', () => {
+      themeModal.classList.remove('hidden');
+    });
+
+    function createBubbleChart() {
+    const data = [{
+      x: Array.from({length: 50}, () => Math.random() * 10 - 5),
+      y: Array.from({length: 50}, () => Math.random() * 10 - 5),
+      mode: 'markers',
+      marker: {
+        size: Array.from({length: 50}, () => Math.random() * 20 + 10),
+        color: Array.from({length: 50}, () => 'rgba(255, 255, 255, 0.7)'),
+        line: {
+          color: 'rgba(255, 255, 255, 0.3)',
+          width: 1
+        }
+      },
+      type: 'scatter'
+    }];
+
+    const layout = {
+      paper_bgcolor: 'rgba(0,0,0,0)',
+      plot_bgcolor: 'rgba(0,0,0,0)',
+      xaxis: { visible: false, range: [-5, 5] },
+      yaxis: { visible: false, range: [-5, 5] },
+      showlegend: false,
+      margin: { t: 0, b: 0, l: 0, r: 0 },
+      height: 300,
+      width: 300
+    };
+
+    const config = {
+      displayModeBar: false,
+      responsive: true
+    };
+
+    Plotly.newPlot('bubbleChart', data, layout, config);
+  }
+
+    function applyTheme(theme) {
+      document.body.className = isDarkMode ? 'dark' : '';
+      if (isFogActive) document.body.classList.add('fog-active');
+      document.body.style.color = isDarkMode ? 'var(--text-color)' : '#2d1f46';
+      
+      switch(theme) {
+        case 'alchemist':
+          if (isDarkMode) {
+            document.body.style.backgroundImage = 'url("data:image/svg+xml;base64,PHN2ZyB4bWxucz0iaHR0cDovL3d3dy53My5vcmcvMjAwMC9zdmciIHdpZHRoPSIxMDAlIiBoZWlnaHQ9IjEwMCUiIHByZXNlcnZlQXNwZWN0UmF0aW89Im5vbmUiPjxkZWZzPjxwYXR0ZXJuIGlkPSJwYXR0ZXJuLWRhcmsiIHBhdHRlcm5Vbml0cz0idXNlclNwYWNlT25Vc2UiIHdpZHRoPSI0MCIgaGVpZ2h0PSI0MCIgcGF0dGVyblRyYW5zZm9ybT0icm90YXRlKDQ1KSI+PHJlY3Qgd2lkdGg9IjIwIiBoZWlnaHQ9IjQwIiBmaWxsPSIjMGYwZDI1Ii8+PC9wYXR0ZXJuPjwvZGVmcz48cmVjdCB3aWR0aD0iMTAwJSIgaGVpZ2h0PSIxMDAlIiBmaWxsPSIjMGEwODE4Ii8+PHJlY3Qgd2lkdGg9IjEwMCUiIGhlaWdodD0iMTAwJSIgZmlsbD0idXJsKCNwYXR0ZXJuLWRhcmspIi8+PC9zdmc+")';
+            cauldron.style.boxShadow =
+              'inset 0 -20px 30px rgba(0, 0, 0, 0.5), 0 15px 25px -5px rgba(0, 0, 0, 0.3), 0 0 20px rgba(138, 92, 246, 0.4)';
+          } else {
+            document.body.style.backgroundImage = 'url("data:image/svg+xml;base64,PHN2ZyB4bWxucz0iaHR0cDovL3d3dy53My5vcmcvMjAwMC9zdmciIHdpZHRoPSIxMDAlIiBoZWlnaHQ9IjEwMCUiIHByZXNlcnZlQXNwZWN0UmF0aW89Im5vbmUiPjxkZWZzPjxwYXR0ZXJuIGlkPSJwYXR0ZXJuLWxpZ2h0IiBwYXR0ZXJuVW5pdHM9InVzZXJTcGFjZU9uVXNlIiB3aWR0aD0iNDAiIGhlaWdodD0iNDAiIHBhdHRlcm5UcmFuc2Zvcm09InJvdGF0ZSg0NSkiPjxyZWN0IHdpZHRoPSIyMCIgaGVpZ2h0PSI0MCIgZmlsbD0iI2U0ZDlmOCIvPjwvcGF0dGVybj48L2RlZnM+PHJlY3Qgd2lkdGg9IjEwMCUiIGhlaWdodD0iMTAwJSIgZmlsbD0iI2ZhZjdmZiIvPjxyZWN0IHdpZHRoPSIxMDAlIiBoZWlnaHQ9IjEwMCUiIGZpbGw9InVybCgjcGF0dGVybi1saWdodCkiLz48L3N2Zz4=")';
+            cauldron.style.boxShadow =
+              'inset 0 -20px 30px rgba(255, 255, 255, 0.5), 0 15px 25px -5px rgba(255, 255, 255, 0.3), 0 0 20px rgba(124, 58, 237, 0.4)';
+          }
+          break;
+
+        case 'starry':
+          if (isDarkMode) {
+            document.body.style.backgroundImage = 'url("data:image/svg+xml;base64,PHN2ZyB4bWxucz0iaHR0cDovL3d3dy53My5vcmcvMjAwMC9zdmciIHdpZHRoPSIxMDAlIiBoZWlnaHQ9IjEwMCUiPjxkZWZzPjxwYXR0ZXJuIGlkPSJzdGFycyIgd2lkdGg9IjEwMCIgaGVpZ2h0PSIxMDAiIHBhdHRlcm5Vbml0cz0idXNlclNwYWNlT25Vc2UiPjxjaXJjbGUgY3g9IjUiIGN5PSI1IiByPSIxIiBmaWxsPSJyZ2JhKDI1NSwyNTUsMjU1LDAuNSkiLz48Y2lyY2xlIGN4PSIyNSIgY3k9IjE1IiByPSIwLjUiIGZpbGw9InJnYmEoMjU1LDI1NSwyNTUsMC4zKSIvPjxjaXJjbGUgY3g9IjQ1IiBjeT0iMzUiIHI9IjEiIGZpbGw9InJnYmEoMjU1LDI1NSwyNTUsMC40KSIvPjxjaXJjbGUgY3g9IjY1IiBjeT0iNzUiIHI9IjAuNSIgZmlsbD0icmdiYSgyNTUsMjU1LDI1NSwwLjIpIi8+PGNpcmNsZSBjeD0iODUiIGN5PSI0NSIgcj0iMSIgZmlsbD0icmdiYSgyNTUsMjU1LDI1NSwwLjMpIi8+PC9wYXR0ZXJuPjwvZGVmcz48cmVjdCB3aWR0aD0iMTAwJSIgaGVpZ2h0PSIxMDAlIiBmaWxsPSIjMDkwODJjIi8+PHJlY3Qgd2lkdGg9IjEwMCUiIGhlaWdodD0iMTAwJSIgZmlsbD0idXJsKCNzdGFycykiLz48L3N2Zz4=")';
+            cauldron.style.boxShadow =
+              'inset 0 -20px 30px rgba(0, 0, 0, 0.5), 0 15px 25px -5px rgba(0, 0, 0, 0.3), 0 0 20px rgba(59, 130, 246, 0.6)';
+          } else {
+            document.body.style.backgroundImage = 'url("data:image/svg+xml;base64,PHN2ZyB4bWxucz0iaHR0cDovL3d3dy53My5vcmcvMjAwMC9zdmciIHdpZHRoPSIxMDAlIiBoZWlnaHQ9IjEwMCUiPjxkZWZzPjxwYXR0ZXJuIGlkPSJzdGFycyIgd2lkdGg9IjEwMCIgaGVpZ2h0PSIxMDAiIHBhdHRlcm5Vbml0cz0idXNlclNwYWNlT25Vc2UiPjxjaXJjbGUgY3g9IjUiIGN5PSI1IiByPSIxIiBmaWxsPSJyZ2JhKDgwLDgwLDEzMCwwLjYpIi8+PGNpcmNsZSBjeD0iMjUiIGN5PSIxNSIgcj0iMC41IiBmaWxsPSJyZ2JhKDgwLDgwLDEzMCwwLjQpIi8+PGNpcmNsZSBjeD0iNDUiIGN5PSIzNSIgcj0iMSIgZmlsbD0icmdiYSg4MCw4MCwxMzAsMC41KSIvPjxjaXJjbGUgY3g9IjY1IiBjeT0iNzUiIHI9IjAuNSIgZmlsbD0icmdiYSg4MCw4MCwxMzAsMC4zKSIvPjxjaXJjbGUgY3g9Ijg1IiBjeT0iNDUiIHI9IjEiIGZpbGw9InJnYmEoODAsODAsMTMwLDAuNCkiLz48L3BhdHRlcm4+PC9kZWZzPjxyZWN0IHdpZHRoPSIxMDAlIiBoZWlnaHQ9IjEwMCUiIGZpbGw9IiNmNWY1ZmYiLz48cmVjdCB3aWR0aD0iMTAwJSIgaGVpZ2h0PSIxMDAlIiBmaWxsPSJ1cmwoI3N0YXJzKSIvPjwvc3ZnPg==")';
+            cauldron.style.boxShadow =
+              'inset 0 -20px 30px rgba(255, 255, 255, 0.4), 0 15px 25px -5px rgba(255, 255, 255, 0.3), 0 0 20px rgba(96, 165, 250, 0.6)';
+          }
+          break;
+
+        case 'forest':
+          if (isDarkMode) {
+            document.body.style.backgroundImage = 'url("data:image/svg+xml;base64,PHN2ZyB4bWxucz0iaHR0cDovL3d3dy53My5vcmcvMjAwMC9zdmciIHdpZHRoPSIxMDAlIiBoZWlnaHQ9IjEwMCUiPjxkZWZzPjxwYXR0ZXJuIGlkPSJsZWF2ZXMiIHdpZHRoPSI2MCIgaGVpZ2h0PSI2MCIgcGF0dGVyblVuaXRzPSJ1c2VyU3BhY2VPblVzZSI+PHBhdGggZD0iTTMwLDMwIEwyMCwyMCBMMzAsMTAgTDQwLDIwIFoiIGZpbGw9InJnYmEoMTY3LDI0MywxNTgsMC4wNykiIHRyYW5zZm9ybT0icm90YXRlKDQ1IDMwIDMwKSIvPjwvcGF0dGVybj48L2RlZnM+PHJlY3Qgd2lkdGg9IjEwMCUiIGhlaWdodD0iMTAwJSIgZmlsbD0iIzA0MjQxNCIvPjxyZWN0IHdpZHRoPSIxMDAlIiBoZWlnaHQ9IjEwMCUiIGZpbGw9InVybCgjbGVhdmVzKSIvPjwvc3ZnPg==")';
+            cauldron.style.boxShadow =
+              'inset 0 -20px 30px rgba(0, 0, 0, 0.5), 0 15px 25px -5px rgba(0, 0, 0, 0.3), 0 0 20px rgba(52, 211, 153, 0.5)';
+          } else {
+            document.body.style.backgroundImage = 'url("data:image/svg+xml;base64,PHN2ZyB4bWxucz0iaHR0cDovL3d3dy53My5vcmcvMjAwMC9zdmciIHdpZHRoPSIxMDAlIiBoZWlnaHQ9IjEwMCUiPjxkZWZzPjxwYXR0ZXJuIGlkPSJsZWF2ZXMiIHdpZHRoPSI2MCIgaGVpZ2h0PSI2MCIgcGF0dGVyblVuaXRzPSJ1c2VyU3BhY2VPblVzZSI+PHBhdGggZD0iTTMwLDMwIEwyMCwyMCBMMzAsMTAgTDQwLDIwIFoiIGZpbGw9InJnYmEoNzAsMTYwLDExMCwwLjI1KSIgdHJhbnNmb3JmPSJyb3RhdGUoNDUgMzAgMzApIi8+PC9wYXR0ZXJuPjwvZGVmcz48cmVjdCB3aWR0aD0iMTAwJSIgaGVpZ2h0PSIxMDAlIiBmaWxsPSIjZTZmZmYxIi8+PHJlY3Qgd2lkdGg9IjEwMCUiIGhlaWdodD0iMTAwJSIgZmlsbD0idXJsKCNsZWF2ZXMpIi8+PC9zdmc+")';
+            cauldron.style.boxShadow =
+              'inset 0 -20px 30px rgba(255, 255, 255, 0.4), 0 15px 25px -5px rgba(255, 255, 255, 0.3), 0 0 20px rgba(110, 231, 183, 0.5)';
+          }
+          break;
+      }
+    }
+
+    function renderIngredients() {
+      ingredientList.innerHTML = '';
+      ingredients.forEach(ing => {
+        const div = document.createElement('div');
+        div.className = 'ingredient p-3 rounded-lg text-center transition transform duration-200';
+        div.style.backgroundColor = ing.color;
+        div.draggable = true;
+        
+        div.innerHTML = `
+          <div class="font-bold">${ing.name}</div>
+          <div class="text-xs opacity-80">${ing.type} • ${ing.rarity}</div>
+          <div class="flex justify-between mt-1 text-xs">
+            <span>✨ ${ing.magic}</span>
+            <span>👅 ${ing.taste}</span>
+          </div>
+        `;
+        
+        div.addEventListener('dragstart', (e) => {
+          e.dataTransfer.setData('ingredient', JSON.stringify(ing));
+          div.classList.add('opacity-50');
+        });
+        
+        div.addEventListener('dragend', () => {
+          div.classList.remove('opacity-50');
+        });
+        
+        ingredientList.appendChild(div);
+      });
+    }
+
+    function setupDropZone() {
+    const cauldronContainer = document.getElementById('cauldron-container');
+    
+    cauldronContainer.addEventListener('dragover', (e) => {
+      e.preventDefault();
+      cauldron.classList.add('border-purple-300');
+    });
+    
+    cauldronContainer.addEventListener('dragleave', () => {
+      cauldron.classList.remove('border-purple-300');
+    });
+    
+    cauldronContainer.addEventListener('drop', (e) => {
+      e.preventDefault();
+      cauldron.classList.remove('border-purple-300');
+      
+      const ingData = e.dataTransfer.getData('ingredient');
+      if (ingData) {
+        const ingredient = JSON.parse(ingData);
+        
+        if (selectedIngredients.length < 5) {
+          addIngredient(ingredient);
+        } else {
+          shakeElement(cauldron);
+          showToast("Cauldron is full! (Max 5 ingredients)");
+        }
+      }
+    });
+  }
+
+    function addIngredient(ingredient) {
+      selectedIngredients.push(ingredient);
+      updateCauldron();
+    }
+
+    function updateCauldron() {
+      if (selectedIngredients.length === 0) {
+        cauldronContent.innerHTML = `<p class="text-black">Drop Ingredients Here</p><div id="ingredientBadges" class="mt-2"></div>`;
+        ingredientBadges.innerHTML = '';
+        cauldron.style.backgroundColor = 'var(--cauldron-color)';
+        return;
+      }
+      
+      if (selectedIngredients.length > 0) {
+        const colorStops = selectedIngredients.map((ing, i) => {
+          const percent = (i / (selectedIngredients.length - 1)) * 100;
+          return `${ing.color} ${percent}%`;
+        }).join(', ');
+        
+        cauldron.style.backgroundColor = selectedIngredients.length > 1 
+          ? `linear-gradient(135deg, ${colorStops})` 
+          : selectedIngredients[0].color;
+      }
+      
+      ingredientBadges.innerHTML = '';
+      selectedIngredients.forEach((ing, index) => {
+        const badge = document.createElement('div');
+        badge.className = 'ingredient-badge text-xs';
+        badge.style.backgroundColor = ing.color;
+        badge.style.animationDelay = `${index * 0.2}s`;
+        badge.innerHTML = `${ing.name} <span class="cursor-pointer ml-1" onclick="removeIngredient(${index})">✕</span>`;
+        ingredientBadges.appendChild(badge);
+      });
+      
+      cauldron.classList.add('bubbling');
+    }
+
+    window.removeIngredient = function(index) {
+      selectedIngredients.splice(index, 1);
+      updateCauldron();
+    };
+
+    function mixPotion() {
+    if (selectedIngredients.length === 0) {
+      showToast("Add ingredients first!");
+      shakeElement(cauldron);
+      return;
+    }
+    
+    // Show the bubble chart
+    const bubbleChart = document.getElementById('bubbleChart');
+    bubbleChart.style.display = 'block';
+    createBubbleChart();
+    
+    // Animate bubbles rising
+    let animationFrames = [];
+    for (let i = 0; i < 10; i++) {
+      animationFrames.push({
+        data: [{
+          y: Array.from({length: 50}, () => Math.random() * 10 + i * 2)
+        }]
+      });
+    }
+    
+    Plotly.animate('bubbleChart', animationFrames, {
+      frame: { duration: 200 },
+      transition: { duration: 200 },
+      mode: 'immediate'
+    });
+    
+    cauldron.classList.add('mixing');
+    
+    // Hide bubble chart and show results
+    setTimeout(() => {
+      bubbleChart.style.display = 'none';
+      cauldron.classList.remove('mixing');
+      
+      const baseScore = calculatePotencyScore();
+      const compatibilityBonus = calculateCompatibilityBonus();
+      const finalScore = Math.min(100, Math.round(baseScore + compatibilityBonus));
+      const effects = generatePotionEffects();
+      
+      let description;
+      if (finalScore >= 90) {
+        description = "Masterwork! This potion radiates with extraordinary power!";
+      } else if (finalScore >= 75) {
+        description = "Excellent brew! A potion of remarkable quality.";
+      } else if (finalScore >= 50) {
+        description = "A decent concoction with noticeable magical properties.";
+      } else if (finalScore >= 25) {
+        description = "A weak mixture with mild effects.";
+      } else {
+        description = "This barely qualifies as a magical potion...";
+      }
+      
+      potencyScore.textContent = finalScore;
+      potencyDescription.textContent = description;
+      potionEffects.textContent = effects.join(", ");
+      
+      updatePotencyChart(finalScore);
+      updateTasteChart();
+      
+      potencyModal.classList.remove('hidden');
+    }, 2000);
+  }
+
+    function calculatePotencyScore() {
+      if (selectedIngredients.length === 0) return 0;
+      const totalMagic = selectedIngredients.reduce((sum, ing) => sum + ing.magic, 0);
+      return Math.round(totalMagic / selectedIngredients.length);
+    }
+
+    function calculateCompatibilityBonus() {
+      let bonus = 0;
+      const elements = selectedIngredients.map(ing => ing.element);
+      const uniqueElements = new Set(elements);
+      
+      if (uniqueElements.size >= 3) bonus += 5;
+      
+      const complementaryPairs = [
+        ['fire', 'water'],
+        ['earth', 'air'],
+        ['light', 'shadow'],
+        ['nature', 'astral']
+      ];
+      
+      for (const [elem1, elem2] of complementaryPairs) {
+        if (elements.includes(elem1) && elements.includes(elem2)) {
+          bonus += 10; 
+        }
+      }
+      
+      const rarityBonus = selectedIngredients.reduce((sum, ing) => {
+        if (ing.rarity === 'legendary') return sum + 15;
+        if (ing.rarity === 'very rare') return sum + 10;
+        if (ing.rarity === 'rare') return sum + 5;
+        return sum;
+      }, 0);
+      
+      return Math.min(30, bonus + rarityBonus);
+    }
+
+    function generatePotionEffects() {
+      const effects = [];
+      const elementEffects = {
+        'fire': 'Heat Generation',
+        'water': 'Flowing Movement',
+        'earth': 'Stability',
+        'air': 'Lightness',
+        'light': 'Illumination',
+        'shadow': 'Concealment',
+        'nature': 'Growth',
+        'astral': 'Clairvoyance',
+        'spirit': 'Etherealness',
+        'poison': 'Toxicity'
+      };
+      
+      const elements = selectedIngredients.map(ing => ing.element);
+      const uniqueElements = [...new Set(elements)];
+      
+      uniqueElements.forEach(element => {
+        if (elementEffects[element]) {
+          effects.push(elementEffects[element]);
+        }
+      });
+      
+      if (elements.includes('fire') && elements.includes('water')) {
+        effects.push('Steam Production');
+      }
+      
+      if (elements.includes('light') && elements.includes('shadow')) {
+        effects.push('Illusion');
+      }
+      
+      if (effects.length === 0) {
+        effects.push('Minor Bubbling');
+      }
+      
+      return effects;
+    }
+
+    function updatePotencyChart(score) {
+      const data = [{
+        type: 'indicator',
+        mode: 'gauge+number',
+        value: score,
+        title: { text: "Magic Potency", font: { color: '#888888' } },
+        gauge: {
+          axis: { range: [0, 100], tickcolor: '#888888' },
+          bar: { color: "#8b5cf6" },
+          bgcolor: "rgba(0,0,0,0.2)",
+          bordercolor: "rgba(255,255,255,0.2)",
+          steps: [
+            { range: [0, 25], color: "#312e81" },
+            { range: [25, 50], color: "#4338ca" },
+            { range: [50, 75], color: "#6d28d9" },
+            { range: [75, 100], color: "#8b5cf6" }
+          ]
+        }
+      }];
+
+      const layout = { 
+        paper_bgcolor: 'rgba(0,0,0,0)',
+        plot_bgcolor: 'rgba(0,0,0,0)',
+        font: { color: '#888888' },
+        width: null,
+        height: 300,
+        margin: { t: 25, b: 25, l: 40, r: 40 },
+        autosize: true
+      };
+
+      Plotly.newPlot('potencyChart', data, layout, {displayModeBar: false, responsive: true});
+    }
+
+    function updateTasteChart() {
+      if (selectedIngredients.length === 0) {
+        Plotly.purge('tasteChart');
+        return;
+      }
+
+      const flavorProfiles = [
+        'Sweet', 'Bitter', 'Spicy', 'Sour', 'Umami'
+      ];
+    
+      const flavorScores = flavorProfiles.map(() => 0);
+      
+      selectedIngredients.forEach(ing => {
+        const tasteValue = ing.taste / 100;
+
+        ing.tasteProfile?.forEach((flavor, i) => {
+          const flavorIndex = flavorProfiles.indexOf(flavor);
+          if (flavorIndex !== -1) {
+            const weight = i === 0 ? 0.7 : 0.3;
+            flavorScores[flavorIndex] += tasteValue * weight;
+          }
+        });
+      });
+      
+      const maxScore = Math.max(...flavorScores);
+      if (maxScore > 0) {
+        for (let i = 0; i < flavorScores.length; i++) {
+          flavorScores[i] = Math.round((flavorScores[i] / maxScore) * 100);
+        }
+      }
+      
+      const data = [{
+        x: flavorProfiles,
+        y: flavorScores.map(() => 0), 
+        type: 'bar',
+        marker: {
+          color: ['#ec4899', '#8b5cf6', '#ef4444', '#3b82f6', '#10b981']
+        }
+      }];
+      
+      const layout = {
+        paper_bgcolor: 'rgba(0,0,0,0)',
+        plot_bgcolor: 'rgba(0,0,0,0)',
+        font: { color: '#e2d9f3' },
+        margin: { t: 10, b: 40, l: 40, r: 10 },
+        xaxis: { gridcolor: 'rgba(255,255,255,0.1)' },
+        yaxis: { gridcolor: 'rgba(255,255,255,0.1)', range: [0, 100] },
+        bargap: 0.3
+      };
+      
+      const config = {
+        displayModeBar: false,
+        responsive: true
+      };
+      
+      Plotly.newPlot('tasteChart', data, layout, config).then(() => {
+        Plotly.animate('tasteChart', {
+          data: [{ y: flavorScores }],
+          traces: [0],
+          layout: {}
+        }, {
+          transition: { duration: 1000, easing: 'elastic' },
+          frame: { duration: 1000 }
+        });
+      });
+    }
+
+    function saveRecipe() {
+      if (selectedIngredients.length === 0) {
+        showToast("Add ingredients first!");
+        return;
+      }
+      
+      const savedRecipes = JSON.parse(localStorage.getItem('potionRecipes') || '[]');
+      
+      const recipe = {
+        id: Date.now(),
+        ingredients: selectedIngredients,
+        potency: calculatePotencyScore() + calculateCompatibilityBonus(),
+        timestamp: new Date().toISOString()
+      };
+      
+      savedRecipes.push(recipe);
+      localStorage.setItem('potionRecipes', JSON.stringify(savedRecipes));
+      
+      showToast("Recipe saved successfully!");
+      loadSavedRecipes();
+    }
+
+    function loadSavedRecipes() {
+      const savedRecipes = JSON.parse(localStorage.getItem('potionRecipes') || '[]');
+      
+      if (savedRecipes.length === 0) {
+        savedRecipesContainer.innerHTML = '<p class="text-gray-300">No saved recipes yet</p>';
+        return;
+      }
+      
+      savedRecipesContainer.innerHTML = '';
+      
+      savedRecipes.sort((a, b) => new Date(b.timestamp) - new Date(a.timestamp))
+                  .slice(0, 6) 
+                  .forEach(recipe => {
+        const div = document.createElement('div');
+        div.className = 'p-3 rounded-lg bg-gradient-to-br from-purple-900/50 to-indigo-900/50 border border-purple-700/30';
+        
+        const colorBars = recipe.ingredients.map(ing => 
+          `<div class="h-2 rounded-full" style="background-color: ${ing.color}; width: ${100/recipe.ingredients.length}%"></div>`
+        ).join('');
+        
+        div.innerHTML = `
+          <div class="flex mb-2">${colorBars}</div>
+          <div class="flex justify-between items-center">
+            <div>
+              <h3 class="font-semibold">Potion #${recipe.id.toString().substring(recipe.id.toString().length - 4)}</h3>
+              <p class="text-xs text-gray-300">${new Date(recipe.timestamp).toLocaleDateString()}</p>
+            </div>
+            <div class="text-sm font-bold">⭐ ${recipe.potency}</div>
+          </div>
+          <p class="text-xs mt-2">${recipe.ingredients.map(i => i.name).join(', ')}</p>
+          <button class="w-full mt-2 text-xs text-center py-1 bg-indigo-900 hover:bg-indigo-800 rounded-lg" 
+                  onclick="loadRecipe(${recipe.id})">Load Recipe</button>
+        `;
+        
+        savedRecipesContainer.appendChild(div);
+      });
+    }
+
+    window.loadRecipe = function(recipeId) {
+      const savedRecipes = JSON.parse(localStorage.getItem('potionRecipes') || '[]');
+      const recipe = savedRecipes.find(r => r.id === recipeId);
+      
+      if (recipe) {
+        selectedIngredients = [...recipe.ingredients];
+        updateCauldron();
+        showToast("Recipe loaded into cauldron!");
+      }
+    };
+
+    function exportChartImage() {
+      if (selectedIngredients.length === 0) {
+        showToast("Mix a potion first!");
+        return;
+      }
+      
+      const potencyChartNode = document.getElementById('potencyChart');
+      
+      html2canvas(potencyChartNode).then(canvas => {
+        const link = document.createElement('a');
+        link.download = `potion-chart-${Date.now()}.png`;
+        link.href = canvas.toDataURL();
+        link.click();
+      });
+    }
+
+    function showToast(message) {
+      const existingToast = document.querySelector('.toast-message');
+      if (existingToast) {
+        existingToast.remove();
+      }
+      
+      const toast = document.createElement('div');
+      toast.className = 'toast-message fixed bottom-4 left-1/2 transform -translate-x-1/2 bg-purple-900 text-white px-6 py-3 rounded-full shadow-lg z-50';
+      toast.textContent = message;
+      
+      document.body.appendChild(toast);
+      
+      setTimeout(() => {
+        toast.style.opacity = '0';
+        setTimeout(() => toast.remove(), 500);
+      }, 3000);
+    }
+
+    function shakeElement(element) {
+      element.classList.add('animate-shake');
+      setTimeout(() => element.classList.remove('animate-shake'), 500);
+    }
+
+    window.closeModal = function(modalId) {
+      document.getElementById(modalId).classList.add('hidden');
+    };
+
+    function init() {
+      renderIngredients();
+      setupDropZone();
+      
+      mixButton.addEventListener('click', mixPotion);
+      saveRecipeButton.addEventListener('click', saveRecipe);
+      exportChartButton.addEventListener('click', exportChartImage);
+      
+      updatePotencyChart(0);
+      
+      loadSavedRecipes();
+      
+      const styleSheet = document.styleSheets[0];
+      styleSheet.insertRule(`
+        @keyframes animate-shake {
+          0% { transform: translateX(0); }
+          25% { transform: translateX(-5px); }
+          50% { transform: translateX(5px); }
+          75% { transform: translateX(-5px); }
+          100% { transform: translateX(0); }
+        }
+      `, styleSheet.cssRules.length);
+      
+      styleSheet.insertRule(`
+        .animate-shake {
+          animation: animate-shake 0.5s ease-in-out;
+        }
+      `, styleSheet.cssRules.length);
+    }
+
+    const fogCanvas = document.getElementById('fogCanvas');
+    const ctx = fogCanvas.getContext('2d');
+    function resizeCanvas() {
+      fogCanvas.width = window.innerWidth;
+      fogCanvas.height = window.innerHeight;
+    }
+    window.addEventListener('resize', resizeCanvas);
+    resizeCanvas();
+  
+    let fogParticles = Array.from({ length: 60 }, () => ({
+      x: Math.random() * fogCanvas.width,
+      y: Math.random() * fogCanvas.height,
+      radius: 60 + Math.random() * 60,
+      opacity: 0.15 + Math.random() * 0.3,
+      speedX: -0.2 + Math.random() * 0.4,
+      speedY: -0.1 + Math.random() * 0.2
+    }));
+  
+    function drawFog() {
+      ctx.clearRect(0, 0, fogCanvas.width, fogCanvas.height);
+      
+      const isDark = document.documentElement.classList.contains('dark');
+      const fogColor = isDark ? 'rgba(110,110,110,' : 'rgba(30,30,30,';
+      fogParticles.forEach(p => {
+        ctx.beginPath();
+        let gradient = ctx.createRadialGradient(p.x, p.y, p.radius * 0.3, p.x, p.y, p.radius);
+        gradient.addColorStop(0, `${fogColor}${isDark?p.opacity:0.3})`);
+        gradient.addColorStop(1, `${isDark?'rgba(110,110,110,0)':'rgba(0,0,0,0)'}`);
+        ctx.fillStyle = gradient;
+        ctx.arc(p.x, p.y, p.radius, 0, Math.PI * 2);
+        ctx.fill();
+  
+        p.x += p.speedX;
+        p.y += p.speedY;
+  
+        if (p.x < -p.radius) p.x = fogCanvas.width + p.radius;
+        if (p.x > fogCanvas.width + p.radius) p.x = -p.radius;
+        if (p.y < -p.radius) p.y = fogCanvas.height + p.radius;
+        if (p.y > fogCanvas.height + p.radius) p.y = -p.radius;
+      });
+  
+      requestAnimationFrame(drawFog);
+    }
+  
+    drawFog();
+  
+    const fogCanvasToggle = document.getElementById('toggleFog');
+    let fogVisible = false;
+  
+    fogCanvasToggle.addEventListener('click', () => {
+      fogVisible = !fogVisible;
+      fogCanvas.style.opacity = fogVisible ? '0.5' : '0';
+    });
+  
+    fogCanvas.style.transition = 'opacity 1s ease';
+    fogCanvas.style.opacity = '0';
+
+    init();
+  </script>
+</body>
+</html>

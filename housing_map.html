@@ -1,0 +1,380 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>US Housing Price Dashboard</title>
+    
+    <!-- Tailwind CSS -->
+    <script src="https://cdn.tailwindcss.com"></script>
+    
+    <!-- D3.js & TopoJSON -->
+    <script src="https://d3js.org/d3.v7.min.js"></script>
+    <script src="https://d3js.org/topojson.v3.min.js"></script>
+
+    <!-- Google Fonts -->
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Montserrat:ital,wght@0,100..900;1,100..900&display=swap" rel="stylesheet">
+
+    <style>
+        body {
+            font-family: "Montserrat", sans-serif;
+            background-color: #f5f7f9;
+        }
+        .state {
+            stroke: #424141;
+            stroke-width: 0.2px;
+            transition: all 0.2s ease;
+        }
+        .state:hover {
+            stroke: #000;
+            stroke-width: 0.5px;
+            filter: brightness(1.2);
+        }
+        .tooltip {
+            position: absolute;
+            visibility: hidden;
+            background-color: rgba(17, 24, 39, 0.9);
+            color: white;
+            padding: 8px 12px;
+            border-radius: 6px;
+            font-size: 14px;
+            z-index: 100;
+            pointer-events: none;
+            white-space: nowrap;
+            box-shadow: 0 10px 15px -3px rgba(0, 0, 0, 0.1);
+        }
+        .tooltip::after {
+            content: "";
+            position: absolute;
+            margin-left: -5px;
+            border-width: 5px;
+            border-style: solid;
+            border-color: rgba(17, 24, 39, 0.9) transparent transparent transparent;
+        }
+        .dashboard-card {
+            transition: all 0.3s ease;
+        }
+        .dashboard-card:hover {
+            transform: translateY(-5px);
+            box-shadow: 0 20px 25px -5px rgba(0, 0, 0, 0.1), 0 10px 10px -5px rgba(0, 0, 0, 0.04);
+        }
+        .reset-zoom {
+            position: absolute;
+            bottom: 10px;
+            right: 10px;
+            background: white;
+            color: #333;
+            border: 1px solid #ddd;
+            border-radius: 4px;
+            padding: 5px 10px;
+            font-size: 12px;
+            cursor: pointer;
+            box-shadow: 0 2px 5px rgba(0,0,0,0.1);
+            z-index: 10;
+            transition: all 0.2s;
+        }
+        .reset-zoom:hover {
+            background: #f0f0f0;
+        }
+        #map {
+            cursor: grab;
+        }
+        #map:active {
+            cursor: grabbing;
+        }
+        .title-line {
+            display: flex;
+            align-items: center;
+            width: 100%;
+            margin-bottom: 16px;
+        }
+        .title-line h2 {
+            white-space: nowrap;
+            margin-right: 16px;
+        }
+        .title-line::after {
+            content: "";
+            flex-grow: 1;
+            height: 1px;
+            background-color: #d1d5db;
+        }
+    </style>
+</head>
+<body class="bg-gray-50 flex items-center justify-center min-h-screen py-8">
+    <div class="max-w-6xl w-full px-4">
+        <!-- Title Board -->
+        <div class="bg-green-800 rounded-xl shadow-xl py-12 px-4 mb-6 text-center">
+            <h1 class="text-4xl font-bold text-white">US Housing Prices Across States</h1>
+        </div>
+        
+        <!-- Map Container with Shadow -->
+        <div class="bg-white rounded-xl shadow-xl p-6 mb-8 relative">
+            <div id="map-container" class="relative">
+                <svg id="map"></svg>
+                <div id="tooltip" class="tooltip"></div>
+                <button class="reset-zoom" id="reset-zoom">Reset View</button>
+            </div>
+
+            <!-- Legend -->
+            <div class="mt-6 mb-2">
+                <p class="text-sm text-gray-700 text-center mb-2">Median Home Prices by State ($)</p>
+                <div class="flex flex-col items-center">
+                    <div class="h-3 w-64 rounded-sm" id="gradient-bar"></div>
+                    <div class="relative w-64 h-6">
+                        <div id="legend-ticks" class="w-full flex justify-between text-xs text-gray-600"></div>
+                    </div>
+                </div>
+            </div>
+            <div class="text-right">
+                <span class="text-xs text-gray-400">Data from Redfin</span>
+            </div>
+        </div>
+        
+        <!-- Title for Stats Cards -->
+        <div class="title-line">
+            <h2 class="text-xl font-bold text-gray-800">Housing Prices Overview</h2>
+        </div>
+        
+        <!-- Stats Cards -->
+        <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6 mb-8">
+            <!-- Average Price Card - Darkest Green -->
+            <div id="avg-price-card" class="dashboard-card bg-white rounded-lg shadow-lg p-6 border-t-4 border-green-800">
+                <h3 class="text-lg font-semibold text-gray-700 mb-2">Average Price</h3>
+                <p id="avg-price" class="text-3xl font-bold text-green-800">$0</p>
+                <p class="text-sm text-gray-500 mt-2">National average home price</p>
+            </div>
+            
+            <!-- Median Price Card - Medium-Dark Green -->
+            <div id="median-price-card" class="dashboard-card bg-white rounded-lg shadow-lg p-6 border-t-4 border-green-700">
+                <h3 class="text-lg font-semibold text-gray-700 mb-2">Median Price</h3>
+                <p id="median-price" class="text-3xl font-bold text-green-700">$0</p>
+                <p class="text-sm text-gray-500 mt-2">National median home price</p>
+            </div>
+            
+            <!-- Highest Price Card - Medium-Light Green -->
+            <div id="highest-price-card" class="dashboard-card bg-white rounded-lg shadow-lg p-6 border-t-4 border-green-600">
+                <h3 class="text-lg font-semibold text-gray-700 mb-2">Highest Price</h3>
+                <div>
+                    <p id="highest-price" class="text-3xl font-bold text-green-600">$0</p>
+                    <p id="highest-state" class="text-sm font-medium text-green-600 mt-1">-</p>
+                </div>
+            </div>
+            
+            <!-- Lowest Price Card - Light Green -->
+            <div id="lowest-price-card" class="dashboard-card bg-white rounded-lg shadow-lg p-6 border-t-4 border-green-500">
+                <h3 class="text-lg font-semibold text-gray-700 mb-2">Lowest Price</h3>
+                <div>
+                    <p id="lowest-price" class="text-3xl font-bold text-green-500">$0</p>
+                    <p id="lowest-state" class="text-sm font-medium text-green-500 mt-1">-</p>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        const width = 960, height = 600;
+
+        const housingPrices = {
+            "01": 277000, "02": 396000, "04": 462000, "05": 260000, "06": 869000,
+            "08": 662000, "09": 460000, "10": 403000, "11": 1195000, "12": 433000,
+            "13": 388000, "15": 947000, "16": 491000, "17": 289000, "18": 261000,
+            "19": 241000, "20": 288000, "21": 271000, "22": 248000, "23": 414000,
+            "24": 513000, "25": 646000, "26": 267000, "27": 364000, "28": 257000,
+            "29": 273000, "30": 539000, "31": 290000, "32": 499000, "33": 499000,
+            "34": 542000, "35": 396000, "36": 522000, "37": 390000, "38": 296000,
+            "39": 255000, "40": 247000, "41": 522000, "42": 319000, "44": 518000,
+            "45": 402000, "46": 340000, "47": 397000, "48": 349000, "49": 620000,
+            "50": 395800, "51": 416000, "53": 677000, "54": 261000, "55": 326000,
+            "56": 461000
+        };
+
+        // State FIPS code to name mapping
+        const stateNames = {
+            "01": "Alabama", "02": "Alaska", "04": "Arizona", "05": "Arkansas", "06": "California",
+            "08": "Colorado", "09": "Connecticut", "10": "Delaware", "11": "District of Columbia", "12": "Florida",
+            "13": "Georgia", "15": "Hawaii", "16": "Idaho", "17": "Illinois", "18": "Indiana",
+            "19": "Iowa", "20": "Kansas", "21": "Kentucky", "22": "Louisiana", "23": "Maine",
+            "24": "Maryland", "25": "Massachusetts", "26": "Michigan", "27": "Minnesota", "28": "Mississippi",
+            "29": "Missouri", "30": "Montana", "31": "Nebraska", "32": "Nevada", "33": "New Hampshire",
+            "34": "New Jersey", "35": "New Mexico", "36": "New York", "37": "North Carolina", "38": "North Dakota",
+            "39": "Ohio", "40": "Oklahoma", "41": "Oregon", "42": "Pennsylvania", "44": "Rhode Island",
+            "45": "South Carolina", "46": "South Dakota", "47": "Tennessee", "48": "Texas", "49": "Utah",
+            "50": "Vermont", "51": "Virginia", "53": "Washington", "54": "West Virginia", "55": "Wisconsin",
+            "56": "Wyoming"
+        };
+
+        const prices = Object.values(housingPrices);
+        const minPrice = Math.min(...prices);
+        const maxPrice = Math.max(...prices);
+
+        // Calculate statistics
+        const calculateStats = () => {
+            // Average price
+            const avgPrice = prices.reduce((sum, price) => sum + price, 0) / prices.length;
+            
+            // Median price
+            const sortedPrices = [...prices].sort((a, b) => a - b);
+            const midpoint = Math.floor(sortedPrices.length / 2);
+            const medianPrice = sortedPrices.length % 2 === 0
+                ? (sortedPrices[midpoint - 1] + sortedPrices[midpoint]) / 2
+                : sortedPrices[midpoint];
+            
+            // Find highest price state
+            let highestPrice = -Infinity;
+            let highestStateId = "";
+            
+            // Find lowest price state
+            let lowestPrice = Infinity;
+            let lowestStateId = "";
+            
+            Object.entries(housingPrices).forEach(([stateId, price]) => {
+                if (price > highestPrice) {
+                    highestPrice = price;
+                    highestStateId = stateId;
+                }
+                if (price < lowestPrice) {
+                    lowestPrice = price;
+                    lowestStateId = stateId;
+                }
+            });
+            
+            // Format and display stats
+            document.getElementById('avg-price').textContent = formatPrice(avgPrice);
+            document.getElementById('median-price').textContent = formatPrice(medianPrice);
+            document.getElementById('highest-price').textContent = formatPrice(highestPrice);
+            document.getElementById('highest-state').textContent = stateNames[highestStateId];
+            document.getElementById('lowest-price').textContent = formatPrice(lowestPrice);
+            document.getElementById('lowest-state').textContent = stateNames[lowestStateId];
+        };
+        
+        // Format price to currency with appropriate suffix
+        const formatPrice = (price) => {
+            if (price >= 1000000) {
+                return `$${(price / 1000000).toFixed(2)}M`;
+            } else {
+                return `$${(price / 1000).toFixed(0)}K`;
+            }
+        };
+
+        const colorScale = d3.scaleSequential(d3.interpolateGreens)
+            .domain([minPrice, maxPrice]);
+
+        // Initial projection
+        const projection = d3.geoAlbersUsa()
+            .translate([width / 2, height / 2])
+            .scale(1000);
+            
+        const path = d3.geoPath().projection(projection);
+
+        // Create SVG 
+        const svg = d3.select("#map")
+            .attr("width", "100%")
+            .attr("height", height)
+            .attr("viewBox", `0 0 ${width} ${height}`)
+            .attr("preserveAspectRatio", "xMidYMid meet");
+            
+        // Create a group for the map elements that will be transformed
+        const mapGroup = svg.append("g");
+        
+        // Define zoom behavior
+        const zoom = d3.zoom()
+            .scaleExtent([1, 16])
+            .on("zoom", (event) => {
+                mapGroup.attr("transform", event.transform);
+                
+                // Adjust stroke width based on zoom scale
+                mapGroup.selectAll(".state")
+                    .attr("stroke-width", 1 / event.transform.k);
+            });
+            
+        // Apply zoom behavior to SVG
+        svg.call(zoom);
+        
+        // Reset zoom button
+        document.getElementById("reset-zoom").addEventListener("click", function() {
+            svg.transition()
+                .duration(750)
+                .call(zoom.transform, d3.zoomIdentity);
+        });
+
+        function createLegend() {
+            // Create gradient that matches map colors
+            const gradientBar = document.getElementById('gradient-bar');
+            gradientBar.style.background = `linear-gradient(to right, ${colorScale(minPrice)}, ${colorScale(maxPrice)})`;
+            
+            // Create price markers
+            const legendTicks = document.getElementById('legend-ticks');
+            const numTicks = 5;
+            
+            for (let i = 0; i < numTicks; i++) {
+                const price = minPrice + (maxPrice - minPrice) * (i / (numTicks - 1));
+                const tick = document.createElement('div');
+                
+                // Format price
+                let formattedPrice;
+                if (price >= 1000000) {
+                    formattedPrice = `$${(price / 1000000).toFixed(1)}M`;
+                } else {
+                    formattedPrice = `$${Math.round(price / 1000).toLocaleString()}K`;
+                }
+                
+                tick.textContent = formattedPrice;
+                tick.style.position = 'absolute';
+                tick.style.left = `${(i / (numTicks - 1)) * 100}%`;
+                tick.style.transform = 'translateX(-50%)';
+                tick.style.textAlign = 'center';
+                legendTicks.appendChild(tick);
+            }
+        }
+
+        d3.json("https://cdn.jsdelivr.net/npm/us-atlas@3/states-10m.json").then(us => {
+            const states = topojson.feature(us, us.objects.states).features;
+
+            mapGroup.selectAll("path")
+                .data(states)
+                .enter().append("path")
+                .attr("class", "state")
+                .attr("d", path)
+                .attr("fill", d => {
+                    const stateId = d.id.padStart(2, '0');
+                    return colorScale(housingPrices[stateId] || minPrice);
+                })
+                .on("mousemove", function (event, d) {
+                    const stateId = d.id.padStart(2, '0');
+                    const price = housingPrices[stateId] || "N/A";
+                    
+                    // Get the SVG position relative to the viewport
+                    const svgElement = document.getElementById('map');
+                    const svgRect = svgElement.getBoundingClientRect();
+
+                    // Calculate position relative to SVG
+                    const relativeX = event.clientX - svgRect.left;
+                    const relativeY = event.clientY - svgRect.top;
+
+                    d3.select("#tooltip")
+                        .style("visibility", "visible")
+                        .style("left", `${relativeX + 15}px`)
+                        .style("top", `${relativeY - 40}px`)
+                        .html(`<strong>${d.properties.name}</strong>: $${price.toLocaleString()}`);
+                })
+                .on("mouseout", function () {
+                    d3.select("#tooltip")
+                        .style("visibility", "hidden");
+                });
+
+            // Add instructions text
+            svg.append("text")
+                .attr("x", 20)
+                .attr("y", 30)
+                .attr("font-size", "12px")
+                .attr("fill", "#666")
+                .text("Use mouse wheel to zoom, click and drag to pan");
+
+            createLegend();
+            calculateStats();
+        }).catch(error => console.error("Error loading map data:", error));
+    </script>
+</body>
+</html>
