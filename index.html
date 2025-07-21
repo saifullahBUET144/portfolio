@@ -4,21 +4,13 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     
-    <!-- === YOUR BROWSER TAB TITLE HERE === -->
     <title>Saifullah Bin Yusuf</title>
-
-    <!--
-    This single file contains all the HTML, CSS, and JavaScript.
-    - The styles are within the <style> tag below.
-    - The interactivity script is at the bottom, just before the </body> tag.
-    -->
 
     <!-- Google Fonts: Poppins -->
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
     <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@300;400;500;600;700&display=swap" rel="stylesheet">
 
-    <!-- CSS STYLES EMBEDDED IN THE HTML -->
     <style>
         /* === GLOBAL STYLES & VARIABLES === */
         :root {
@@ -36,9 +28,6 @@
             box-sizing: border-box;
         }
 
-        html {
-            scroll-behavior: smooth;
-        }
 
         body {
             font-family: var(--font-main);
@@ -56,10 +45,8 @@
 
         section {
             padding: 6rem 0;
-            border-bottom: 1px solid #282828;
         }
         
-        /* Fade-in Animation Setup */
         .fade-in-section {
             opacity: 0;
             transform: translateY(30px);
@@ -73,7 +60,6 @@
 
         h2 {
             font-size: 2.5rem;
-            /* Increased top margin for more space */
             margin-top: 2rem; 
             margin-bottom: 2rem;
             text-align: center;
@@ -94,7 +80,6 @@
         .navbar {
             padding: 1.5rem 0;
             background-color: var(--color-background);
-            border-bottom: 1px solid #282828;
             position: sticky;
             top: 0;
             z-index: 1000;
@@ -147,12 +132,59 @@
 
         /* === HERO SECTION === */
         .hero {
-            min-height: calc(100vh - 85px); /* Adjusted height to account for navbar */
+            position: relative; 
+            min-height: calc(100vh - 85px);
             display: flex;
             justify-content: center;
             align-items: center;
             text-align: center;
             flex-direction: column;
+            overflow: hidden; 
+        }
+        
+        .hero-background {
+            position: absolute;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            z-index: -2; 
+        }
+        
+        .hero-background-image {
+            position: absolute;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background-size: cover;
+            background-position: center;
+            background-repeat: no-repeat;
+            transform: translateX(100%);
+            transition: transform 1.5s cubic-bezier(0.77, 0, 0.175, 1);
+        }
+
+        .hero-background-image.active {
+            transform: translateX(0);
+        }
+
+        .hero-background-image.previous {
+            transform: translateX(-100%);
+        }
+        
+        .hero-overlay {
+            position: absolute;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background-color: rgba(0, 0, 0, 0.6); 
+            z-index: -1; 
+        }
+
+        .hero .container {
+            position: relative; 
+            z-index: 1;
         }
 
         .hero h1 {
@@ -268,11 +300,10 @@
             fill: currentColor;
         }
 
-        /* === TECH STACK SECTION (ANIMATED) === */
+        /* === TECH STACK SECTION === */
         #stack-canvas-container {
             width: 100%;
             height: 500px;
-            /* Set background to transparent */
             background-color: transparent;
             display: flex;
             justify-content: center;
@@ -282,14 +313,12 @@
             max-width: 100%;
             max-height: 100%;
         }
-        /* This list provides the tags for the canvas animation and is hidden */
         #tags {
             display: none;
         }
         
         /* === FOOTER === */
         footer {
-            /* Reduced padding for a shorter footer */
             padding: 2rem 0;
             text-align: center;
             background-color: var(--color-surface);
@@ -339,7 +368,7 @@
                 gap: 1rem;
             }
             .navbar {
-                position: static; /* Remove sticky on mobile for better usability */
+                position: static; 
             }
             #stack-canvas-container {
                 height: 400px;
@@ -363,12 +392,9 @@
 </head>
 <body>
 
-    <!-- ====================================================== -->
-    <!-- NAVIGATION BAR                                         -->
-    <!-- ====================================================== -->
+    <!-- NAVIGATION BAR -->
     <nav class="navbar">
         <div class="container">
-            <!-- === YOUR NAME/LOGO HERE === -->
             <a href="#" class="nav-logo">Saifullah Bin Yusuf</a>
             <ul class="nav-links">
                 <li><a href="#about">About</a></li>
@@ -378,98 +404,85 @@
         </div>
     </nav>
 
-    <!-- ====================================================== -->
-    <!-- HERO SECTION                                           -->
-    <!-- ====================================================== -->
+    <!-- HERO SECTION -->
     <header class="hero">
+        <div class="hero-background">
+        </div>
+        <div class="hero-overlay"></div>
         <div class="container">
-            <!-- === YOUR NAME HERE === -->
             <h1>Saifullah Bin Yusuf</h1>
-            <!-- === YOUR TITLE/ROLE HERE === -->
             <p class="subtitle">Django Developer | AI/ML Enthusiast</p>
-            <!-- === YOUR BRIEF INTRO HERE === -->
             <p>Focused on building elegant, intuitive, and user-friendly web applications that blend into the world of AI and machine learning.</p>
         </div>
     </header>
 
     <main>
-        <!-- ====================================================== -->
-        <!-- ABOUT ME SECTION                                         -->
-        <!-- ====================================================== -->
+        <!-- ABOUT ME SECTION -->
         <section id="about" class="container fade-in-section">
             <h2>About Me</h2>
             <div class="about-content">
                 <div class="about-text">
-                    <!-- === YOUR ABOUT ME TEXT HERE === -->
-                    <p>Hello! I'm [Your Name], a passionate developer with a knack for creating beautiful and functional digital experiences. With a background in [Your Field], I love solving complex problems and turning ideas into reality through code. When I'm not coding, you can find me [Your Hobby]. I'm always eager to learn new technologies and collaborate on exciting projects.</p>
+                    <p>Assalamu alaikum! I'm Saifullah Bin Yusuf, an aspiring web developer with a passion for creating products and solutions that can truly create an impact for the better. I'm keen on harnessing the power of Machine Learning to unravel new frontiers of its use, with a special interest in advancing the NLP scenario for the Bengali language. I'm a really fast learner and great at adapting to changes, and my interest in learning almost everything pairs nicely with that trait.</p>
                 </div>
                 <div class="about-image">
-                    <!-- === YOUR PROFILE PICTURE HERE === -->
-                        <img src="images/dp_2.jpeg" alt="A photo of Saifullah Bin Yusuf" ...>
+                    <img src="images/dp_2.jpeg" alt="A photo of Saifullah Bin Yusuf">
                 </div>
             </div>
         </section>
 
 
-<!-- ====================================================== -->
-<!-- FEATURED PROJECTS SECTION                              -->
-<!-- ====================================================== -->
-<section id="projects" class="container fade-in-section">
-    <h2>Featured Projects</h2>
-    <div class="project-grid">
+        <!-- FEATURED PROJECTS SECTION -->
+        <section id="projects" class="container fade-in-section">
+            <h2>Featured Work</h2>
+            <div class="project-grid">
 
-        <!-- === PROJECT 1 === -->
-        <div class="project-card">
-            <!-- Replace placeholder with actual project image -->
-            <img src="images/thumbnail_1.png" alt="Screenshot of Project One" onerror="this.onerror=null;this.src='https://placehold.co/600x400/1e1e1e/ffffff?text=Image+Not+Found';">
-            <div class="project-content">
-                <div class="project-tags">
-                    <span>React</span>
-                    <span>Node.js</span>
-                    <span>API</span>
+                <!-- === PROJECT 1 === -->
+                <div class="project-card">
+                    <img src="images/thumbnail_1.png" alt="Screenshot of Project One" onerror="this.onerror=null;this.src='https://placehold.co/600x400/1e1e1e/ffffff?text=Image+Not+Found';">
+                    <div class="project-content">
+                        <div class="project-tags">
+                            <span>PyTorch</span>
+                            <span>Python</span>
+                            <span>Transformer</span>
+                        </div>
+                        <h3>Low Resource Language Text Summarization</h3>
+                        <p>Studying the feasibilty of using the pivoting technique to overcome the scarcity of training data for summarizing text in low-NLP-resource languages such as Bangla. Accepted for publication at ICTIS 2025, Bangkok, Thailand.</p>
+                        <div class="project-links">
+                            <a href="https://github.com/saifullahBUET144/Bengali_pivot_summary" target="_blank">
+                                <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M12 .3a12 12 0 0 0-3.8 23.4c.6.1.8-.3.8-.6v-2.2c-3.3.7-4-1.6-4-1.6-.5-1.4-1.3-1.8-1.3-1.8-1-1 .1-1 .1-1 1.1.1 1.7 1.2 1.7 1.2.9 1.6 2.3 1.2 2.9.9.1-.7.4-1.2.8-1.5-2.2-.3-4.6-1.1-4.6-5 0-1.1.4-2 1-2.8-.1-.3-.5-1.3.1-2.7 0 0 .8-.3 2.8 1.1.8-.2 1.7-.4 2.5-.4s1.7.1 2.5.4c2-1.3 2.8-1.1 2.8-1.1.6 1.4.2 2.5.1 2.8.7.7 1 1.6 1 2.8 0 3.8-2.3 4.7-4.6 5 .4.3.8.9.8 1.8v2.6c0 .4.2.7.8.6A12 12 0 0 0 12 .3z"/></svg>
+                                GitHub
+                            </a>
+                        </div>
+                    </div>
                 </div>
-                <h3>Project One Title</h3>
-                <p>A brief but compelling description of your project, highlighting the key features and the problem it solves.</p>
-                <div class="project-links">
-                    <a href="#" target="_blank">
-                        <!-- GitHub SVG icon remains unchanged -->
-                        <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M12 .3a12 12 0 0 0-3.8 23.4c.6.1.8-.3.8-.6v-2.2c-3.3.7-4-1.6-4-1.6-.5-1.4-1.3-1.8-1.3-1.8-1-1 .1-1 .1-1 1.1.1 1.7 1.2 1.7 1.2.9 1.6 2.3 1.2 2.9.9.1-.7.4-1.2.8-1.5-2.2-.3-4.6-1.1-4.6-5 0-1.1.4-2 1-2.8-.1-.3-.5-1.3.1-2.7 0 0 .8-.3 2.8 1.1.8-.2 1.7-.4 2.5-.4s1.7.1 2.5.4c2-1.3 2.8-1.1 2.8-1.1.6 1.4.2 2.5.1 2.8.7.7 1 1.6 1 2.8 0 3.8-2.3 4.7-4.6 5 .4.3.8.9.8 1.8v2.6c0 .4.2.7.8.6A12 12 0 0 0 12 .3z"/></svg>
-                        GitHub
-                    </a>
+
+                <!-- === PROJECT 2 === -->
+                <div class="project-card">
+                    <img src="images/thumbnail_2.jpg" alt="Screenshot of Project Two" onerror="this.onerror=null;this.src='https://placehold.co/600x400/1e1e1e/ffffff?text=Image+Not+Found';">
+                    <div class="project-content">
+                        <div class="project-tags">
+                            <span>Kotlin</span>
+                            <span>MobileBERT</span>
+                            <span>LiteRT</span>
+                        </div>
+                        <h3>Web Content Filtering App</h3>
+                        <p>Open-source Mobile app to filter malicious and unwanted content on the internet using ML-based classification techniques and accessibility features. Implements on-device processing for minimizing maintainance costs and maximizing privacy by preventing traffic data from exiting the device. Currently under development.</p>
+                        <div class="project-links">
+                            <a href="https://github.com/saifullahBUET144/malicious_content_filtering" target="_blank">
+                                <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M12 .3a12 12 0 0 0-3.8 23.4c.6.1.8-.3.8-.6v-2.2c-3.3.7-4-1.6-4-1.6-.5-1.4-1.3-1.8-1.3-1.8-1-1 .1-1 .1-1 1.1.1 1.7 1.2 1.7 1.2.9 1.6 2.3 1.2 2.9.9.1-.7.4-1.2.8-1.5-2.2-.3-4.6-1.1-4.6-5 0-1.1.4-2 1-2.8-.1-.3-.5-1.3.1-2.7 0 0 .8-.3 2.8 1.1.8-.2 1.7-.4 2.5-.4s1.7.1 2.5.4c2-1.3 2.8-1.1 2.8-1.1.6 1.4.2 2.5.1 2.8.7.7 1 1.6 1 2.8 0 3.8-2.3 4.7-4.6 5 .4.3.8.9.8 1.8v2.6c0 .4.2.7.8.6A12 12 0 0 0 12 .3z"/></svg>
+                                GitHub
+                            </a>
+                        </div>
+                    </div>
                 </div>
+                
             </div>
-        </div>
-
-        <!-- === PROJECT 2 === -->
-        <div class="project-card">
-            <!-- Replace placeholder with actual project image -->
-            <img src="images/thumbnail_2.jpg" alt="Screenshot of Project Two" onerror="this.onerror=null;this.src='https://placehold.co/600x400/1e1e1e/ffffff?text=Image+Not+Found';">
-            <div class="project-content">
-                <div class="project-tags">
-                    <span>Vue.js</span>
-                    <span>Firebase</span>
-                </div>
-                <h3>Project Two Title</h3>
-                <p>Another description for a different project. Talk about the technology used and what you learned from building it.</p>
-                <div class="project-links">
-                    <a href="#" target="_blank">
-                        <!-- GitHub SVG icon remains unchanged -->
-                        <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M12 .3a12 12 0 0 0-3.8 23.4c.6.1.8-.3.8-.6v-2.2c-3.3.7-4-1.6-4-1.6-.5-1.4-1.3-1.8-1.3-1.8-1-1 .1-1 .1-1 1.1.1 1.7 1.2 1.7 1.2.9 1.6 2.3 1.2 2.9.9.1-.7.4-1.2.8-1.5-2.2-.3-4.6-1.1-4.6-5 0-1.1.4-2 1-2.8-.1-.3-.5-1.3.1-2.7 0 0 .8-.3 2.8 1.1.8-.2 1.7-.4 2.5-.4s1.7.1 2.5.4c2-1.3 2.8-1.1 2.8-1.1.6 1.4.2 2.5.1 2.8.7.7 1 1.6 1 2.8 0 3.8-2.3 4.7-4.6 5 .4.3.8.9.8 1.8v2.6c0 .4.2.7.8.6A12 12 0 0 0 12 .3z"/></svg>
-                        GitHub
-                    </a>
-                </div>
-            </div>
-        </div>
-        
-    </div>
-</section>
+        </section>
 
 
-        <!-- ====================================================== -->
-        <!-- DEVELOPMENT STACK SECTION (ANIMATED)                 -->
-        <!-- ====================================================== -->
+        <!-- DEVELOPMENT STACK SECTION -->
         <section id="stack" class="container fade-in-section">
-            <h2>My Development Stack</h2>
+            <h2>Development Stack</h2>
             <div id="stack-canvas-container">
                 <canvas width="800" height="600" id="stack-canvas">
                     <p>In case you can't see this, my stack includes: PyTorch, Django, MySQL, Arduino, C, C++, Python, Java, HTML/CSS/JS, MATLAB, Bootstrap, Git</p>
@@ -477,8 +490,6 @@
             </div>
             <div id="tags">
                 <ul>
-                    <!-- Your updated tech stack. The href doesn't matter. -->
-                    <!-- Logos are from simpleicons.org, colored with the primary green -->
                     <li><a href="#"><img src="https://cdn.simpleicons.org/pytorch/1DB954" alt="PyTorch"></a></li>
                     <li><a href="#"><img src="https://cdn.simpleicons.org/django/1DB954" alt="Django"></a></li>
                     <li><a href="#"><img src="https://cdn.simpleicons.org/mysql/1DB954" alt="MySQL"></a></li>
@@ -499,46 +510,35 @@
 
     </main>
 
-    <!-- ====================================================== -->
-    <!-- FOOTER SECTION                                         -->
-    <!-- ====================================================== -->
+    <!-- FOOTER SECTION -->
     <footer>
         <div class="container">
             <div class="social-links">
-                <!-- === YOUR SOCIAL LINKS HERE === -->
-                <a href="https://github.com/yourusername" target="_blank" aria-label="GitHub">
+                <a href="https://github.com/saifullahBUET144" target="_blank" aria-label="GitHub">
                     <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M12 .3a12 12 0 0 0-3.8 23.4c.6.1.8-.3.8-.6v-2.2c-3.3.7-4-1.6-4-1.6-.5-1.4-1.3-1.8-1.3-1.8-1-1 .1-1 .1-1 1.1.1 1.7 1.2 1.7 1.2.9 1.6 2.3 1.2 2.9.9.1-.7.4-1.2.8-1.5-2.2-.3-4.6-1.1-4.6-5 0-1.1.4-2 1-2.8-.1-.3-.5-1.3.1-2.7 0 0 .8-.3 2.8 1.1.8-.2 1.7-.4 2.5-.4s1.7.1 2.5.4c2-1.3 2.8-1.1 2.8-1.1.6 1.4.2 2.5.1 2.8.7.7 1 1.6 1 2.8 0 3.8-2.3 4.7-4.6 5 .4.3.8.9.8 1.8v2.6c0 .4.2.7.8.6A12 12 0 0 0 12 .3z"/></svg>
                 </a>
-                <a href="https://linkedin.com/in/yourusername" target="_blank" aria-label="LinkedIn">
+                <a href="https://www.linkedin.com/in/saifullah-bin-yusuf-3647b71a4/" target="_blank" aria-label="LinkedIn">
                     <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M22.23 0H1.77C.79 0 0 .77 0 1.72v20.56C0 23.23.79 24 1.77 24h20.46c.98 0 1.77-.77 1.77-1.72V1.72C24 .77 23.21 0 22.23 0zM7.06 20.45H3.55V9h3.51v11.45zM5.3 7.5c-1.1 0-2-1-2-2.2s.9-2.2 2-2.2c1.1 0 2 1 2 2.2s-.9 2.2-2 2.2zm15.15 12.95h-3.5v-5.5c0-1.3-.02-3-1.83-3-1.83 0-2.1 1.4-2.1 2.9v5.6H9.49V9h3.36v1.5h.05c.46-.9 1.6-1.8 3.3-1.8 3.55 0 4.2 2.3 4.2 5.4v6.35z"/></svg>
                 </a>
-                <a href="mailto:youremail@example.com" aria-label="Email">
+                <a href="mailto:saifsearcher@gmail.com" aria-label="Email">
                     <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M22 6c0-1.1-.9-2-2-2H4c-1.1 0-2 .9-2 2v12c0 1.1.9 2 2 2h16c1.1 0 2-.9 2-2V6zm-2 0l-8 5-8-5h16zm0 12H4V8l8 5 8-5v10z"/></svg>
                 </a>
             </div>
-            <!-- === YOUR COPYRIGHT NOTICE HERE === -->
-            <!-- JavaScript will automatically update the year -->
-            <p class="copyright">&copy; <span id="year"></span> Your Name. All Rights Reserved.</p>
+            <p class="copyright">&copy; <span id="year"></span> All Rights Reserved.</p>
         </div>
     </footer>
 
-
-    <!-- JAVASCRIPT LIBRARIES & CUSTOM SCRIPT -->
     
-    <!-- TagCanvas library for the animated stack -->
     <script src="https://www.goat1000.com/tagcanvas.min.js" type="text/javascript"></script>
     
     <script>
-        // Use window.onload to ensure all content, including the TagCanvas library, is loaded before scripts run.
         window.onload = function() {
             
-            // --- 1. SET CURRENT YEAR IN FOOTER ---
             const yearSpan = document.getElementById('year');
             if (yearSpan) {
                 yearSpan.textContent = new Date().getFullYear();
             }
 
-            // --- 2. FADE-IN SECTIONS ON SCROLL ---
             const sections = document.querySelectorAll('.fade-in-section');
             if ('IntersectionObserver' in window) {
                 const sectionObserver = new IntersectionObserver((entries, observer) => {
@@ -558,29 +558,75 @@
                 sections.forEach(section => section.classList.add('is-visible'));
             }
 
-            // --- 3. INITIALIZE ANIMATED STACK (TagCanvas) ---
+            // --- INITIALIZE ANIMATED STACK
             try {
                 TagCanvas.Start('stack-canvas', 'tags', {
-                    // Use images from the <img> tags
                     imageMode: 'tag',
-                    // Set the image size directly. This creates a 20px diameter logo.
                     imageRadius: 10,
-                    // Animation settings
                     outlineColour: 'transparent',
                     reverse: true,
                     depth: 0.8,
                     maxSpeed: 0.05,
-                    initial: [0.05, -0.05], // Start with a slow rotation
-                    // Interaction settings
-                    wheelZoom: false, // Prevent zooming with scroll wheel
+                    initial: [0.05, -0.05],
+                    wheelZoom: false,
                     noSelect: true,
-                    lock: 'xy' // Only rotate on x and y axes
+                    lock: 'xy'
                 });
             } catch(e) {
-                // If the canvas fails, hide the container
                 console.error("TagCanvas failed to load:", e);
                 document.getElementById('stack-canvas-container').style.display = 'none';
             }
+            
+            // --- HERO BACKGROUND SLIDESHOW ---
+            const backgroundContainer = document.querySelector('.hero-background');
+            const images = [
+                'https://images.unsplash.com/photo-1690683790356-c1edb75e3df7?q=80&w=3009&auto=format&fit=crop&ixlib=rb-4.1.0&ixid=M3wxMjA3fDB8MHxwaG90by1wYWdlfHx8fGVufDB8fHx8fA%3D%3D',
+                'https://images.unsplash.com/photo-1504639725590-34d0984388bd?q=80&w=1674&auto=format&fit=crop&ixlib=rb-4.1.0&ixid=M3wxMjA3fDB8MHxwaG90by1wYWdlfHx8fGVufDB8fHx8fA%3D%3D',
+                'https://images.unsplash.com/photo-1526374965328-7f61d4dc18c5?q=80&w=2070&auto=format&fit=crop&ixlib=rb-4.1.0&ixid=M3wxMjA3fDB8MHxwaG90by1wYWdlfHx8fGVufDB8fHx8fA%3D%3D'
+            ];
+            let currentImageIndex = 0;
+
+            // Create image elements and add them to the container
+            images.forEach((src, index) => {
+                const imgDiv = document.createElement('div');
+                imgDiv.classList.add('hero-background-image');
+                imgDiv.style.backgroundImage = `url(${src})`;
+                backgroundContainer.appendChild(imgDiv);
+            });
+
+            const imageElements = document.querySelectorAll('.hero-background-image');
+            // Set initial state for the first image
+            if(imageElements.length > 0) {
+                imageElements[0].classList.add('active');
+            }
+
+            setInterval(() => {
+                const previousImageIndex = currentImageIndex;
+                currentImageIndex = (currentImageIndex + 1) % imageElements.length;
+
+                imageElements[previousImageIndex].classList.remove('active');
+                imageElements[previousImageIndex].classList.add('previous');
+
+                imageElements[currentImageIndex].classList.remove('previous');
+                imageElements[currentImageIndex].classList.add('active');
+                
+            }, 5000);
+
+            document.querySelectorAll('.nav-links a').forEach(anchor => {
+                anchor.addEventListener('click', function (e) {
+                    e.preventDefault();
+                    
+                    const targetId = this.getAttribute('href');
+                    const targetElement = document.querySelector(targetId);
+                    
+                    if (targetElement) {
+                        targetElement.scrollIntoView({
+                            behavior: 'smooth',
+                            block: 'center'
+                        });
+                    }
+                });
+            });
         };
     </script>
 
