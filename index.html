@@ -1,31 +1,589 @@
 <!DOCTYPE html>
 <html lang="en">
 <head>
-  <meta charset="UTF-8" />
-  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <title>UI Samples by Saifullah</title>
-  <style>
-    body { font-family: Arial, sans-serif; max-width: 700px; margin: auto; padding: 2rem; background: #f2f6fc; color: #333; }
-    h1 { text-align: center; color: #2c3e50; }
-    ul { list-style-type: none; padding: 0; }
-    li { margin: 1rem 0; background: #fff; padding: 0.5rem 1rem; border-radius: 6px; box-shadow: 0 2px 4px rgba(0,0,0,0.1); }
-    a { text-decoration: none; color: #2980b9; font-weight: bold; }
-    a:hover { text-decoration: underline; }
-  </style>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    
+    <!-- === YOUR BROWSER TAB TITLE HERE === -->
+    <title>Saifullah Bin Yusuf</title>
+
+    <!--
+    This single file contains all the HTML, CSS, and JavaScript.
+    - The styles are within the <style> tag below.
+    - The interactivity script is at the bottom, just before the </body> tag.
+    -->
+
+    <!-- Google Fonts: Poppins -->
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+
+    <!-- CSS STYLES EMBEDDED IN THE HTML -->
+    <style>
+        /* === GLOBAL STYLES & VARIABLES === */
+        :root {
+            --color-background: #121212;
+            --color-surface: #1e1e1e;
+            --color-primary: #1DB954; /* Spotify-like green */
+            --color-text-primary: #FFFFFF;
+            --color-text-secondary: #b3b3b3;
+            --font-main: 'Poppins', sans-serif;
+        }
+
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        html {
+            scroll-behavior: smooth;
+        }
+
+        body {
+            font-family: var(--font-main);
+            background-color: var(--color-background);
+            color: var(--color-text-primary);
+            line-height: 1.7;
+        }
+
+        /* === UTILITY CLASSES === */
+        .container {
+            max-width: 1080px;
+            margin: 0 auto;
+            padding: 0 2rem;
+        }
+
+        section {
+            padding: 6rem 0;
+            border-bottom: 1px solid #282828;
+        }
+        
+        /* Fade-in Animation Setup */
+        .fade-in-section {
+            opacity: 0;
+            transform: translateY(30px);
+            transition: opacity 0.8s ease-out, transform 0.8s ease-out;
+        }
+
+        .fade-in-section.is-visible {
+            opacity: 1;
+            transform: translateY(0);
+        }
+
+        h2 {
+            font-size: 2.5rem;
+            /* Increased top margin for more space */
+            margin-top: 2rem; 
+            margin-bottom: 2rem;
+            text-align: center;
+            color: var(--color-primary);
+        }
+
+        a {
+            color: var(--color-primary);
+            text-decoration: none;
+            transition: color 0.3s ease;
+        }
+
+        a:hover {
+            color: #ffffff;
+        }
+        
+        /* === NAVIGATION BAR === */
+        .navbar {
+            padding: 1.5rem 0;
+            background-color: var(--color-background);
+            border-bottom: 1px solid #282828;
+            position: sticky;
+            top: 0;
+            z-index: 1000;
+        }
+        
+        .navbar .container {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+        
+        .nav-logo {
+            font-size: 1.5rem;
+            font-weight: 700;
+            color: var(--color-text-primary);
+        }
+        
+        .nav-links {
+            list-style: none;
+            display: flex;
+            gap: 2rem;
+        }
+        
+        .nav-links a {
+            font-weight: 500;
+            color: var(--color-text-secondary);
+            position: relative;
+            padding-bottom: 0.25rem;
+        }
+        
+        .nav-links a:hover {
+            color: var(--color-text-primary);
+        }
+        
+        .nav-links a::after {
+            content: '';
+            position: absolute;
+            bottom: 0;
+            left: 0;
+            width: 0;
+            height: 2px;
+            background-color: var(--color-primary);
+            transition: width 0.3s ease;
+        }
+        
+        .nav-links a:hover::after {
+            width: 100%;
+        }
+
+
+        /* === HERO SECTION === */
+        .hero {
+            min-height: calc(100vh - 85px); /* Adjusted height to account for navbar */
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            text-align: center;
+            flex-direction: column;
+        }
+
+        .hero h1 {
+            font-size: 4rem;
+            margin-bottom: 0.5rem;
+        }
+        
+        .hero .subtitle {
+            font-size: 1.5rem;
+            color: var(--color-text-secondary);
+            margin-bottom: 1.5rem;
+        }
+
+        .hero p {
+            max-width: 600px;
+            font-size: 1.1rem;
+            color: var(--color-text-secondary);
+        }
+        
+        /* === ABOUT SECTION === */
+        .about-content {
+            display: flex;
+            align-items: center;
+            gap: 4rem;
+        }
+
+        .about-text {
+            flex: 1;
+        }
+
+        .about-image {
+            flex-basis: 300px;
+            flex-shrink: 0;
+        }
+
+        .about-image img {
+            width: 100%;
+            height: 300px;
+            object-fit: cover;
+            border-radius: 50%;
+            border: 3px solid var(--color-primary);
+        }
+        
+        /* === PROJECTS SECTION === */
+        .project-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(320px, 1fr));
+            gap: 2rem;
+        }
+
+        .project-card {
+            background-color: var(--color-surface);
+            border-radius: 8px;
+            overflow: hidden;
+            transition: transform 0.3s ease, box-shadow 0.3s ease;
+            display: flex;
+            flex-direction: column;
+        }
+
+        .project-card:hover {
+            transform: translateY(-5px);
+            box-shadow: 0 10px 20px rgba(0,0,0,0.2);
+        }
+
+        .project-card img {
+            width: 100%;
+            height: 200px;
+            object-fit: cover;
+        }
+
+        .project-content {
+            padding: 1.5rem;
+            flex-grow: 1;
+            display: flex;
+            flex-direction: column;
+        }
+
+        .project-tags {
+            margin-bottom: 1rem;
+        }
+
+        .project-tags span {
+            background-color: var(--color-primary);
+            color: var(--color-background);
+            padding: 0.2rem 0.6rem;
+            border-radius: 4px;
+            font-size: 0.8rem;
+            font-weight: 600;
+            margin-right: 0.5rem;
+        }
+
+        .project-card h3 {
+            font-size: 1.5rem;
+            margin-bottom: 0.5rem;
+        }
+
+        .project-card p {
+            color: var(--color-text-secondary);
+            flex-grow: 1;
+            margin-bottom: 1.5rem;
+        }
+
+        .project-links a {
+            margin-right: 1rem;
+            font-weight: 600;
+            display: inline-flex;
+            align-items: center;
+            gap: 0.5rem;
+        }
+        .project-links a svg {
+            width: 20px;
+            height: 20px;
+            fill: currentColor;
+        }
+
+        /* === TECH STACK SECTION (ANIMATED) === */
+        #stack-canvas-container {
+            width: 100%;
+            height: 500px;
+            /* Set background to transparent */
+            background-color: transparent;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+        }
+        #stack-canvas {
+            max-width: 100%;
+            max-height: 100%;
+        }
+        /* This list provides the tags for the canvas animation and is hidden */
+        #tags {
+            display: none;
+        }
+        
+        /* === FOOTER === */
+        footer {
+            /* Reduced padding for a shorter footer */
+            padding: 2rem 0;
+            text-align: center;
+            background-color: var(--color-surface);
+        }
+        
+        .social-links {
+            margin-bottom: 1rem;
+        }
+        
+        .social-links a {
+            margin: 0 1rem;
+        }
+        
+        .social-links svg {
+            width: 28px;
+            height: 28px;
+            fill: var(--color-text-secondary);
+            transition: fill 0.3s ease;
+        }
+        
+        .social-links a:hover svg {
+            fill: var(--color-primary);
+        }
+
+        .copyright {
+            color: var(--color-text-secondary);
+            font-size: 0.9rem;
+        }
+        
+        /* === RESPONSIVE STYLES === */
+        @media (max-width: 768px) {
+            h2 {
+                font-size: 2rem;
+            }
+            .hero h1 {
+                font-size: 3rem;
+            }
+            .hero .subtitle {
+                font-size: 1.2rem;
+            }
+            .about-content {
+                flex-direction: column;
+                text-align: center;
+            }
+            .navbar .container {
+                flex-direction: column;
+                gap: 1rem;
+            }
+            .navbar {
+                position: static; /* Remove sticky on mobile for better usability */
+            }
+            #stack-canvas-container {
+                height: 400px;
+            }
+        }
+        
+        @media (max-width: 480px) {
+            .nav-links {
+                gap: 1.5rem;
+                flex-wrap: wrap;
+                justify-content: center;
+            }
+            .hero h1 {
+                font-size: 2.5rem;
+            }
+            #stack-canvas-container {
+                height: 300px;
+            }
+        }
+    </style>
 </head>
 <body>
-  <h1>UI Samples by Saifullah</h1>
-  <ul>
-    <li><a href="bloomington_parking_dashboard.html" target="_blank">Bloomington Parking Dashboard</a></li>
-    <li><a href="city_sounds.html" target="_blank">City Sounds Interface</a></li>
-    <li><a href="ethereum_price_analysis.html" target="_blank">Ethereum Price Analysis</a></li>
-    <li><a href="housing_map.html" target="_blank">Housing Map UI</a></li>
-    <li><a href="luggage_picker.html" target="_blank">Luggage Picker UI</a></li>
-    <li><a href="magic_potion_mixer.html" target="_blank">Magic Potion Mixer</a></li>
-    <li><a href="stellar_muse.html" target="_blank">Stellar Muse UI</a></li>
-    <li><a href="thrift_app_ui.html" target="_blank">Thrift App UI</a></li>
-    <li><a href="textile_machinery.html" target="_blank">Textile Machinery Data</a></li>
 
-  </ul>
+    <!-- ====================================================== -->
+    <!-- NAVIGATION BAR                                         -->
+    <!-- ====================================================== -->
+    <nav class="navbar">
+        <div class="container">
+            <!-- === YOUR NAME/LOGO HERE === -->
+            <a href="#" class="nav-logo">Saifullah Bin Yusuf</a>
+            <ul class="nav-links">
+                <li><a href="#about">About</a></li>
+                <li><a href="#projects">Work</a></li>
+                <li><a href="#stack">Tech Stack</a></li>
+            </ul>
+        </div>
+    </nav>
+
+    <!-- ====================================================== -->
+    <!-- HERO SECTION                                           -->
+    <!-- ====================================================== -->
+    <header class="hero">
+        <div class="container">
+            <!-- === YOUR NAME HERE === -->
+            <h1>Saifullah Bin Yusuf</h1>
+            <!-- === YOUR TITLE/ROLE HERE === -->
+            <p class="subtitle">Django Developer | AI/ML Enthusiast</p>
+            <!-- === YOUR BRIEF INTRO HERE === -->
+            <p>Focused on building elegant, intuitive and user-friendly web applications that blend into the world of AI and machine learning.</p>
+        </div>
+    </header>
+
+    <main>
+        <!-- ====================================================== -->
+        <!-- ABOUT ME SECTION                                         -->
+        <!-- ====================================================== -->
+        <section id="about" class="container fade-in-section">
+            <h2>About Me</h2>
+            <div class="about-content">
+                <div class="about-text">
+                    <!-- === YOUR ABOUT ME TEXT HERE === -->
+                    <p>Hello! I'm [Your Name], a passionate developer with a knack for creating beautiful and functional digital experiences. With a background in [Your Field], I love solving complex problems and turning ideas into reality through code. When I'm not coding, you can find me [Your Hobby]. I'm always eager to learn new technologies and collaborate on exciting projects.</p>
+                </div>
+                <div class="about-image">
+                    <!-- === YOUR PROFILE PICTURE HERE === -->
+                    <!-- Make sure you have a 'profile.jpg' in an 'images' folder -->
+                    <img src="https://placehold.co/300x300/1DB954/121212?text=You" alt="A photo of Your Name" onerror="this.onerror=null;this.src='https://placehold.co/300x300/1e1e1e/ffffff?text=Image+Not+Found';">
+                </div>
+            </div>
+        </section>
+
+        <!-- ====================================================== -->
+        <!-- FEATURED PROJECTS SECTION                              -->
+        <!-- ====================================================== -->
+        <section id="projects" class="container fade-in-section">
+            <h2>Featured Projects</h2>
+            <div class="project-grid">
+
+                <!-- === PROJECT 1 === -->
+                <div class="project-card">
+                    <!-- === YOUR PROJECT IMAGE HERE === -->
+                    <img src="https://placehold.co/600x400/1e1e1e/1DB954?text=Project+1" alt="Screenshot of Project One" onerror="this.onerror=null;this.src='https://placehold.co/600x400/1e1e1e/ffffff?text=Image+Not+Found';">
+                    <div class="project-content">
+                        <div class="project-tags">
+                            <!-- === YOUR PROJECT TAGS HERE === -->
+                            <span>React</span>
+                            <span>Node.js</span>
+                            <span>API</span>
+                        </div>
+                        <!-- === YOUR PROJECT TITLE HERE === -->
+                        <h3>Project One Title</h3>
+                        <!-- === YOUR PROJECT DESCRIPTION HERE === -->
+                        <p>A brief but compelling description of your project, highlighting the key features and the problem it solves.</p>
+                        <div class="project-links">
+                            <!-- === YOUR PROJECT LINKS HERE (Live Demo removed) === -->
+                            <a href="#" target="_blank">
+                                <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M12 .3a12 12 0 0 0-3.8 23.4c.6.1.8-.3.8-.6v-2.2c-3.3.7-4-1.6-4-1.6-.5-1.4-1.3-1.8-1.3-1.8-1-1 .1-1 .1-1 1.1.1 1.7 1.2 1.7 1.2.9 1.6 2.3 1.2 2.9.9.1-.7.4-1.2.8-1.5-2.2-.3-4.6-1.1-4.6-5 0-1.1.4-2 1-2.8-.1-.3-.5-1.3.1-2.7 0 0 .8-.3 2.8 1.1.8-.2 1.7-.4 2.5-.4s1.7.1 2.5.4c2-1.3 2.8-1.1 2.8-1.1.6 1.4.2 2.5.1 2.8.7.7 1 1.6 1 2.8 0 3.8-2.3 4.7-4.6 5 .4.3.8.9.8 1.8v2.6c0 .4.2.7.8.6A12 12 0 0 0 12 .3z"/></svg>
+                                GitHub
+                            </a>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- === PROJECT 2 === -->
+                <div class="project-card">
+                    <img src="https://placehold.co/600x400/1e1e1e/1DB954?text=Project+2" alt="Screenshot of Project Two" onerror="this.onerror=null;this.src='https://placehold.co/600x400/1e1e1e/ffffff?text=Image+Not+Found';">
+                    <div class="project-content">
+                        <div class="project-tags">
+                            <span>Vue.js</span>
+                            <span>Firebase</span>
+                        </div>
+                        <h3>Project Two Title</h3>
+                        <p>Another description for a different project. Talk about the technology used and what you learned from building it.</p>
+                        <div class="project-links">
+                            <!-- === YOUR PROJECT LINKS HERE (Live Demo removed) === -->
+                            <a href="#" target="_blank">
+                                <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M12 .3a12 12 0 0 0-3.8 23.4c.6.1.8-.3.8-.6v-2.2c-3.3.7-4-1.6-4-1.6-.5-1.4-1.3-1.8-1.3-1.8-1-1 .1-1 .1-1 1.1.1 1.7 1.2 1.7 1.2.9 1.6 2.3 1.2 2.9.9.1-.7.4-1.2.8-1.5-2.2-.3-4.6-1.1-4.6-5 0-1.1.4-2 1-2.8-.1-.3-.5-1.3.1-2.7 0 0 .8-.3 2.8 1.1.8-.2 1.7-.4 2.5-.4s1.7.1 2.5.4c2-1.3 2.8-1.1 2.8-1.1.6 1.4.2 2.5.1 2.8.7.7 1 1.6 1 2.8 0 3.8-2.3 4.7-4.6 5 .4.3.8.9.8 1.8v2.6c0 .4.2.7.8.6A12 12 0 0 0 12 .3z"/></svg>
+                                GitHub
+                            </a>
+                        </div>
+                    </div>
+                </div>
+                
+            </div>
+        </section>
+
+        <!-- ====================================================== -->
+        <!-- DEVELOPMENT STACK SECTION (ANIMATED)                 -->
+        <!-- ====================================================== -->
+        <section id="stack" class="container fade-in-section">
+            <h2>My Development Stack</h2>
+            <div id="stack-canvas-container">
+                <canvas width="800" height="600" id="stack-canvas">
+                    <p>In case you can't see this, my stack includes: PyTorch, Django, MySQL, Arduino, C, C++, Python, Java, HTML/CSS/JS, MATLAB, Bootstrap, Git</p>
+                </canvas>
+            </div>
+            <div id="tags">
+                <ul>
+                    <!-- Your updated tech stack. The href doesn't matter. -->
+                    <!-- Logos are from simpleicons.org, colored with the primary green -->
+                    <li><a href="#"><img src="https://cdn.simpleicons.org/pytorch/1DB954" alt="PyTorch"></a></li>
+                    <li><a href="#"><img src="https://cdn.simpleicons.org/django/1DB954" alt="Django"></a></li>
+                    <li><a href="#"><img src="https://cdn.simpleicons.org/mysql/1DB954" alt="MySQL"></a></li>
+                    <li><a href="#"><img src="https://cdn.simpleicons.org/arduino/1DB954" alt="Arduino"></a></li>
+                    <li><a href="#"><img src="https://cdn.simpleicons.org/c/1DB954" alt="C"></a></li>
+                    <li><a href="#"><img src="https://cdn.simpleicons.org/cplusplus/1DB954" alt="C++"></a></li>
+                    <li><a href="#"><img src="https://cdn.simpleicons.org/python/1DB954" alt="Python"></a></li>
+                    <li><a href="#"><img src="https://cdn.simpleicons.org/java/1DB954" alt="Java"></a></li>
+                    <li><a href="#"><img src="https://cdn.simpleicons.org/html5/1DB954" alt="HTML5"></a></li>
+                    <li><a href="#"><img src="https://cdn.simpleicons.org/css3/1DB954" alt="CSS3"></a></li>
+                    <li><a href="#"><img src="https://cdn.simpleicons.org/javascript/1DB954" alt="JavaScript"></a></li>
+                    <li><a href="#"><img src="https://cdn.simpleicons.org/matlab/1DB954" alt="MATLAB"></a></li>
+                    <li><a href="#"><img src="https://cdn.simpleicons.org/bootstrap/1DB954" alt="Bootstrap"></a></li>
+                    <li><a href="#"><img src="https://cdn.simpleicons.org/git/1DB954" alt="Git"></a></li>
+                </ul>
+            </div>
+        </section>
+
+    </main>
+
+    <!-- ====================================================== -->
+    <!-- FOOTER SECTION                                         -->
+    <!-- ====================================================== -->
+    <footer>
+        <div class="container">
+            <div class="social-links">
+                <!-- === YOUR SOCIAL LINKS HERE === -->
+                <a href="https://github.com/yourusername" target="_blank" aria-label="GitHub">
+                    <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M12 .3a12 12 0 0 0-3.8 23.4c.6.1.8-.3.8-.6v-2.2c-3.3.7-4-1.6-4-1.6-.5-1.4-1.3-1.8-1.3-1.8-1-1 .1-1 .1-1 1.1.1 1.7 1.2 1.7 1.2.9 1.6 2.3 1.2 2.9.9.1-.7.4-1.2.8-1.5-2.2-.3-4.6-1.1-4.6-5 0-1.1.4-2 1-2.8-.1-.3-.5-1.3.1-2.7 0 0 .8-.3 2.8 1.1.8-.2 1.7-.4 2.5-.4s1.7.1 2.5.4c2-1.3 2.8-1.1 2.8-1.1.6 1.4.2 2.5.1 2.8.7.7 1 1.6 1 2.8 0 3.8-2.3 4.7-4.6 5 .4.3.8.9.8 1.8v2.6c0 .4.2.7.8.6A12 12 0 0 0 12 .3z"/></svg>
+                </a>
+                <a href="https://linkedin.com/in/yourusername" target="_blank" aria-label="LinkedIn">
+                    <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M22.23 0H1.77C.79 0 0 .77 0 1.72v20.56C0 23.23.79 24 1.77 24h20.46c.98 0 1.77-.77 1.77-1.72V1.72C24 .77 23.21 0 22.23 0zM7.06 20.45H3.55V9h3.51v11.45zM5.3 7.5c-1.1 0-2-1-2-2.2s.9-2.2 2-2.2c1.1 0 2 1 2 2.2s-.9 2.2-2 2.2zm15.15 12.95h-3.5v-5.5c0-1.3-.02-3-1.83-3-1.83 0-2.1 1.4-2.1 2.9v5.6H9.49V9h3.36v1.5h.05c.46-.9 1.6-1.8 3.3-1.8 3.55 0 4.2 2.3 4.2 5.4v6.35z"/></svg>
+                </a>
+                <a href="mailto:youremail@example.com" aria-label="Email">
+                    <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M22 6c0-1.1-.9-2-2-2H4c-1.1 0-2 .9-2 2v12c0 1.1.9 2 2 2h16c1.1 0 2-.9 2-2V6zm-2 0l-8 5-8-5h16zm0 12H4V8l8 5 8-5v10z"/></svg>
+                </a>
+            </div>
+            <!-- === YOUR COPYRIGHT NOTICE HERE === -->
+            <!-- JavaScript will automatically update the year -->
+            <p class="copyright">&copy; <span id="year"></span> Your Name. All Rights Reserved.</p>
+        </div>
+    </footer>
+
+
+    <!-- JAVASCRIPT LIBRARIES & CUSTOM SCRIPT -->
+    
+    <!-- TagCanvas library for the animated stack -->
+    <script src="https://www.goat1000.com/tagcanvas.min.js" type="text/javascript"></script>
+    
+    <script>
+        // Use window.onload to ensure all content, including the TagCanvas library, is loaded before scripts run.
+        window.onload = function() {
+            
+            // --- 1. SET CURRENT YEAR IN FOOTER ---
+            const yearSpan = document.getElementById('year');
+            if (yearSpan) {
+                yearSpan.textContent = new Date().getFullYear();
+            }
+
+            // --- 2. FADE-IN SECTIONS ON SCROLL ---
+            const sections = document.querySelectorAll('.fade-in-section');
+            if ('IntersectionObserver' in window) {
+                const sectionObserver = new IntersectionObserver((entries, observer) => {
+                    entries.forEach(entry => {
+                        if (entry.isIntersecting) {
+                            entry.target.classList.add('is-visible');
+                            observer.unobserve(entry.target);
+                        }
+                    });
+                }, { root: null, threshold: 0.1 });
+
+                sections.forEach(section => {
+                    sectionObserver.observe(section);
+                });
+            } else {
+                // Fallback for older browsers
+                sections.forEach(section => section.classList.add('is-visible'));
+            }
+
+            // --- 3. INITIALIZE ANIMATED STACK (TagCanvas) ---
+            try {
+                TagCanvas.Start('stack-canvas', 'tags', {
+                    // Use images from the <img> tags
+                    imageMode: 'tag',
+                    // Set the image size directly. This creates a 20px diameter logo.
+                    imageRadius: 10,
+                    // Animation settings
+                    outlineColour: 'transparent',
+                    reverse: true,
+                    depth: 0.8,
+                    maxSpeed: 0.05,
+                    initial: [0.05, -0.05], // Start with a slow rotation
+                    // Interaction settings
+                    wheelZoom: false, // Prevent zooming with scroll wheel
+                    noSelect: true,
+                    lock: 'xy' // Only rotate on x and y axes
+                });
+            } catch(e) {
+                // If the canvas fails, hide the container
+                console.error("TagCanvas failed to load:", e);
+                document.getElementById('stack-canvas-container').style.display = 'none';
+            }
+        };
+    </script>
+
 </body>
 </html>
