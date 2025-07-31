@@ -246,7 +246,20 @@
             display: flex;
             flex-direction: column;
             width: 100%;
-            height: auto;
+            height: 100%; /* Important for consistent height in carousel */
+        }
+
+        .ui-links-list {
+            list-style: none;
+            padding-left: 0;
+            margin-top: 1rem;
+            flex-grow: 1;
+        }
+        .ui-links-list li {
+            margin-bottom: 0.75rem;
+        }
+        .ui-links-list a {
+            font-weight: 500;
         }
 
         .project-card:hover {
@@ -364,19 +377,19 @@
         
         /* === RESPONSIVE STYLES === */
         @media (min-width: 769px) {
-            /* Desktop-only styles */
+            /* Desktop-only styles for Carousel */
             .project-grid {
-                display: flex; /* Override grid to flex for swiper */
+                display: flex; /* This is the key fix */
             }
-            .swiper-container {
+            .swiper {
                 width: 100%;
-                padding: 0 50px; /* Space for navigation arrows */
+                padding: 0 50px;
             }
             .swiper-slide {
-                height: auto; /* Ensure slides have consistent height */
+                height: auto;
             }
             .swiper-button-next, .swiper-button-prev {
-                display: flex; /* Show arrows on desktop */
+                display: flex;
             }
         }
         
@@ -423,7 +436,6 @@
 </head>
 <body>
 
-    <!-- NAVIGATION BAR -->
     <nav class="navbar">
         <div class="container">
             <a href="#" class="nav-logo">Saifullah Bin Yusuf</a>
@@ -435,7 +447,6 @@
         </div>
     </nav>
 
-    <!-- HERO SECTION -->
     <header class="hero">
         <div class="hero-background">
         </div>
@@ -448,7 +459,6 @@
     </header>
 
     <main>
-        <!-- ABOUT ME SECTION -->
         <section id="about" class="container fade-in-section">
             <h2>About Me</h2>
             <div class="about-content">
@@ -462,14 +472,11 @@
         </section>
 
 
-        <!-- FEATURED PROJECTS SECTION -->
         <section id="projects" class="container fade-in-section">
             <h2>Featured Work</h2>
-            <!-- Swiper Carousel Container -->
-            <div class="swiper swiper-container">
+            <div class="swiper">
                 <div class="project-grid swiper-wrapper">
 
-                    <!-- Project 1 -->
                     <div class="project-card swiper-slide">
                         <img src="images/thumbnail_1.png" alt="Screenshot of Project One" onerror="this.onerror=null;this.src='https://placehold.co/600x400/1e1e1e/ffffff?text=Image+Not+Found';">
                         <div class="project-content">
@@ -489,27 +496,6 @@
                         </div>
                     </div>
 
-                    <!-- Project 3 -->
-                    <div class="project-card swiper-slide">
-                        <img src="images/thumbnail_3.jpg" alt="Screenshot of Project Three" onerror="this.onerror=null;this.src='https://placehold.co/600x400/1e1e1e/ffffff?text=Image+Not+Found';">
-                        <div class="project-content">
-                            <div class="project-tags">
-                                <span>Django</span>
-                                <span>Bootstrap</span>
-                                <span>PostgreSQL</span>
-                            </div>
-                            <h3>Account Tracker</h3>
-                            <p>A full-featured Django web application for managing financial accounts and tracking transactions. This app allows users to register, create multiple accounts, and log inflows and expenses with receipt uploads for each transaction.</p>
-                            <div class="project-links">
-                                <a href="https://github.com/saifullahBUET144/account_tracker" target="_blank">
-                                    <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M12 .3a12 12 0 0 0-3.8 23.4c.6.1.8-.3.8-.6v-2.2c-3.3.7-4-1.6-4-1.6-.5-1.4-1.3-1.8-1.3-1.8-1-1 .1-1 .1-1 1.1.1 1.7 1.2 1.7 1.2.9 1.6 2.3 1.2 2.9.9.1-.7.4-1.2.8-1.5-2.2-.3-4.6-1.1-4.6-5 0-1.1.4-2 1-2.8-.1-.3-.5-1.3.1-2.7 0 0 .8-.3 2.8 1.1.8-.2 1.7-.4 2.5-.4s1.7.1 2.5.4c2-1.3 2.8-1.1 2.8-1.1.6 1.4.2 2.5.1 2.8.7.7 1 1.6 1 2.8 0 3.8-2.3 4.7-4.6 5 .4.3.8.9.8 1.8v2.6c0 .4.2.7.8.6A12 12 0 0 0 12 .3z"/></svg>
-                                    GitHub
-                                </a>
-                            </div>
-                        </div>
-                    </div>
-
-                    <!-- Project 2 -->
                     <div class="project-card swiper-slide">
                         <img src="images/thumbnail_2.jpg" alt="Screenshot of Project Two" onerror="this.onerror=null;this.src='https://placehold.co/600x400/1e1e1e/ffffff?text=Image+Not+Found';">
                         <div class="project-content">
@@ -529,15 +515,53 @@
                         </div>
                     </div>
 
+                    <div class="project-card swiper-slide">
+                        <img src="images/thumbnail_3.jpg" alt="Screenshot of Project Three" onerror="this.onerror=null;this.src='https://placehold.co/600x400/1e1e1e/ffffff?text=Image+Not+Found';">
+                        <div class="project-content">
+                            <div class="project-tags">
+                                <span>Django</span>
+                                <span>Bootstrap</span>
+                                <span>PostgreSQL</span>
+                            </div>
+                            <h3>Account Tracker</h3>
+                            <p>A full-featured Django web application for managing financial accounts and tracking transactions. This app allows users to register, create multiple accounts, and log inflows and expenses with receipt uploads for each transaction.</p>
+                            <div class="project-links">
+                                <a href="https://github.com/saifullahBUET144/account_tracker" target="_blank">
+                                    <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M12 .3a12 12 0 0 0-3.8 23.4c.6.1.8-.3.8-.6v-2.2c-3.3.7-4-1.6-4-1.6-.5-1.4-1.3-1.8-1.3-1.8-1-1 .1-1 .1-1 1.1.1 1.7 1.2 1.7 1.2.9 1.6 2.3 1.2 2.9.9.1-.7.4-1.2.8-1.5-2.2-.3-4.6-1.1-4.6-5 0-1.1.4-2 1-2.8-.1-.3-.5-1.3.1-2.7 0 0 .8-.3 2.8 1.1.8-.2 1.7-.4 2.5-.4s1.7.1 2.5.4c2-1.3 2.8-1.1 2.8-1.1.6 1.4.2 2.5.1 2.8.7.7 1 1.6 1 2.8 0 3.8-2.3 4.7-4.6 5 .4.3.8.9.8 1.8v2.6c0 .4.2.7.8.6A12 12 0 0 0 12 .3z"/></svg>
+                                    GitHub
+                                </a>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Project 4: UI Samples -->
+                    <div class="project-card swiper-slide">
+                        <img src="mages/thumbnail_4.jpg" alt="A collage of UI Samples" onerror="this.onerror=null;this.src='https://placehold.co/600x400/1e1e1e/ffffff?text=Image+Not+Found';">
+                        <div class="project-content">
+                            <div class="project-tags">
+                                <span>HTML</span>
+                                <span>CSS</span>
+                                <span>JavaScript</span>
+                            </div>
+                            <h3>UI Samples</h3>
+                            <p>A collection of various UI components and page layouts built with HTML, CSS, and JavaScript.</p>
+                            <ul class="ui-links-list">
+                                <li><a href="./UI Samples/magic_potion_mixer.html" target="_blank">magic Potion Mixer</a></li>
+                                <li><a href="./UI Samples/city_sounds.html" target="_blank">City Sounds</a></li>
+                                <li><a href="./UI Samples/stellar_muse.html" target="_blank">Stellar Muse</a></li>
+                                <li><a href="./UI Samples/luggage_picker.html" target="_blank">Luggage Picker</a></li>
+                                <li><a href="./UI Samples/thrift_app_ui.html" target="_blank">Thrift App</a></li>
+                            </ul>
+                        </div>
+                    </div>
+
                 </div>
-                <!-- Add Navigation -->
                 <div class="swiper-button-next"></div>
                 <div class="swiper-button-prev"></div>
             </div>
         </section>
 
 
-        <!-- DEVELOPMENT STACK SECTION -->
         <section id="stack" class="container fade-in-section">
             <h2>Development Stack</h2>
             <div id="stack-canvas-container">
@@ -567,7 +591,6 @@
 
     </main>
 
-    <!-- FOOTER SECTION -->
     <footer>
         <div class="container">
             <div class="social-links">
@@ -575,7 +598,7 @@
                     <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M12 .3a12 12 0 0 0-3.8 23.4c.6.1.8-.3.8-.6v-2.2c-3.3.7-4-1.6-4-1.6-.5-1.4-1.3-1.8-1.3-1.8-1-1 .1-1 .1-1 1.1.1 1.7 1.2 1.7 1.2.9 1.6 2.3 1.2 2.9.9.1-.7.4-1.2.8-1.5-2.2-.3-4.6-1.1-4.6-5 0-1.1.4-2 1-2.8-.1-.3-.5-1.3.1-2.7 0 0 .8-.3 2.8 1.1.8-.2 1.7-.4 2.5-.4s1.7.1 2.5.4c2-1.3 2.8-1.1 2.8-1.1.6 1.4.2 2.5.1 2.8.7.7 1 1.6 1 2.8 0 3.8-2.3 4.7-4.6 5 .4.3.8.9.8 1.8v2.6c0 .4.2.7.8.6A12 12 0 0 0 12 .3z"/></svg>
                 </a>
                 <a href="https://www.linkedin.com/in/saifullah-bin-yusuf-3647b71a4/" target="_blank" aria-label="LinkedIn">
-                    <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M22.23 0H1.77C.79 0 0 .77 0 1.72v20.56C0 23.23.79 24 1.77 24h20.46c.98 0 1.77-.77 1.77-1.72V1.72C24 .77 23.21 0 22.23 0zM7.06 20.45H3.55V9h3.51v11.45zM5.3 7.5c-1.1 0-2-1-2-2.2s.9-2.2 2-2.2c1.1 0 2 1 2 2.2s-.9 2.2-2 2.2zm15.15 12.95h-3.5v-5.5c0-1.3-.02-3-1.83-3-1.83 0-2.1 1.4-2.1 2.9v5.6H9.49V9h3.36v1.5h.05c.46-.9 1.6-1.8 3.3-1.8 3.55 0 4.2 2.3 4.2 5.4v6.35z"/></svg>
+                    <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M22.23 0H1.77C.79 0 0 .77 0 1.72v20.56C0 23.23.79 24 1.77 24h20.46c.98 0 1.77-.77 1.77-1.72V1.72C24 .77 23.21 0 22.23 0zM7.06 20.45H3.55V9h3.51v11.45zM5.3 7.5c-1.1 0-2-1-2-2.2s.9-2.2 2-2.2c1.1 0 2 1 2.2s-.9 2.2-2 2.2zm15.15 12.95h-3.5v-5.5c0-1.3-.02-3-1.83-3-1.83 0-2.1 1.4-2.1 2.9v5.6H9.49V9h3.36v1.5h.05c.46-.9 1.6-1.8 3.3-1.8 3.55 0 4.2 2.3 4.2 5.4v6.35z"/></svg>
                 </a>
                 <a href="mailto:saifsearcher@gmail.com" aria-label="Email">
                     <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M22 6c0-1.1-.9-2-2-2H4c-1.1 0-2 .9-2 2v12c0 1.1.9 2 2 2h16c1.1 0 2-.9 2-2V6zm-2 0l-8 5-8-5h16zm0 12H4V8l8 5 8-5v10z"/></svg>
@@ -679,17 +702,26 @@
             });
 
             // --- INITIALIZE SWIPER CAROUSEL ---
-            if (window.innerWidth >= 769) { // Only initialize on desktop
-                const swiper = new Swiper('.swiper-container', {
-                    slidesPerView: 2,
-                    spaceBetween: 30,
-                    loop: true,
-                    navigation: {
-                        nextEl: '.swiper-button-next',
-                        prevEl: '.swiper-button-prev',
-                    },
-                });
+            var swiper = null;
+            function initSwiper() {
+                if (window.innerWidth >= 769 && swiper == null) {
+                    swiper = new Swiper('.swiper', {
+                        slidesPerView: 2,
+                        spaceBetween: 30,
+                        loop: true,
+                        navigation: {
+                            nextEl: '.swiper-button-next',
+                            prevEl: '.swiper-button-prev',
+                        },
+                    });
+                } else if (window.innerWidth < 769 && swiper != null) {
+                    swiper.destroy();
+                    swiper = null;
+                }
             }
+            
+            initSwiper(); // Run on page load
+            window.addEventListener('resize', initSwiper); // Re-run on window resize
         };
     </script>
 
