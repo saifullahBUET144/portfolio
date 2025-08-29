@@ -67,7 +67,7 @@
                             <img src="../images/binary_tree.png" alt="Binary Tree Thumbnail" class="w-full h-full object-cover" onerror="this.onerror=null;this.src='https://placehold.co/600x400/0f172a/e2e8f0?text=Binary+Tree';">
                         </div>
                         <div class="p-6">
-                            <h2 class="text-2xl font-bold text-slate-100 flex items-center gap-3"><i class="fa-solid fa-code-branch text-cyan-400"></i>Binary Tree</h2>
+                            <h2 class="text-3xl font-bold text-slate-100 flex items-center gap-3"><i class="fa-solid fa-code-branch text-cyan-400"></i>Binary Tree</h2>
                             <p class="text-slate-400 mt-2">A tree where each node has at most two children.</p>
                         </div>
                     </div>
@@ -78,7 +78,7 @@
                              <img src="../images/binary_search_tree.png" alt="Binary Search Tree Thumbnail" class="w-full h-full object-cover" onerror="this.onerror=null;this.src='https://placehold.co/600x400/0f172a/e2e8f0?text=Binary+Search+Tree';">
                         </div>
                         <div class="p-6">
-                            <h2 class="text-2xl font-bold text-slate-100 flex items-center gap-3"><i class="fa-solid fa-code-fork text-cyan-400"></i></i>Binary Search Tree</h2>
+                            <h2 class="text-3xl font-bold text-slate-100 flex items-center gap-3"><i class="fa-solid fa-code-fork text-cyan-400"></i>Binary Search Tree</h2>
                             <p class="text-slate-400 mt-2">A sorted binary tree for fast data operations.</p>
                         </div>
                     </div>
@@ -89,7 +89,7 @@
                              <img src="../images/trie.png" alt="Trie Thumbnail" class="w-full h-full object-cover" onerror="this.onerror=null;this.src='https://placehold.co/600x400/0f172a/e2e8f0?text=Trie';">
                         </div>
                         <div class="p-6">
-                            <h2 class="text-2xl font-bold text-slate-100 flex items-center gap-3"><i class="fa-solid fa-arrow-down-a-z text-cyan-400"></i></i>Trie</h2>
+                            <h2 class="text-3xl font-bold text-slate-100 flex items-center gap-3"><i class="fa-solid fa-arrow-down-a-z text-cyan-400"></i>Trie</h2>
                             <p class="text-slate-400 mt-2">An efficient tree for storing and retrieving strings.</p>
                         </div>
                     </div>
@@ -98,21 +98,21 @@
         </div>
 
         <!-- Visualizer Page -->
-        <div id="visualizer-page" class="hidden">
-            <header class="glass-panel p-4 flex items-center justify-between sticky top-0 z-50">
-                <div>
-                    <button id="back-btn" class="bg-slate-700/50 hover:bg-slate-700 text-white font-bold py-2 px-4 rounded-lg transition-colors">
-                        <span class="sm:hidden">&larr;</span>
-                        <span class="hidden sm:inline">&larr; Back to Home</span>
-                    </button>
-                </div>
+        <div id="visualizer-page" class="hidden h-screen flex flex-col">
+            <header class="glass-panel p-4 flex items-center justify-between sticky top-0 z-50 shrink-0">
+                <button id="back-btn" class="bg-slate-700/50 hover:bg-slate-700 text-white font-bold py-2 px-4 rounded-lg transition-colors">
+                    <span class="sm:hidden">&larr;</span>
+                    <span class="hidden sm:inline">&larr; Back to Home</span>
+                </button>
                 <div id="visualizer-title" class="text-xl md:text-3xl font-bold text-slate-100 flex items-center gap-3 absolute left-1/2 -translate-x-1/2 whitespace-nowrap"></div>
-                <div class="w-16 sm:w-32"></div> <!-- Spacer to balance header -->
+                <button id="visualizer-info-btn" class="text-slate-300 hover:text-cyan-400 transition text-3xl pr-3">
+                    <i class="fa-solid fa-circle-question"></i>
+                </button>
             </header>
 
-            <div class="flex flex-col lg:flex-row h-[calc(100vh-72px)]">
+            <main class="flex-1 p-4 lg:p-6 flex flex-col lg:flex-row gap-6 overflow-hidden">
                 <!-- Controls Panel -->
-                <div class="w-full lg:w-80 glass-panel p-6 border-b lg:border-b-0 lg:border-r border-slate-700/50 overflow-y-auto">
+                <div class="w-full lg:w-80 glass-panel p-6 rounded-xl overflow-y-auto shrink-0">
                     <h3 class="text-lg font-semibold mb-4 flex items-center"><i class="fas fa-sliders-h mr-3 text-cyan-400"></i>Controls</h3>
                     <div class="space-y-4">
                         <div>
@@ -134,10 +134,10 @@
                 </div>
 
                 <!-- Canvas -->
-                <div id="canvas-container" class="flex-1 bg-slate-900/20 overflow-hidden relative">
+                <div id="canvas-container" class="flex-1 w-full glass-panel rounded-xl overflow-hidden relative">
                     <svg id="canvas" width="100%" height="100%"></svg>
                 </div>
-            </div>
+            </main>
         </div>
     </div>
     
@@ -148,6 +148,17 @@
              <p class="text-slate-300 mb-3 text-sm md:text-base">This tool is designed to help you visualize and interact with tree data structures. You can build, edit, and manipulate Binary Trees and Binary Search Trees in real-time.</p>
              <p class="text-slate-300 mb-4 text-sm md:text-base">Features include node creation, editing, deletion, BST balancing, and Python code generation. It's built with HTML, Tailwind CSS, and vanilla JavaScript.</p>
              <button id="close-about-modal" class="py-2 px-4 bg-slate-700/80 hover:bg-slate-700 rounded-lg transition-all text-sm md:text-base">Close</button>
+        </div>
+    </div>
+
+    <!-- Data Structure Info Modal -->
+    <div id="ds-info-modal" class="fixed inset-0 bg-black/70 flex items-center justify-center p-4 z-[1000] opacity-0 pointer-events-none">
+        <div class="glass-panel rounded-xl p-6 md:p-8 max-w-2xl w-full mx-4 max-h-[90vh] flex flex-col">
+             <h2 id="ds-info-title" class="text-xl md:text-2xl font-bold text-cyan-300 mb-4 flex items-center"></h2>
+             <div id="ds-info-content" class="text-slate-300 text-sm md:text-base space-y-4 overflow-y-auto">
+                <!-- Content will be injected by JS -->
+             </div>
+             <button id="close-ds-info-modal" class="mt-6 py-2 px-4 bg-slate-700/80 hover:bg-slate-700 rounded-lg transition-all text-sm md:text-base self-start">Close</button>
         </div>
     </div>
     
@@ -177,6 +188,31 @@
             </div>
         </div>
     </div>
+
+    <!-- Node Edit Modal (for Mobile) -->
+    <div id="node-edit-modal" class="fixed inset-0 bg-black/70 flex items-center justify-center p-4 hidden z-[1000]">
+        <div class="glass-panel rounded-lg shadow-xl w-full max-w-xs flex flex-col">
+            <div class="flex justify-between items-center p-4 border-b border-slate-700/50">
+                <h3 class="text-lg font-semibold text-white">Edit Node</h3>
+                <button id="close-node-modal-btn" class="text-slate-400 hover:text-white text-2xl leading-none">&times;</button>
+            </div>
+            <div class="p-4 space-y-4">
+                <div>
+                    <label for="node-value-input" class="block text-sm font-medium text-slate-300 mb-2">Node Value</label>
+                    <input type="number" id="node-value-input" class="block w-full bg-slate-900/70 border border-slate-700 rounded-lg px-3 py-2 focus:ring-2 focus:ring-cyan-500 outline-none transition-all placeholder-slate-500">
+                </div>
+                <div id="node-actions-container" class="space-y-3">
+                    <div id="add-children-buttons" class="grid grid-cols-2 gap-3">
+                        <button id="add-left-child-btn" class="w-full bg-green-600/50 hover:bg-green-600/70 text-white font-bold py-2 px-4 rounded-lg transition-all flex items-center justify-center gap-2 text-sm disabled:opacity-50 disabled:cursor-not-allowed"><i class="fas fa-plus"></i>Add Left</button>
+                        <button id="add-right-child-btn" class="w-full bg-green-600/50 hover:bg-green-600/70 text-white font-bold py-2 px-4 rounded-lg transition-all flex items-center justify-center gap-2 text-sm disabled:opacity-50 disabled:cursor-not-allowed"><i class="fas fa-plus"></i>Add Right</button>
+                    </div>
+                    <button id="delete-node-btn" class="w-full bg-red-600/80 hover:bg-red-600 text-white font-bold py-2 px-4 rounded-lg transition-all flex items-center justify-center gap-2"><i class="fas fa-trash"></i>Delete Node</button>
+                </div>
+                <button id="save-node-btn" class="w-full bg-cyan-600/80 hover:bg-cyan-600 text-white font-bold py-2 px-4 rounded-lg transition-all">Save Changes</button>
+            </div>
+        </div>
+    </div>
+
 
     <script src="script.js"></script>
 </body>

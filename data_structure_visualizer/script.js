@@ -7,6 +7,7 @@ document.addEventListener('DOMContentLoaded', () => {
     const cards = document.querySelectorAll('.card');
     const hamburgerBtn = document.getElementById('hamburger-btn');
     const mobileMenu = document.getElementById('mobile-menu');
+    const visualizerInfoBtn = document.getElementById('visualizer-info-btn');
 
     // Visualizer controls
     const inputDescription = document.getElementById('input-description');
@@ -30,13 +31,83 @@ document.addEventListener('DOMContentLoaded', () => {
     const mobileAboutBtn = document.getElementById('mobile-about-btn');
     const closeAboutModalBtn = document.getElementById('close-about-modal');
     const toastContainer = document.getElementById('toast-container');
+    
+    // DS Info Modal elements
+    const dsInfoModal = document.getElementById('ds-info-modal');
+    const dsInfoTitle = document.getElementById('ds-info-title');
+    const dsInfoContent = document.getElementById('ds-info-content');
+    const closeDsInfoModalBtn = document.getElementById('close-ds-info-modal');
+
+    // Node Edit Modal elements
+    const nodeEditModal = document.getElementById('node-edit-modal');
+    const closeNodeModalBtn = document.getElementById('close-node-modal-btn');
+    const nodeValueInput = document.getElementById('node-value-input');
+    const addLeftChildBtn = document.getElementById('add-left-child-btn');
+    const addRightChildBtn = document.getElementById('add-right-child-btn');
+    const deleteNodeBtn = document.getElementById('delete-node-btn');
+    const saveNodeBtn = document.getElementById('save-node-btn');
+    const addChildrenButtons = document.getElementById('add-children-buttons');
 
     let currentTreeType = null;
     let currentRoot = null;
+    let currentlyEditingNode = null;
 
     // --- Pan and Zoom State ---
     let scale = 1, translateX = 0, translateY = 0, isPanning = false, startX, startY;
     let masterGroup = null;
+
+    // --- Utility ---
+    const isMobile = () => window.innerWidth <= 768;
+
+    // --- Data Structure Information ---
+    const dsInfoData = {
+        BT: {
+            title: `<i class="fa-solid fa-code-branch text-cyan-400 mr-3"></i>Binary Tree`,
+            content: `
+                <p>A <strong>Binary Tree</strong> is a hierarchical data structure where each node has at most two children, referred to as the left child and the right child. It's a foundational structure used to implement more complex trees.</p>
+                <h4 class="font-semibold text-slate-100 mt-4">Use Cases:</h4>
+                <ul class="list-disc list-inside space-y-1">
+                    <li>Used in expression trees for evaluating arithmetic expressions.</li>
+                    <li>Forms the basis for more advanced structures like Binary Search Trees, heaps, and syntax trees in compilers.</li>
+                    <li>Represents hierarchical data, such as file systems.</li>
+                </ul>
+                <h4 class="font-semibold text-slate-100 mt-4">Input Format:</h4>
+                <p>Provide numbers in <strong>level-order traversal</strong>, separated by commas. Use the word <code class="bg-slate-700/50 px-1 rounded-md text-cyan-400">null</code> to represent an empty spot where a node could be.</p>
+                <p><strong>Example:</strong> <code class="bg-slate-700/50 px-1 rounded-md text-cyan-400">8, 3, 10, 1, 6, null, 14</code></p>
+            `
+        },
+        BST: {
+            title: `<i class="fa-solid fa-code-fork text-cyan-400 mr-3"></i>Binary Search Tree`,
+            content: `
+                <p>A <strong>Binary Search Tree (BST)</strong> is a special type of binary tree with a specific ordering property: for any given node, all values in its left subtree are less than the node's value, and all values in its right subtree are greater than or equal to the node's value.</p>
+                <h4 class="font-semibold text-slate-100 mt-4">Use Cases:</h4>
+                <ul class="list-disc list-inside space-y-1">
+                    <li>Extremely efficient for searching, insertion, and deletion operations (average time complexity of O(log n)).</li>
+                    <li>Used to implement dynamic sets and lookup tables (e.g., dictionaries or maps).</li>
+                    <li>Can be used to naturally sort items by performing an in-order traversal.</li>
+                </ul>
+                <h4 class="font-semibold text-slate-100 mt-4">Input Format:</h4>
+                <p>Provide a list of unique numbers separated by commas. The visualizer will automatically construct the BST by inserting the numbers in the given order.</p>
+                <p><strong>Example:</strong> <code class="bg-slate-700/50 px-1 rounded-md text-cyan-400">8, 3, 10, 1, 6, 14, 4, 7, 13</code></p>
+            `
+        },
+        TRIE: {
+            title: `<i class="fa-solid fa-arrow-down-a-z text-cyan-400 mr-3"></i>Trie (Prefix Tree)`,
+            content: `
+                <p>A <strong>Trie</strong>, also known as a prefix tree, is a tree-like data structure that specializes in storing and retrieving strings. Each node represents a character, and paths from the root to a node represent prefixes. Nodes marking the end of a complete word are highlighted.</p>
+                <h4 class="font-semibold text-slate-100 mt-4">Use Cases:</h4>
+                <ul class="list-disc list-inside space-y-1">
+                    <li>Autocomplete and search suggestions in search engines and text editors.</li>
+                    <li>Spell checkers and auto-correct features.</li>
+                    <li>IP routing tables for efficient prefix matching.</li>
+                </ul>
+                <h4 class="font-semibold text-slate-100 mt-4">Input Format:</h4>
+                <p>Provide words separated by commas. The case will be standardized to lowercase.</p>
+                <p><strong>Example:</strong> <code class="bg-slate-700/50 px-1 rounded-md text-cyan-400">apple, app, apply, apt, ape</code></p>
+            `
+        }
+    };
+
 
     // --- Animated Background ---
     const bgCanvas = document.getElementById('background-canvas');
@@ -188,7 +259,6 @@ document.addEventListener('DOMContentLoaded', () => {
             const cardTitleHTML = card.querySelector('h2').innerHTML;
             visualizerTitle.innerHTML = cardTitleHTML;
             
-            // Reset UI states
             balanceBstBtn.classList.add('hidden');
             
             if (currentTreeType === 'BST') {
@@ -240,7 +310,7 @@ document.addEventListener('DOMContentLoaded', () => {
             this.isEndOfWord = false;
             this.x = 0;
             this.y = 0;
-            this.width = 0; // Width of the subtree rooted at this node
+            this.width = 0;
         }
     }
 
@@ -341,7 +411,7 @@ document.addEventListener('DOMContentLoaded', () => {
         return result.slice(0, lastNonNullIndex + 1);
     }
 
-    // --- Visualization Logic ---
+    // Visualization
 
     function clearCanvas() {
         canvas.innerHTML = '';
@@ -362,7 +432,7 @@ document.addEventListener('DOMContentLoaded', () => {
             generatePyBtn.classList.add('hidden');
             return;
         }
-        generatePyBtn.classList.add('hidden'); // No python code for trie yet
+        generatePyBtn.classList.add('hidden');
 
         const svgNS = "http://www.w3.org/2000/svg";
         masterGroup = document.createElementNS(svgNS, 'g');
@@ -434,7 +504,6 @@ document.addEventListener('DOMContentLoaded', () => {
         translateY = (canvasHeight - treeHeight * scale) / 2 - minY * scale;
         updateTransform();
 
-        // Draw edges first
         edges.forEach(edge => {
             const line = document.createElementNS(svgNS, 'line');
             line.setAttribute('x1', edge.from.x);
@@ -445,7 +514,6 @@ document.addEventListener('DOMContentLoaded', () => {
             masterGroup.appendChild(line);
         });
 
-        // Draw nodes on top of edges
         nodes.forEach(node => {
             const g = document.createElementNS(svgNS, 'g');
             g.setAttribute('class', 'node');
@@ -461,7 +529,7 @@ document.addEventListener('DOMContentLoaded', () => {
             const text = document.createElementNS(svgNS, 'text');
             text.setAttribute('dy', '.3em');
             text.setAttribute('text-anchor', 'middle');
-            text.textContent = node.value === 'root' ? ' ' : node.value; // Don't show text for root
+            text.textContent = node.value === 'root' ? ' ' : node.value;
 
             g.appendChild(circle);
             g.appendChild(text);
@@ -548,7 +616,7 @@ document.addEventListener('DOMContentLoaded', () => {
 
             const circle = document.createElementNS(svgNS, 'circle');
             circle.setAttribute('r', nodeRadius);
-            circle.setAttribute('fill', '#0f172a'); // slate-900
+            circle.setAttribute('fill', '#0f172a');
 
             const text = document.createElementNS(svgNS, 'text');
             text.setAttribute('dy', '.3em');
@@ -559,112 +627,190 @@ document.addEventListener('DOMContentLoaded', () => {
             g.appendChild(text);
             masterGroup.appendChild(g);
 
-            // In-place editing
+            // Click listener for mobile/desktop
             g.addEventListener('click', (event) => {
                 event.stopPropagation();
-                if (g.querySelector('foreignObject')) return;
-                const textElement = g.querySelector('text');
-                textElement.style.visibility = 'hidden';
-                const fo = document.createElementNS(svgNS, 'foreignObject');
-                fo.setAttribute('x', -nodeRadius);
-                fo.setAttribute('y', -15);
-                fo.setAttribute('width', nodeRadius * 2);
-                fo.setAttribute('height', 30);
-                const input = document.createElement('input');
-                input.setAttribute('type', 'number');
-                input.value = node.value;
-                input.style.cssText = `width: 100%; height: 100%; background-color: #1e293b; border: 1px solid #6366f1; border-radius: 4px; color: #f1f5f9; text-align: center; font-size: 1rem; font-weight: 600; font-family: 'Poppins', sans-serif; outline: none;`;
-                fo.appendChild(input);
-                g.appendChild(fo);
-                input.focus();
-                input.select();
-                const finishEdit = () => {
-                    const newValueRaw = input.value;
-                    if (g.contains(fo)) g.removeChild(fo);
-                    textElement.style.visibility = 'visible';
-                    if (newValueRaw === null || newValueRaw.trim() === '') return;
-                    const newValue = Number(newValueRaw);
-                    if (isNaN(newValue) || node.value === newValue) return;
-                    if (currentTreeType === 'BST') {
-                        const bstValues = [];
-                        function getValues(n) { if (!n) return; bstValues.push(n.value); getValues(n.left); getValues(n.right); }
-                        getValues(currentRoot);
-                        const index = bstValues.indexOf(node.value);
-                        if (index > -1) bstValues[index] = newValue;
-                        treeInput.value = bstValues.join(', ');
-                    } else {
-                        node.value = newValue;
-                        const newArray = treeToLevelOrderArray(currentRoot);
-                        treeInput.value = newArray.map(v => v === null ? 'null' : v).join(', ');
-                    }
-                    visualizeBtn.click();
-                };
-                input.addEventListener('blur', finishEdit, { once: true });
-                input.addEventListener('keydown', (e) => {
-                    if (e.key === 'Enter') input.blur();
-                    if (e.key === 'Escape') { if (g.contains(fo)) g.removeChild(fo); textElement.style.visibility = 'visible'; }
-                });
+                if (isMobile()) {
+                    openNodeEditModal(node);
+                } else {
+                    // Desktop in-place editing
+                    if (g.querySelector('foreignObject')) return;
+                    const textElement = g.querySelector('text');
+                    textElement.style.visibility = 'hidden';
+                    const fo = document.createElementNS(svgNS, 'foreignObject');
+                    fo.setAttribute('x', -nodeRadius);
+                    fo.setAttribute('y', -15);
+                    fo.setAttribute('width', nodeRadius * 2);
+                    fo.setAttribute('height', 30);
+                    const input = document.createElement('input');
+                    input.setAttribute('type', 'number');
+                    input.value = node.value;
+                    input.style.cssText = `width: 100%; height: 100%; background-color: #1e293b; border: 1px solid #6366f1; border-radius: 4px; color: #f1f5f9; text-align: center; font-size: 1rem; font-weight: 600; font-family: 'Poppins', sans-serif; outline: none;`;
+                    fo.appendChild(input);
+                    g.appendChild(fo);
+                    input.focus();
+                    input.select();
+                    const finishEdit = () => {
+                        const newValueRaw = input.value;
+                        if (g.contains(fo)) g.removeChild(fo);
+                        textElement.style.visibility = 'visible';
+                        if (newValueRaw === null || newValueRaw.trim() === '') return;
+                        const newValue = Number(newValueRaw);
+                        if (isNaN(newValue) || node.value === newValue) return;
+                        updateNodeValue(node, newValue);
+                    };
+                    input.addEventListener('blur', finishEdit, { once: true });
+                    input.addEventListener('keydown', (e) => {
+                        if (e.key === 'Enter') input.blur();
+                        if (e.key === 'Escape') { if (g.contains(fo)) g.removeChild(fo); textElement.style.visibility = 'visible'; }
+                    });
+                }
             });
 
-            // Add Child Buttons
-            if (currentTreeType !== 'BST') {
-                const directions = [{ side: 'left', x: -25, y: 25 }, { side: 'right', x: 25, y: 25 }];
-                directions.forEach(({ side, x, y }) => {
-                    if (node[side] === null) {
-                        const addBtn = document.createElementNS(svgNS, 'g');
-                        addBtn.setAttribute('class', 'action-btn add-btn');
-                        addBtn.setAttribute('transform', `translate(${x}, ${y})`);
-                        const btnCircle = document.createElementNS(svgNS, 'circle');
-                        btnCircle.setAttribute('r', '10');
-                        const btnText = document.createElementNS(svgNS, 'text');
-                        btnText.setAttribute('dy', '.35em');
-                        btnText.setAttribute('text-anchor', 'middle');
-                        btnText.textContent = '+';
-                        addBtn.appendChild(btnCircle);
-                        addBtn.appendChild(btnText);
-                        g.appendChild(addBtn);
-                        addBtn.addEventListener('click', (e) => {
-                            e.stopPropagation();
-                            node[side] = new Node(0);
-                            node[side].parent = node;
-                            const newArray = treeToLevelOrderArray(currentRoot);
-                            treeInput.value = newArray.map(v => v === null ? 'null' : v).join(', ');
-                            visualizeBtn.click();
-                        });
-                    }
+            if (!isMobile()) {
+                // Add Child Buttons for desktop
+                if (currentTreeType !== 'BST') {
+                    const directions = [{ side: 'left', x: -25, y: 25 }, { side: 'right', x: 25, y: 25 }];
+                    directions.forEach(({ side, x, y }) => {
+                        if (node[side] === null) {
+                            const addBtn = document.createElementNS(svgNS, 'g');
+                            addBtn.setAttribute('class', 'action-btn add-btn');
+                            addBtn.setAttribute('transform', `translate(${x}, ${y})`);
+                            const btnCircle = document.createElementNS(svgNS, 'circle');
+                            btnCircle.setAttribute('r', '10');
+                            const btnText = document.createElementNS(svgNS, 'text');
+                            btnText.setAttribute('dy', '.35em');
+                            btnText.setAttribute('text-anchor', 'middle');
+                            btnText.textContent = '+';
+                            addBtn.appendChild(btnCircle);
+                            addBtn.appendChild(btnText);
+                            g.appendChild(addBtn);
+                            addBtn.addEventListener('click', (e) => {
+                                e.stopPropagation();
+                                addChildNode(node, side);
+                            });
+                        }
+                    });
+                }
+                
+                // Delete Button for desktop
+                const deleteBtn = document.createElementNS(svgNS, 'g');
+                deleteBtn.setAttribute('class', 'action-btn delete-btn');
+                deleteBtn.setAttribute('transform', 'translate(0, -35)');
+                const btnCircle = document.createElementNS(svgNS, 'circle');
+                btnCircle.setAttribute('r', '10');
+                const btnText = document.createElementNS(svgNS, 'text');
+                btnText.setAttribute('dy', '.35em');
+                btnText.setAttribute('text-anchor', 'middle');
+                btnText.textContent = '×';
+                deleteBtn.appendChild(btnCircle);
+                deleteBtn.appendChild(btnText);
+                g.appendChild(deleteBtn);
+                deleteBtn.addEventListener('click', (e) => {
+                    e.stopPropagation();
+                    deleteNodeAndDescendants(node);
                 });
             }
-            
-            // Delete Button
-            const deleteBtn = document.createElementNS(svgNS, 'g');
-            deleteBtn.setAttribute('class', 'action-btn delete-btn');
-            deleteBtn.setAttribute('transform', 'translate(0, -35)');
-            const btnCircle = document.createElementNS(svgNS, 'circle');
-            btnCircle.setAttribute('r', '10');
-            const btnText = document.createElementNS(svgNS, 'text');
-            btnText.setAttribute('dy', '.35em');
-            btnText.setAttribute('text-anchor', 'middle');
-            btnText.textContent = '×';
-            deleteBtn.appendChild(btnCircle);
-            deleteBtn.appendChild(btnText);
-            g.appendChild(deleteBtn);
-            deleteBtn.addEventListener('click', (e) => {
-                e.stopPropagation();
-                if (!node.parent) {
-                    currentRoot = null;
-                } else {
-                    if (node.parent.left === node) {
-                        node.parent.left = null;
-                    } else {
-                        node.parent.right = null;
-                    }
-                }
-                const newArray = treeToLevelOrderArray(currentRoot);
-                treeInput.value = newArray.map(v => v === null ? 'null' : v).join(', ');
-                visualizeBtn.click();
-            });
         });
     }
+
+    // --- Mobile Node Edit Modal ---
+    function openNodeEditModal(node) {
+        currentlyEditingNode = node;
+        nodeValueInput.value = node.value;
+
+        if (currentTreeType === 'BT') {
+            addChildrenButtons.classList.remove('hidden');
+            addLeftChildBtn.disabled = node.left !== null;
+            addRightChildBtn.disabled = node.right !== null;
+        } else {
+            addChildrenButtons.classList.add('hidden');
+        }
+        
+        nodeEditModal.classList.remove('hidden');
+    }
+
+    function closeNodeEditModal() {
+        nodeEditModal.classList.add('hidden');
+        currentlyEditingNode = null;
+    }
+
+    function updateNodeValue(node, newValue) {
+        if (currentTreeType === 'BST') {
+            const bstValues = [];
+            function getValues(n) { if (!n) return; bstValues.push(n.value); getValues(n.left); getValues(n.right); }
+            getValues(currentRoot);
+            const index = bstValues.indexOf(node.value);
+            if (index > -1) bstValues[index] = newValue;
+            treeInput.value = bstValues.join(', ');
+        } else {
+            node.value = newValue;
+            const newArray = treeToLevelOrderArray(currentRoot);
+            treeInput.value = newArray.map(v => v === null ? 'null' : v).join(', ');
+        }
+        visualizeBtn.click();
+    }
+
+    function addChildNode(node, side) {
+        node[side] = new Node(0);
+        node[side].parent = node;
+        const newArray = treeToLevelOrderArray(currentRoot);
+        treeInput.value = newArray.map(v => v === null ? 'null' : v).join(', ');
+        visualizeBtn.click();
+    }
+
+    function deleteNodeAndDescendants(node) {
+        if (!node.parent) {
+            currentRoot = null;
+        } else {
+            if (node.parent.left === node) {
+                node.parent.left = null;
+            } else {
+                node.parent.right = null;
+            }
+        }
+        const newArray = treeToLevelOrderArray(currentRoot);
+        treeInput.value = newArray.map(v => v === null ? 'null' : v).join(', ');
+        visualizeBtn.click();
+    }
+    
+    // Listeners for mobile edit modal
+    saveNodeBtn.addEventListener('click', () => {
+        if (!currentlyEditingNode) return;
+        const newValue = Number(nodeValueInput.value);
+        if (!isNaN(newValue) && currentlyEditingNode.value !== newValue) {
+            updateNodeValue(currentlyEditingNode, newValue);
+        }
+        closeNodeEditModal();
+    });
+
+    addLeftChildBtn.addEventListener('click', () => {
+        if (currentlyEditingNode) {
+            addChildNode(currentlyEditingNode, 'left');
+        }
+        closeNodeEditModal();
+    });
+
+    addRightChildBtn.addEventListener('click', () => {
+        if (currentlyEditingNode) {
+            addChildNode(currentlyEditingNode, 'right');
+        }
+        closeNodeEditModal();
+    });
+
+    deleteNodeBtn.addEventListener('click', () => {
+        if (currentlyEditingNode) {
+            deleteNodeAndDescendants(currentlyEditingNode);
+        }
+        closeNodeEditModal();
+    });
+    
+    closeNodeModalBtn.addEventListener('click', closeNodeEditModal);
+    nodeEditModal.addEventListener('click', (e) => {
+        if (e.target === nodeEditModal) closeNodeEditModal();
+    });
+
+
     
     // --- Pan and Zoom Handlers ---
     function updateTransform() {
@@ -843,23 +989,38 @@ document.addEventListener('DOMContentLoaded', () => {
     closeModalBtn.addEventListener('click', () => codeModal.classList.add('hidden'));
     codeModal.addEventListener('click', (e) => { if (e.target === codeModal) { codeModal.classList.add('hidden'); } });
     
+    // --- Modal Logic ---
     function showAboutModal() {
         aboutModal.classList.remove('opacity-0', 'pointer-events-none');
-        requestAnimationFrame(() => {
-            aboutModal.classList.add('show');
-        });
+        requestAnimationFrame(() => aboutModal.classList.add('show'));
     }
     function hideAboutModal() {
         aboutModal.classList.remove('show');
-        setTimeout(() => {
-            aboutModal.classList.add('opacity-0', 'pointer-events-none');
-        }, 300);
+        setTimeout(() => aboutModal.classList.add('opacity-0', 'pointer-events-none'), 300);
+    }
+    
+    function showDsInfoModal() {
+        const info = dsInfoData[currentTreeType];
+        if (info) {
+            dsInfoTitle.innerHTML = info.title;
+            dsInfoContent.innerHTML = info.content;
+            dsInfoModal.classList.remove('opacity-0', 'pointer-events-none');
+            requestAnimationFrame(() => dsInfoModal.classList.add('show'));
+        }
+    }
+    function hideDsInfoModal() {
+        dsInfoModal.classList.remove('show');
+        setTimeout(() => dsInfoModal.classList.add('opacity-0', 'pointer-events-none'), 300);
     }
 
     homeAboutBtn.addEventListener('click', showAboutModal);
     mobileAboutBtn.addEventListener('click', showAboutModal);
     closeAboutModalBtn.addEventListener('click', hideAboutModal);
-    aboutModal.addEventListener('click', (e) => { if (e.target === aboutModal) { hideAboutModal(); } });
+    aboutModal.addEventListener('click', (e) => { if (e.target === aboutModal) hideAboutModal(); });
+    
+    visualizerInfoBtn.addEventListener('click', showDsInfoModal);
+    closeDsInfoModalBtn.addEventListener('click', hideDsInfoModal);
+    dsInfoModal.addEventListener('click', (e) => { if (e.target === dsInfoModal) hideDsInfoModal(); });
 
 
     function copyToClipboard(text, button) {
