@@ -1,0 +1,172 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Data Structure Visualizer</title>
+    <!-- Tailwind CSS -->
+    <script src="https://cdn.tailwindcss.com"></script>
+    <!-- Google Fonts -->
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@300;400;500;600;700;800&display=swap" rel="stylesheet">
+    <!-- Font Awesome -->
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.1/css/all.min.css" xintegrity="sha512-DTOQO9RWCH3ppGqcWaEA1BIZOC6xxalwEsw9c2QQeAIftl+Vegovlnee1c9QX4TctnWMn13TZye+giMm8e2LwA==" crossorigin="anonymous" referrerpolicy="no-referrer" />
+    <!-- Custom CSS -->
+    <link rel="stylesheet" href="style.css">
+</head>
+<body class="antialiased">
+    <canvas id="background-canvas"></canvas>
+
+    <div id="app-container" class="min-h-screen">
+
+        <!-- Home Page -->
+        <div id="home-page">
+            <nav class="glass-panel py-4 px-6 flex items-center sticky top-0 z-50">
+                <div class="flex-1 flex items-center">
+                     <h1 class="text-lg sm:text-2xl font-bold bg-gradient-to-r from-cyan-400 to-purple-500 bg-clip-text text-transparent flex items-center gap-3">
+                        <svg class="w-7 h-7 text-cyan-400 hidden sm:block" viewBox="0 0 24 24" fill="currentColor" xmlns="http://www.w3.org/2000/svg"><g id="SVGRepo_bgCarrier" stroke-width="0"></g><g id="SVGRepo_tracerCarrier" stroke-linecap="round" stroke-linejoin="round"></g><g id="SVGRepo_iconCarrier"> <path fill-rule="evenodd" clip-rule="evenodd" d="M9 1H1V9H9V6H11V20H15V23H23V15H15V18H13V6H15V9H23V1H15V4H9V1ZM21 3H17V7H21V3ZM17 17H21V21H17V17Z"></path> </g></svg>
+                        <span>Data Structure Visualizer</span>
+                    </h1>
+                </div>
+                
+                <!-- Desktop Nav -->
+                <div class="hidden sm:flex flex-1 justify-end items-center space-x-6 pr-4">
+                    <button id="home-about-btn" class="text-slate-300 hover:text-cyan-400 transition text-lg">About</button>
+                    <a href="https://github.com/saifullahBUET144" target="_blank" class="text-slate-300 hover:text-cyan-400 transition"><i class="fab fa-github fa-xl"></i></a>
+                    <a href="https://www.linkedin.com/in/saifullah-bin-yusuf-3647b71a4/" target="_blank" class="text-slate-300 hover:text-cyan-400 transition"><i class="fab fa-linkedin fa-xl"></i></a>
+                </div>
+                
+                <!-- Mobile Nav -->
+                <div class="sm:hidden flex-1 flex justify-end">
+                    <button id="hamburger-btn" class="text-slate-300 hover:text-cyan-400 transition">
+                        <i class="fas fa-bars fa-lg"></i>
+                    </button>
+                </div>
+                 <div id="mobile-menu" class="hidden sm:hidden absolute top-full right-0 mt-2 w-48 bg-slate-900 rounded-lg shadow-lg p-2 border border-slate-700 z-50">
+                    <button id="mobile-about-btn" class="w-full text-left text-slate-300 hover:bg-slate-700/50 hover:text-cyan-400 transition rounded px-3 py-2">About</button>
+                    <a href="https://github.com/saifullahBUET144" target="_blank" class="block text-slate-300 hover:bg-slate-700/50 hover:text-cyan-400 transition rounded px-3 py-2">GitHub</a>
+                    <a href="https://www.linkedin.com/in/saifullah-bin-yusuf-3647b71a4/" target="_blank" class="block text-slate-300 hover:bg-slate-700/50 hover:text-cyan-400 transition rounded px-3 py-2">LinkedIn</a>
+                </div>
+            </nav>
+
+            <header class="container mx-auto px-6 py-12 sm:py-16 text-center">
+                <h1 class="text-4xl sm:text-5xl md:text-7xl font-bold bg-gradient-to-r from-cyan-400 to-purple-500 bg-clip-text text-transparent mb-2 floating">
+                    Visualize Data Structures
+                </h1>
+                <p class="text-lg sm:text-xl md:text-2xl text-slate-300 mt-4 max-w-3xl mx-auto font-bold subtitle-glow">
+                    An interactive way to understand complex data structures. Choose one to get started.
+                </p>
+            </header>
+
+            <main class="container mx-auto px-6 pb-16">
+                <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-8">
+                    <!-- Binary Tree Card -->
+                    <div class="card glass-panel rounded-xl overflow-hidden cursor-pointer" data-type="BT">
+                        <div class="relative h-48 bg-slate-700/50 flex items-center justify-center">
+                            <img src="../images/binary_tree.png" alt="Binary Tree Thumbnail" class="w-full h-full object-cover" onerror="this.onerror=null;this.src='https://placehold.co/600x400/0f172a/e2e8f0?text=Binary+Tree';">
+                        </div>
+                        <div class="p-6">
+                            <h2 class="text-2xl font-bold text-slate-100 flex items-center gap-3"><i class="fa-solid fa-code-branch text-cyan-400"></i>Binary Tree</h2>
+                            <p class="text-slate-400 mt-2">A tree where each node has at most two children.</p>
+                        </div>
+                    </div>
+
+                    <!-- Binary Search Tree Card -->
+                    <div class="card glass-panel rounded-xl overflow-hidden cursor-pointer" data-type="BST">
+                        <div class="relative h-48 bg-slate-700/50 flex items-center justify-center">
+                             <img src="../images/binary_search_tree.png" alt="Binary Search Tree Thumbnail" class="w-full h-full object-cover" onerror="this.onerror=null;this.src='https://placehold.co/600x400/0f172a/e2e8f0?text=Binary+Search+Tree';">
+                        </div>
+                        <div class="p-6">
+                            <h2 class="text-2xl font-bold text-slate-100 flex items-center gap-3"><i class="fa-solid fa-code-branch text-cyan-400"></i>Binary Search Tree</h2>
+                            <p class="text-slate-400 mt-2">A sorted binary tree for fast data operations.</p>
+                        </div>
+                    </div>
+                </div>
+            </main>
+        </div>
+
+        <!-- Visualizer Page -->
+        <div id="visualizer-page" class="hidden">
+            <header class="glass-panel p-4 flex items-center justify-between sticky top-0 z-50">
+                <div>
+                    <button id="back-btn" class="bg-slate-700/50 hover:bg-slate-700 text-white font-bold py-2 px-4 rounded-lg transition-colors">
+                        <span class="sm:hidden">&larr;</span>
+                        <span class="hidden sm:inline">&larr; Back to Home</span>
+                    </button>
+                </div>
+                <div id="visualizer-title" class="text-xl md:text-3xl font-bold text-slate-100 flex items-center gap-3 absolute left-1/2 -translate-x-1/2 whitespace-nowrap"></div>
+                <div class="w-16 sm:w-32"></div> <!-- Spacer to balance header -->
+            </header>
+
+            <div class="flex flex-col lg:flex-row h-[calc(100vh-72px)]">
+                <!-- Controls Panel -->
+                <div class="w-full lg:w-80 glass-panel p-6 border-b lg:border-b-0 lg:border-r border-slate-700/50 overflow-y-auto">
+                    <h3 class="text-lg font-semibold mb-4 flex items-center"><i class="fas fa-sliders-h mr-3 text-cyan-400"></i>Controls</h3>
+                    <div class="space-y-4">
+                        <div>
+                            <label for="tree-input" class="block text-sm font-medium text-slate-300">Tree Input</label>
+                            <p id="input-description" class="text-xs text-slate-400 mt-1 mb-2"></p>
+                            <textarea id="tree-input" rows="4" class="mt-1 block w-full bg-slate-900/70 border border-slate-700 rounded-lg px-3 py-2 focus:ring-2 focus:ring-cyan-500 outline-none transition-all placeholder-slate-500" placeholder="e.g., 1, 2, 3, null, 5"></textarea>
+                            <p class="mt-1 text-xs text-slate-500">Enter numbers separated by commas. Use 'null' for empty nodes.</p>
+                        </div>
+                        <button id="visualize-btn" class="w-full bg-cyan-600/80 hover:bg-cyan-600 text-white font-bold py-2 px-4 rounded-lg transition-all flex items-center justify-center gap-2">
+                            <i class="fas fa-play"></i> Visualize
+                        </button>
+                        <button id="balance-bst-btn" class="w-full bg-teal-600/80 hover:bg-teal-600 text-white font-bold py-2 px-4 rounded-lg transition-all hidden">
+                            Balance the Tree
+                        </button>
+                        <button id="generate-py-btn" class="w-full bg-slate-700/80 hover:bg-slate-700 text-white font-bold py-2 px-4 rounded-lg transition-all hidden">
+                            Generate Python Code
+                        </button>
+                    </div>
+                </div>
+
+                <!-- Canvas -->
+                <div id="canvas-container" class="flex-1 bg-slate-900/20 overflow-hidden relative">
+                    <svg id="canvas" width="100%" height="100%"></svg>
+                </div>
+            </div>
+        </div>
+    </div>
+    
+    <!-- About Modal -->
+    <div id="about-modal" class="fixed inset-0 bg-black/70 flex items-center justify-center p-4 z-[1000] opacity-0 pointer-events-none">
+        <div class="glass-panel rounded-xl p-6 md:p-8 max-w-lg w-full mx-4">
+             <h2 class="text-xl md:text-2xl font-bold text-cyan-300 mb-4 flex items-center"><i class="fas fa-info-circle mr-3"></i>About This Visualizer</h2>
+             <p class="text-slate-300 mb-3 text-sm md:text-base">This tool is designed to help you visualize and interact with tree data structures. You can build, edit, and manipulate Binary Trees and Binary Search Trees in real-time.</p>
+             <p class="text-slate-300 mb-4 text-sm md:text-base">Features include node creation, editing, deletion, BST balancing, and Python code generation. It's built with HTML, Tailwind CSS, and vanilla JavaScript.</p>
+             <button id="close-about-modal" class="py-2 px-4 bg-slate-700/80 hover:bg-slate-700 rounded-lg transition-all text-sm md:text-base">Close</button>
+        </div>
+    </div>
+    
+    <!-- Toast Notification Container -->
+    <div id="toast-container" class="fixed bottom-5 right-5 z-[2000] space-y-2"></div>
+
+    <!-- Python Code Modal -->
+    <div id="code-modal" class="fixed inset-0 bg-black/70 flex items-center justify-center p-4 hidden z-[1000]">
+        <div class="glass-panel rounded-lg shadow-xl w-full max-w-2xl max-h-[90vh] flex flex-col">
+            <div class="flex justify-between items-center p-4 border-b border-slate-700/50">
+                <h3 class="text-lg font-semibold text-white flex items-center"><i class="fab fa-python mr-3 text-cyan-400"></i>Python Code Representation</h3>
+                <button id="close-modal-btn" class="text-slate-400 hover:text-white text-2xl leading-none">&times;</button>
+            </div>
+            <div class="p-4 overflow-y-auto space-y-4">
+                <!-- Detailed Code Box -->
+                <div class="bg-slate-900/70 rounded-lg p-4 relative border border-slate-700/50">
+                    <h4 class="text-md font-semibold text-slate-300 mb-2">Detailed Representation</h4>
+                    <button id="copy-detailed-btn" class="absolute top-4 right-4 bg-slate-700 hover:bg-slate-600 text-white text-xs font-bold py-1 px-2 rounded">Copy</button>
+                    <pre><code id="python-code-detailed" class="text-sm text-slate-300"></code></pre>
+                </div>
+                <!-- One-Liner Code Box -->
+                <div class="bg-slate-900/70 rounded-lg p-4 relative border border-slate-700/50">
+                    <h4 class="text-md font-semibold text-slate-300 mb-2">One-Liner Representation</h4>
+                    <button id="copy-oneliner-btn" class="absolute top-4 right-4 bg-slate-700 hover:bg-slate-600 text-white text-xs font-bold py-1 px-2 rounded">Copy</button>
+                    <pre><code id="python-code-oneliner" class="text-sm text-slate-300"></code></pre>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <script src="script.js"></script>
+</body>
+</html>
