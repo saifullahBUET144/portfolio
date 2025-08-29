@@ -11,6 +11,7 @@ document.addEventListener('DOMContentLoaded', () => {
     // Visualizer controls
     const inputDescription = document.getElementById('input-description');
     const treeInput = document.getElementById('tree-input');
+    const inputHelper = document.getElementById('input-helper');
     const visualizeBtn = document.getElementById('visualize-btn');
     const balanceBstBtn = document.getElementById('balance-bst-btn');
     const generatePyBtn = document.getElementById('generate-py-btn');
@@ -184,18 +185,25 @@ document.addEventListener('DOMContentLoaded', () => {
     cards.forEach(card => {
         card.addEventListener('click', () => {
             currentTreeType = card.dataset.type;
-            const isBST = currentTreeType === 'BST';
             const cardTitleHTML = card.querySelector('h2').innerHTML;
             visualizerTitle.innerHTML = cardTitleHTML;
             
-            inputDescription.textContent = isBST 
-                ? 'Input an array to convert to a BST.'
-                : 'Input is level-by-level order.';
+            // Reset UI states
+            balanceBstBtn.classList.add('hidden');
             
-            if (isBST) {
+            if (currentTreeType === 'BST') {
+                inputDescription.textContent = 'Input an array to convert to a BST.';
+                inputHelper.textContent = "Enter numbers separated by commas. e.g., 8, 3, 10, 1, 6, 14";
+                treeInput.placeholder = "e.g., 8, 3, 10, 1, 6, 14";
                 balanceBstBtn.classList.remove('hidden');
-            } else {
-                balanceBstBtn.classList.add('hidden');
+            } else if (currentTreeType === 'BT') {
+                inputDescription.textContent = 'Input is level-by-level order.';
+                inputHelper.textContent = "Enter numbers separated by commas. Use 'null' for empty nodes.";
+                treeInput.placeholder = "e.g., 1, 2, 3, null, 5";
+            } else if (currentTreeType === 'TRIE') {
+                inputDescription.textContent = 'Input words to build the Trie.';
+                inputHelper.textContent = "Enter words separated by commas.";
+                treeInput.placeholder = "e.g., apple, app, apply";
             }
 
             homePage.classList.add('hidden');
@@ -215,7 +223,7 @@ document.addEventListener('DOMContentLoaded', () => {
 
     // --- Tree Logic ---
 
-    class Node {
+    class Node { // For BT and BST
         constructor(value) {
             this.value = value;
             this.left = null;
@@ -225,8 +233,23 @@ document.addEventListener('DOMContentLoaded', () => {
         }
     }
 
-    function parseInput(input) {
+    class TrieNode {
+        constructor(value = '') {
+            this.value = value;
+            this.children = {};
+            this.isEndOfWord = false;
+            this.x = 0;
+            this.y = 0;
+            this.width = 0; // Width of the subtree rooted at this node
+        }
+    }
+
+
+    function parseInput(input, type) {
         if (!input.trim()) return [];
+        if (type === 'TRIE') {
+            return input.split(',').map(item => item.trim().toLowerCase()).filter(Boolean);
+        }
         return input.split(',').map(item => {
             const trimmed = item.trim();
             if (trimmed.toLowerCase() === 'null' || trimmed === '') return null;
@@ -236,6 +259,21 @@ document.addEventListener('DOMContentLoaded', () => {
     }
 
     // --- Tree Construction ---
+    function buildTrie(words) {
+        const root = new TrieNode('root');
+        words.forEach(word => {
+            let currentNode = root;
+            for (const char of word) {
+                if (!currentNode.children[char]) {
+                    currentNode.children[char] = new TrieNode(char);
+                }
+                currentNode = currentNode.children[char];
+            }
+            currentNode.isEndOfWord = true;
+        });
+        return root;
+    }
+
 
     function buildTreeFromLevelOrder(arr) {
         if (!arr || arr.length === 0 || arr[0] === null) return null;
@@ -316,6 +354,119 @@ document.addEventListener('DOMContentLoaded', () => {
     function getTreeDepth(node) {
         if (!node) return 0;
         return 1 + Math.max(getTreeDepth(node.left), getTreeDepth(node.right));
+    }
+
+    function drawTrie(root) {
+        clearCanvas();
+        if (!root) {
+            generatePyBtn.classList.add('hidden');
+            return;
+        }
+        generatePyBtn.classList.add('hidden'); // No python code for trie yet
+
+        const svgNS = "http://www.w3.org/2000/svg";
+        masterGroup = document.createElementNS(svgNS, 'g');
+        canvas.appendChild(masterGroup);
+
+        const nodeRadius = 20;
+        const horizontalSpacing = 50;
+        const verticalSpacing = 80;
+        
+        const nodes = [];
+        const edges = [];
+
+        function calculateTrieLayout(node, depth = 0) {
+            const children = Object.values(node.children);
+            let subtreeWidth = 0;
+            
+            if (children.length === 0) {
+                node.width = horizontalSpacing;
+                return;
+            }
+            
+            children.forEach(child => {
+                calculateTrieLayout(child, depth + 1);
+                subtreeWidth += child.width;
+            });
+            
+            node.width = Math.max(subtreeWidth, horizontalSpacing);
+        }
+
+        function assignTrieCoordinates(node, x, y) {
+            node.x = x;
+            node.y = y;
+            nodes.push(node);
+            
+            const children = Object.values(node.children);
+            const totalChildrenWidth = children.reduce((acc, child) => acc + child.width, 0);
+            
+            let currentX = x - totalChildrenWidth / 2;
+            
+            children.forEach(child => {
+                const childX = currentX + child.width / 2;
+                assignTrieCoordinates(child, childX, y + verticalSpacing);
+                edges.push({ from: node, to: child });
+                currentX += child.width;
+            });
+        }
+        
+        calculateTrieLayout(root);
+        assignTrieCoordinates(root, 0, 0);
+
+        let minX = Infinity, maxX = -Infinity, minY = Infinity, maxY = -Infinity;
+        nodes.forEach(node => {
+            minX = Math.min(minX, node.x);
+            maxX = Math.max(maxX, node.x);
+            minY = Math.min(minY, node.y);
+            maxY = Math.max(maxY, node.y);
+        });
+        
+        const treeWidth = maxX - minX;
+        const treeHeight = maxY - minY;
+
+        const canvasWidth = canvasContainer.clientWidth;
+        const canvasHeight = canvasContainer.clientHeight;
+        const scaleX = canvasWidth / (treeWidth + horizontalSpacing * 2);
+        const scaleY = canvasHeight / (treeHeight + verticalSpacing * 2);
+        scale = Math.min(1, scaleX, scaleY);
+
+        translateX = (canvasWidth / 2) - ((minX + maxX) / 2) * scale;
+        translateY = (canvasHeight - treeHeight * scale) / 2 - minY * scale;
+        updateTransform();
+
+        // Draw edges first
+        edges.forEach(edge => {
+            const line = document.createElementNS(svgNS, 'line');
+            line.setAttribute('x1', edge.from.x);
+            line.setAttribute('y1', edge.from.y);
+            line.setAttribute('x2', edge.to.x);
+            line.setAttribute('y2', edge.to.y);
+            line.setAttribute('class', 'edge');
+            masterGroup.appendChild(line);
+        });
+
+        // Draw nodes on top of edges
+        nodes.forEach(node => {
+            const g = document.createElementNS(svgNS, 'g');
+            g.setAttribute('class', 'node');
+             if (node.isEndOfWord) {
+                g.classList.add('is-end-of-word');
+            }
+            g.setAttribute('transform', `translate(${node.x}, ${node.y})`);
+
+            const circle = document.createElementNS(svgNS, 'circle');
+            circle.setAttribute('r', nodeRadius);
+            circle.setAttribute('fill', '#0f172a');
+
+            const text = document.createElementNS(svgNS, 'text');
+            text.setAttribute('dy', '.3em');
+            text.setAttribute('text-anchor', 'middle');
+            text.textContent = node.value === 'root' ? ' ' : node.value; // Don't show text for root
+
+            g.appendChild(circle);
+            g.appendChild(text);
+            masterGroup.appendChild(g);
+        });
     }
 
     function drawTree(root) {
@@ -564,23 +715,40 @@ document.addEventListener('DOMContentLoaded', () => {
     // --- Event Listeners ---
     visualizeBtn.addEventListener('click', () => {
         const rawInput = treeInput.value;
-        const parsedArr = parseInput(rawInput);
-        if (parsedArr.includes('error')) {
+        const parsedArr = parseInput(rawInput, currentTreeType);
+        
+        if (currentTreeType !== 'TRIE' && parsedArr.includes('error')) {
             showToast('Invalid input. Please use numbers and commas only.', 'error');
             currentRoot = null; clearCanvas(); generatePyBtn.classList.add('hidden'); return;
         }
-        const cleanArr = parsedArr.filter(val => val !== null);
-        if (currentTreeType === 'BST' && new Set(cleanArr).size !== cleanArr.length) {
-            showToast('BST input cannot contain duplicate values.', 'error');
-            currentRoot = null; clearCanvas(); generatePyBtn.classList.add('hidden'); return;
+
+        if (currentTreeType === 'BST' || currentTreeType === 'BT') {
+            const cleanArr = parsedArr.filter(val => val !== null);
+            if (currentTreeType === 'BST' && new Set(cleanArr).size !== cleanArr.length) {
+                showToast('BST input cannot contain duplicate values.', 'error');
+                currentRoot = null; clearCanvas(); generatePyBtn.classList.add('hidden'); return;
+            }
+            currentRoot = (currentTreeType === 'BST') ? buildBST(cleanArr) : buildTreeFromLevelOrder(parsedArr);
+            drawTree(currentRoot);
+        } else if (currentTreeType === 'TRIE') {
+            currentRoot = buildTrie(parsedArr);
+            drawTrie(currentRoot);
         }
-        currentRoot = (currentTreeType === 'BST') ? buildBST(cleanArr) : buildTreeFromLevelOrder(parsedArr);
-        drawTree(currentRoot);
+        
         if(currentRoot) {
-            showToast('Tree Built Successfully!', 'success');
+            showToast('Visualization complete!', 'success');
         }
     });
-    window.addEventListener('resize', () => { if(currentRoot) { drawTree(currentRoot); } });
+
+    window.addEventListener('resize', () => { 
+        if(currentRoot) { 
+            if (currentTreeType === 'TRIE') {
+                drawTrie(currentRoot);
+            } else {
+                drawTree(currentRoot); 
+            }
+        } 
+    });
 
     // Balance BST Logic
     function balanceBST(root) {
@@ -662,7 +830,10 @@ document.addEventListener('DOMContentLoaded', () => {
     }
 
     generatePyBtn.addEventListener('click', () => {
-        if (!currentRoot) { showToast("Please visualize a tree first.", "error"); return; }
+        if (!currentRoot || currentTreeType === 'TRIE') { 
+            showToast("Please visualize a tree first (Code gen not available for Tries).", "error"); 
+            return; 
+        }
         const { detailed, oneliner } = generatePythonCode(currentRoot);
         pythonCodeDetailed.textContent = detailed;
         pythonCodeOneliner.textContent = oneliner;
@@ -709,3 +880,4 @@ document.addEventListener('DOMContentLoaded', () => {
     copyDetailedBtn.addEventListener('click', () => copyToClipboard(pythonCodeDetailed.textContent, copyDetailedBtn));
     copyOnelinerBtn.addEventListener('click', () => copyToClipboard(pythonCodeOneliner.textContent, copyOnelinerBtn));
 });
+

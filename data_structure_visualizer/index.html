@@ -78,8 +78,19 @@
                              <img src="../images/binary_search_tree.png" alt="Binary Search Tree Thumbnail" class="w-full h-full object-cover" onerror="this.onerror=null;this.src='https://placehold.co/600x400/0f172a/e2e8f0?text=Binary+Search+Tree';">
                         </div>
                         <div class="p-6">
-                            <h2 class="text-2xl font-bold text-slate-100 flex items-center gap-3"><i class="fa-solid fa-code-branch text-cyan-400"></i>Binary Search Tree</h2>
+                            <h2 class="text-2xl font-bold text-slate-100 flex items-center gap-3"><i class="fa-solid fa-code-fork text-cyan-400"></i></i>Binary Search Tree</h2>
                             <p class="text-slate-400 mt-2">A sorted binary tree for fast data operations.</p>
+                        </div>
+                    </div>
+
+                    <!-- Trie Card -->
+                    <div class="card glass-panel rounded-xl overflow-hidden cursor-pointer" data-type="TRIE">
+                        <div class="relative h-48 bg-slate-700/50 flex items-center justify-center">
+                             <img src="../images/trie.png" alt="Trie Thumbnail" class="w-full h-full object-cover" onerror="this.onerror=null;this.src='https://placehold.co/600x400/0f172a/e2e8f0?text=Trie';">
+                        </div>
+                        <div class="p-6">
+                            <h2 class="text-2xl font-bold text-slate-100 flex items-center gap-3"><i class="fa-solid fa-arrow-down-a-z text-cyan-400"></i></i>Trie</h2>
+                            <p class="text-slate-400 mt-2">An efficient tree for storing and retrieving strings.</p>
                         </div>
                     </div>
                 </div>
@@ -105,10 +116,10 @@
                     <h3 class="text-lg font-semibold mb-4 flex items-center"><i class="fas fa-sliders-h mr-3 text-cyan-400"></i>Controls</h3>
                     <div class="space-y-4">
                         <div>
-                            <label for="tree-input" class="block text-sm font-medium text-slate-300">Tree Input</label>
+                            <label for="tree-input" class="block text-sm font-medium text-slate-300">Input</label>
                             <p id="input-description" class="text-xs text-slate-400 mt-1 mb-2"></p>
-                            <textarea id="tree-input" rows="4" class="mt-1 block w-full bg-slate-900/70 border border-slate-700 rounded-lg px-3 py-2 focus:ring-2 focus:ring-cyan-500 outline-none transition-all placeholder-slate-500" placeholder="e.g., 1, 2, 3, null, 5"></textarea>
-                            <p class="mt-1 text-xs text-slate-500">Enter numbers separated by commas. Use 'null' for empty nodes.</p>
+                            <textarea id="tree-input" rows="4" class="mt-1 block w-full bg-slate-900/70 border border-slate-700 rounded-lg px-3 py-2 focus:ring-2 focus:ring-cyan-500 outline-none transition-all placeholder-slate-500"></textarea>
+                            <p id="input-helper" class="mt-1 text-xs text-slate-500"></p>
                         </div>
                         <button id="visualize-btn" class="w-full bg-cyan-600/80 hover:bg-cyan-600 text-white font-bold py-2 px-4 rounded-lg transition-all flex items-center justify-center gap-2">
                             <i class="fas fa-play"></i> Visualize
@@ -170,3 +181,4 @@
     <script src="script.js"></script>
 </body>
 </html>
+

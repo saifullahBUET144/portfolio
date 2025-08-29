@@ -76,6 +76,11 @@ body {
     stroke-width: 2;
     stroke: #6366f1; /* Indigo-500 */
 }
+/* Style for Trie nodes that are end-of-word */
+.node.is-end-of-word circle {
+    stroke: #22c55e; /* green-500 */
+    filter: drop-shadow(0 0 6px rgba(34, 197, 94, 0.7));
+}
 .node text {
     font-size: 1rem;
     font-weight: 600;
@@ -158,3 +163,4 @@ pre code {
     white-space: pre-wrap;
     word-wrap: break-word;
 }
+
