@@ -103,6 +103,12 @@ body {
     stroke-width: 2;
     transition: all 0.3s ease-in-out;
 }
+
+/* Graph edge arrow styling */
+.edge polygon {
+    stroke: #475569;
+    stroke-width: 1;
+}
 /* Styles for the interactive buttons */
 .action-btn {
     cursor: pointer;

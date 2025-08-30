@@ -34,6 +34,11 @@ document.addEventListener('DOMContentLoaded', () => {
     const mValueContainer = document.getElementById('m-value-container');
     const mValueInput = document.getElementById('m-value-input');
     const addMaryChildBtn = document.getElementById('add-mary-child-btn');
+    const graphControls = document.getElementById('graph-controls');
+    const undirectedBtn = document.getElementById('undirected-btn');
+    const directedBtn = document.getElementById('directed-btn');
+    const edgeListBtn = document.getElementById('edge-list-btn');
+    const adjacencyListBtn = document.getElementById('adjacency-list-btn');
     
     // DS Info Modal elements
     const dsInfoModal = document.getElementById('ds-info-modal');
@@ -55,6 +60,9 @@ document.addEventListener('DOMContentLoaded', () => {
     let currentRoot = null;
     let currentlyEditingNode = null;
     let currentMValue = 3;
+    let currentGraph = null;
+    let isDirectedGraph = false;
+    let isEdgeListFormat = true;
 
     // --- Pan and Zoom State ---
     let scale = 1, translateX = 0, translateY = 0, isPanning = false, startX, startY;
@@ -125,6 +133,24 @@ document.addEventListener('DOMContentLoaded', () => {
                 <h4 class="font-semibold text-slate-100 mt-4">Input Format:</h4>
                 <p>First, set the M value (maximum children per node). Then provide numbers in <strong>level-order traversal</strong>, separated by commas. Use <code class="bg-slate-700/50 px-1 rounded-md text-cyan-400">null</code> for empty child positions.</p>
                 <p><strong>Example (M=3):</strong> <code class="bg-slate-700/50 px-1 rounded-md text-cyan-400">1, 2, 3, 4, 5, 6, 7, null, 8</code></p>
+            `
+        },
+        GRAPH: {
+            title: `<i class="fa-solid fa-project-diagram text-cyan-400 mr-3"></i>Graph`,
+            content: `
+                <p>A <strong>Graph</strong> is a data structure consisting of a finite set of vertices (nodes) together with a set of edges connecting pairs of vertices. Graphs can be directed (edges have direction) or undirected (edges have no direction).</p>
+                <h4 class="font-semibold text-slate-100 mt-4">Use Cases:</h4>
+                <ul class="list-disc list-inside space-y-1">
+                    <li>Social networks and friend connections.</li>
+                    <li>Road networks and navigation systems.</li>
+                    <li>Computer networks and routing algorithms.</li>
+                    <li>Dependency graphs in software systems.</li>
+                    <li>Game maps and level design.</li>
+                </ul>
+                <h4 class="font-semibold text-slate-100 mt-4">Input Format:</h4>
+                <p>Choose between <strong>Edge List</strong> or <strong>Adjacency List</strong> format. Node values can be numbers or characters (up to 3 characters long). Maximum 100 nodes allowed.</p>
+                <p><strong>Edge List Example:</strong> <code class="bg-slate-700/50 px-1 rounded-md text-cyan-400">A-B, B-C, C-D, D-A</code></p>
+                <p><strong>Adjacency List Example:</strong> <code class="bg-slate-700/50 px-1 rounded-md text-cyan-400"><br>A: B, C, D<br>C: A, D<br>B: C</code></p>
             `
         }
     };
@@ -282,6 +308,7 @@ document.addEventListener('DOMContentLoaded', () => {
             
             balanceBstBtn.classList.add('hidden');
             mValueContainer.classList.add('hidden');
+            graphControls.classList.add('hidden');
             
             if (currentTreeType === 'BST') {
                 inputDescription.textContent = 'Input an array to convert to a BST.';
@@ -301,6 +328,12 @@ document.addEventListener('DOMContentLoaded', () => {
                 inputHelper.textContent = "Enter numbers separated by commas. Use 'null' for empty nodes.";
                 treeInput.placeholder = "e.g., 1, 2, 3, 4, 5, 6, 7";
                 mValueContainer.classList.remove('hidden');
+            } else if (currentTreeType === 'GRAPH') {
+                inputDescription.textContent = 'Input graph data in the selected format.';
+                inputHelper.textContent = "Choose input format above and enter graph data.";
+                treeInput.placeholder = "e.g., A-B, B-C, C-D, D-A";
+                graphControls.classList.remove('hidden');
+                updateGraphInputHelper();
             }
 
             homePage.classList.add('hidden');
@@ -314,9 +347,53 @@ document.addEventListener('DOMContentLoaded', () => {
         clearCanvas();
         treeInput.value = '';
         currentRoot = null;
+        currentGraph = null;
         generatePyBtn.classList.add('hidden');
         balanceBstBtn.classList.add('hidden');
     });
+
+    // Graph control event listeners
+    undirectedBtn.addEventListener('click', () => {
+        isDirectedGraph = false;
+        undirectedBtn.className = 'flex-1 bg-cyan-600/80 hover:bg-cyan-600 text-white font-bold py-2 px-4 rounded-lg transition-all text-sm';
+        directedBtn.className = 'flex-1 bg-slate-700/80 hover:bg-slate-700 text-white font-bold py-2 px-4 rounded-lg transition-all text-sm';
+        if (currentGraph) {
+            drawGraph(currentGraph);
+        }
+    });
+
+    directedBtn.addEventListener('click', () => {
+        isDirectedGraph = true;
+        directedBtn.className = 'flex-1 bg-cyan-600/80 hover:bg-cyan-600 text-white font-bold py-2 px-4 rounded-lg transition-all text-sm';
+        undirectedBtn.className = 'flex-1 bg-slate-700/80 hover:bg-slate-700 text-white font-bold py-2 px-4 rounded-lg transition-all text-sm';
+        if (currentGraph) {
+            drawGraph(currentGraph);
+        }
+    });
+
+    edgeListBtn.addEventListener('click', () => {
+        isEdgeListFormat = true;
+        edgeListBtn.className = 'flex-1 bg-cyan-600/80 hover:bg-cyan-600 text-white font-bold py-2 px-4 rounded-lg transition-all text-sm';
+        adjacencyListBtn.className = 'flex-1 bg-slate-700/80 hover:bg-slate-700 text-white font-bold py-2 px-4 rounded-lg transition-all text-sm';
+        updateGraphInputHelper();
+    });
+
+    adjacencyListBtn.addEventListener('click', () => {
+        isEdgeListFormat = false;
+        adjacencyListBtn.className = 'flex-1 bg-cyan-600/80 hover:bg-cyan-600 text-white font-bold py-2 px-4 rounded-lg transition-all text-sm';
+        edgeListBtn.className = 'flex-1 bg-slate-700/80 hover:bg-slate-700 text-white font-bold py-2 px-4 rounded-lg transition-all text-sm';
+        updateGraphInputHelper();
+    });
+
+    function updateGraphInputHelper() {
+        if (isEdgeListFormat) {
+            inputHelper.textContent = "Enter edges as 'A-B, B-C, C-D'. Node values can be numbers or characters (max 3 chars).";
+            treeInput.placeholder = "e.g., A-B, B-C, C-D, D-A";
+        } else {
+            inputHelper.textContent = "Enter adjacency list as 'A: B, C, D' (one node per line). Node values can be numbers or characters (max 3 chars).";
+            treeInput.placeholder = "e.g., A: B, C, D\nB: A, D\nC: A, D\nD: B, C";
+        }
+    }
 
     // --- Tree Logic ---
 
@@ -352,11 +429,23 @@ document.addEventListener('DOMContentLoaded', () => {
         }
     }
 
+    class GraphNode {
+        constructor(value) {
+            this.value = value;
+            this.x = 0;
+            this.y = 0;
+            this.radius = 20;
+        }
+    }
+
 
     function parseInput(input, type) {
         if (!input.trim()) return [];
         if (type === 'TRIE') {
             return input.split(',').map(item => item.trim().toLowerCase()).filter(Boolean);
+        }
+        if (type === 'GRAPH') {
+            return input.trim();
         }
         return input.split(',').map(item => {
             const trimmed = item.trim();
@@ -493,6 +582,129 @@ document.addEventListener('DOMContentLoaded', () => {
             }
         }
         return result.slice(0, lastNonNullIndex + 1);
+    }
+
+    // --- Graph Construction ---
+    function buildGraphFromEdgeList(input) {
+        const nodes = new Map();
+        const edges = [];
+        
+        // Parse edge list format: "A-B, B-C, C-D"
+        const edgeStrings = input.split(',').map(s => s.trim()).filter(s => s);
+        
+        for (const edgeStr of edgeStrings) {
+            const parts = edgeStr.split('-').map(s => s.trim()).filter(s => s);
+            if (parts.length === 2) {
+                const [from, to] = parts;
+                
+                // Create nodes if they don't exist
+                if (!nodes.has(from)) {
+                    nodes.set(from, new GraphNode(from));
+                }
+                if (!nodes.has(to)) {
+                    nodes.set(to, new GraphNode(to));
+                }
+                
+                edges.push({ from, to });
+            }
+        }
+        
+        return { nodes: Array.from(nodes.values()), edges };
+    }
+
+    function buildGraphFromAdjacencyList(input) {
+        const nodes = new Map();
+        const edges = [];
+        
+        // Parse adjacency list format: "A: B, C, D\nC: A, D\nB: C"
+        const nodeStrings = input.split('\n').map(s => s.trim()).filter(s => s);
+        
+        for (const nodeStr of nodeStrings) {
+            const [nodeValue, neighborsStr] = nodeStr.split(':').map(s => s.trim());
+            if (!nodeValue) continue;
+            
+            // Create node if it doesn't exist
+            if (!nodes.has(nodeValue)) {
+                nodes.set(nodeValue, new GraphNode(nodeValue));
+            }
+            
+            if (neighborsStr) {
+                const neighbors = neighborsStr.split(',').map(s => s.trim()).filter(s => s);
+                for (const neighbor of neighbors) {
+                    // Create neighbor node if it doesn't exist
+                    if (!nodes.has(neighbor)) {
+                        nodes.set(neighbor, new GraphNode(neighbor));
+                    }
+                    
+                    // Add edge (avoid duplicates)
+                    const edgeExists = edges.some(e => 
+                        (e.from === nodeValue && e.to === neighbor) || 
+                        (!isDirectedGraph && e.from === neighbor && e.to === nodeValue)
+                    );
+                    
+                    if (!edgeExists) {
+                        edges.push({ from: nodeValue, to: neighbor });
+                    }
+                }
+            }
+        }
+        
+        return { nodes: Array.from(nodes.values()), edges };
+    }
+
+    function validateGraphInput(input, format) {
+        if (!input.trim()) return { valid: false, error: 'Input cannot be empty.' };
+        
+        const nodes = new Set();
+        
+        if (format === 'edge-list') {
+            const edgeStrings = input.split(',').map(s => s.trim()).filter(s => s);
+            for (const edgeStr of edgeStrings) {
+                const parts = edgeStr.split('-').map(s => s.trim()).filter(s => s);
+                if (parts.length !== 2) {
+                    return { valid: false, error: `Invalid edge format: ${edgeStr}. Use format: A-B` };
+                }
+                const [from, to] = parts;
+                
+                // Validate node values
+                if (from.length > 3 || to.length > 3) {
+                    return { valid: false, error: 'Node values must be 3 characters or less.' };
+                }
+                
+                nodes.add(from);
+                nodes.add(to);
+            }
+        } else {
+            const nodeStrings = input.split('\n').map(s => s.trim()).filter(s => s);
+            for (const nodeStr of nodeStrings) {
+                const [nodeValue, neighborsStr] = nodeStr.split(':').map(s => s.trim());
+                if (!nodeValue) {
+                    return { valid: false, error: `Invalid node format: ${nodeStr}. Use format: A: B, C` };
+                }
+                
+                if (nodeValue.length > 3) {
+                    return { valid: false, error: 'Node values must be 3 characters or less.' };
+                }
+                
+                nodes.add(nodeValue);
+                
+                if (neighborsStr) {
+                    const neighbors = neighborsStr.split(',').map(s => s.trim()).filter(s => s);
+                    for (const neighbor of neighbors) {
+                        if (neighbor.length > 3) {
+                            return { valid: false, error: 'Node values must be 3 characters or less.' };
+                        }
+                        nodes.add(neighbor);
+                    }
+                }
+            }
+        }
+        
+        if (nodes.size > 100) {
+            return { valid: false, error: 'Maximum 100 nodes allowed.' };
+        }
+        
+        return { valid: true };
     }
 
     // Visualization
@@ -1011,10 +1223,415 @@ document.addEventListener('DOMContentLoaded', () => {
         });
     }
 
+    function drawGraph(graph) {
+        clearCanvas();
+        if (!graph || !graph.nodes || graph.nodes.length === 0) {
+            generatePyBtn.classList.add('hidden');
+            return;
+        }
+        generatePyBtn.classList.remove('hidden');
+
+        const svgNS = "http://www.w3.org/2000/svg";
+        masterGroup = document.createElementNS(svgNS, 'g');
+        canvas.appendChild(masterGroup);
+
+        const nodeRadius = 20;
+        const canvasWidth = canvasContainer.clientWidth;
+        const canvasHeight = canvasContainer.clientHeight;
+        
+        // Simple force-directed layout for uniform spacing
+        const nodes = graph.nodes;
+        const edges = graph.edges;
+        
+        // Initialize positions in a circle with better spacing
+        const centerX = 0;
+        const centerY = 0;
+        const radius = Math.min(canvasWidth, canvasHeight) * 0.25;
+        
+        nodes.forEach((node, index) => {
+            const angle = (2 * Math.PI * index) / nodes.length;
+            // Add some randomness to prevent perfect circle overlap
+            const randomOffset = (Math.random() - 0.5) * 50;
+            node.x = centerX + (radius + randomOffset) * Math.cos(angle);
+            node.y = centerY + (radius + randomOffset) * Math.sin(angle);
+        });
+
+        // Improved force simulation for better layout
+        const minDistance = 100; // Increased minimum distance between nodes
+        const maxIterations = 200; // More iterations for better convergence
+        
+        for (let iteration = 0; iteration < maxIterations; iteration++) {
+            // Repulsion between nodes with minimum distance enforcement
+            for (let i = 0; i < nodes.length; i++) {
+                for (let j = i + 1; j < nodes.length; j++) {
+                    const dx = nodes[j].x - nodes[i].x;
+                    const dy = nodes[j].y - nodes[i].y;
+                    const distance = Math.sqrt(dx * dx + dy * dy);
+                    if (distance > 0) {
+                        let force = 0;
+                        if (distance < minDistance) {
+                            // Very strong repulsion when nodes are too close
+                            force = (minDistance - distance) * 2.0;
+                        } else {
+                            // Normal repulsion with distance falloff
+                            force = 2000 / (distance * distance);
+                        }
+                        const fx = (dx / distance) * force;
+                        const fy = (dy / distance) * force;
+                        nodes[i].x -= fx * 0.005;
+                        nodes[i].y -= fy * 0.005;
+                        nodes[j].x += fx * 0.005;
+                        nodes[j].y += fy * 0.005;
+                    }
+                }
+            }
+            
+            // Attraction between connected nodes (weaker to prioritize separation)
+            edges.forEach(edge => {
+                const fromNode = nodes.find(n => n.value === edge.from);
+                const toNode = nodes.find(n => n.value === edge.to);
+                if (fromNode && toNode) {
+                    const dx = toNode.x - fromNode.x;
+                    const dy = toNode.y - fromNode.y;
+                    const distance = Math.sqrt(dx * dx + dy * dy);
+                    if (distance > 0) {
+                        const targetDistance = 150; // Increased target distance
+                        const force = (distance - targetDistance) * 0.03; // Weaker attraction
+                        const fx = (dx / distance) * force;
+                        const fy = (dy / distance) * force;
+                        fromNode.x += fx;
+                        fromNode.y += fy;
+                        toNode.x -= fx;
+                        toNode.y -= fy;
+                    }
+                }
+            });
+            
+            // Boundary constraints to keep nodes within canvas
+            const margin = 80;
+            nodes.forEach(node => {
+                node.x = Math.max(margin, Math.min(canvasWidth - margin, node.x));
+                node.y = Math.max(margin, Math.min(canvasHeight - margin, node.y));
+            });
+        }
+        
+        // Final pass to ensure no overlaps
+        for (let i = 0; i < nodes.length; i++) {
+            for (let j = i + 1; j < nodes.length; j++) {
+                const dx = nodes[j].x - nodes[i].x;
+                const dy = nodes[j].y - nodes[i].y;
+                const distance = Math.sqrt(dx * dx + dy * dy);
+                if (distance < minDistance) {
+                    // Force separation
+                    const separation = minDistance - distance;
+                    const fx = (dx / distance) * separation * 0.5;
+                    const fy = (dy / distance) * separation * 0.5;
+                    nodes[i].x -= fx;
+                    nodes[i].y -= fy;
+                    nodes[j].x += fx;
+                    nodes[j].y += fy;
+                }
+            }
+        }
+
+        // Calculate bounds for scaling
+        let minX = Infinity, maxX = -Infinity, minY = Infinity, maxY = -Infinity;
+        nodes.forEach(node => {
+            minX = Math.min(minX, node.x);
+            maxX = Math.max(maxX, node.x);
+            minY = Math.min(minY, node.y);
+            maxY = Math.max(maxY, node.y);
+        });
+
+        const graphWidth = maxX - minX;
+        const graphHeight = maxY - minY;
+
+        const scaleX = canvasWidth / (graphWidth + nodeRadius * 4);
+        const scaleY = canvasHeight / (graphHeight + nodeRadius * 4);
+        scale = Math.min(1, scaleX, scaleY);
+
+        translateX = (canvasWidth / 2) - ((minX + maxX) / 2) * scale;
+        translateY = (canvasHeight / 2) - ((minY + maxY) / 2) * scale;
+        updateTransform();
+
+        // Draw edges first (lower z-index)
+        edges.forEach(edge => {
+            const fromNode = nodes.find(n => n.value === edge.from);
+            const toNode = nodes.find(n => n.value === edge.to);
+            if (fromNode && toNode) {
+                const line = document.createElementNS(svgNS, 'line');
+                line.setAttribute('x1', fromNode.x);
+                line.setAttribute('y1', fromNode.y);
+                line.setAttribute('x2', toNode.x);
+                line.setAttribute('y2', toNode.y);
+                line.setAttribute('class', 'edge');
+                masterGroup.appendChild(line);
+
+                // Add arrow for directed graphs
+                if (isDirectedGraph) {
+                    const angle = Math.atan2(toNode.y - fromNode.y, toNode.x - fromNode.x);
+                    const arrowLength = 15;
+                    const arrowAngle = Math.PI / 6;
+                    
+                    const arrowX = toNode.x - (nodeRadius + arrowLength) * Math.cos(angle);
+                    const arrowY = toNode.y - (nodeRadius + arrowLength) * Math.sin(angle);
+                    
+                    const arrow1X = arrowX - arrowLength * Math.cos(angle - arrowAngle);
+                    const arrow1Y = arrowY - arrowLength * Math.sin(angle - arrowAngle);
+                    const arrow2X = arrowX - arrowLength * Math.cos(angle + arrowAngle);
+                    const arrow2Y = arrowY - arrowLength * Math.sin(angle + arrowAngle);
+                    
+                    const arrow = document.createElementNS(svgNS, 'polygon');
+                    arrow.setAttribute('points', `${arrowX},${arrowY} ${arrow1X},${arrow1Y} ${arrow2X},${arrow2Y}`);
+                    arrow.setAttribute('fill', '#475569');
+                    arrow.setAttribute('class', 'edge');
+                    masterGroup.appendChild(arrow);
+                }
+            }
+        });
+
+        // Draw nodes
+        nodes.forEach(node => {
+            const g = document.createElementNS(svgNS, 'g');
+            g.setAttribute('class', 'node');
+            g.setAttribute('transform', `translate(${node.x}, ${node.y})`);
+
+            const circle = document.createElementNS(svgNS, 'circle');
+            circle.setAttribute('r', nodeRadius);
+            circle.setAttribute('fill', '#0f172a');
+
+            const text = document.createElementNS(svgNS, 'text');
+            text.setAttribute('dy', '.3em');
+            text.setAttribute('text-anchor', 'middle');
+            text.textContent = node.value;
+
+            g.appendChild(circle);
+            g.appendChild(text);
+            masterGroup.appendChild(g);
+
+            // Add plus button for adding new connected nodes
+            if (!isMobile()) {
+                const addBtn = document.createElementNS(svgNS, 'g');
+                addBtn.setAttribute('class', 'action-btn add-btn');
+                addBtn.setAttribute('transform', `translate(0, 35)`);
+                const btnCircle = document.createElementNS(svgNS, 'circle');
+                btnCircle.setAttribute('r', '10');
+                const btnText = document.createElementNS(svgNS, 'text');
+                btnText.setAttribute('dy', '.35em');
+                btnText.setAttribute('text-anchor', 'middle');
+                btnText.textContent = '+';
+                addBtn.appendChild(btnCircle);
+                addBtn.appendChild(btnText);
+                g.appendChild(addBtn);
+                addBtn.addEventListener('click', (e) => {
+                    e.stopPropagation();
+                    addGraphNodeConnectedTo(node);
+                });
+            }
+
+            // Add delete button for removing nodes
+            if (!isMobile()) {
+                const deleteBtn = document.createElementNS(svgNS, 'g');
+                deleteBtn.setAttribute('class', 'action-btn delete-btn');
+                deleteBtn.setAttribute('transform', 'translate(0, -35)');
+                const btnCircle = document.createElementNS(svgNS, 'circle');
+                btnCircle.setAttribute('r', '10');
+                const btnText = document.createElementNS(svgNS, 'text');
+                btnText.setAttribute('dy', '.35em');
+                btnText.setAttribute('text-anchor', 'middle');
+                btnText.textContent = '×';
+                deleteBtn.appendChild(btnCircle);
+                deleteBtn.appendChild(btnText);
+                g.appendChild(deleteBtn);
+                deleteBtn.addEventListener('click', (e) => {
+                    e.stopPropagation();
+                    deleteGraphNode(node);
+                });
+            }
+
+            // Click listener for editing
+            g.addEventListener('click', (event) => {
+                event.stopPropagation();
+                if (isMobile()) {
+                    openNodeEditModal(node);
+                } else {
+                    // Desktop in-place editing
+                    if (g.querySelector('foreignObject')) return;
+                    const textElement = g.querySelector('text');
+                    textElement.style.visibility = 'hidden';
+                    const fo = document.createElementNS(svgNS, 'foreignObject');
+                    fo.setAttribute('x', -nodeRadius);
+                    fo.setAttribute('y', -15);
+                    fo.setAttribute('width', nodeRadius * 2);
+                    fo.setAttribute('height', 30);
+                    const input = document.createElement('input');
+                    input.setAttribute('type', 'text');
+                    input.value = node.value;
+                    input.style.cssText = `width: 100%; height: 100%; background-color: #1e293b; border: 1px solid #6366f1; border-radius: 4px; color: #f1f5f9; text-align: center; font-size: 1rem; font-weight: 600; font-family: 'Poppins', sans-serif; outline: none;`;
+                    fo.appendChild(input);
+                    g.appendChild(fo);
+                    input.focus();
+                    input.select();
+                    const finishEdit = () => {
+                        const newValue = input.value.trim();
+                        if (g.contains(fo)) g.removeChild(fo);
+                        textElement.style.visibility = 'visible';
+                        if (newValue === '' || newValue.length > 3 || node.value === newValue) return;
+                        const success = updateGraphNodeValue(node, newValue);
+                        if (!success) {
+                            // If update failed, revert the input value
+                            input.value = node.value;
+                        }
+                    };
+                    input.addEventListener('blur', finishEdit, { once: true });
+                    input.addEventListener('keydown', (e) => {
+                        if (e.key === 'Enter') input.blur();
+                        if (e.key === 'Escape') { if (g.contains(fo)) g.removeChild(fo); textElement.style.visibility = 'visible'; }
+                    });
+                }
+            });
+        });
+    }
+
+    function updateGraphNodeValue(node, newValue) {
+        // Check if the new value already exists in another node
+        const existingNode = currentGraph.nodes.find(n => n.value === newValue && n !== node);
+        if (existingNode) {
+            showToast('Node value already exists. Please choose a different value.', 'error');
+            return false;
+        }
+        
+        // Update all edges that reference the old value
+        const oldValue = node.value;
+        node.value = newValue;
+        
+        currentGraph.edges.forEach(edge => {
+            if (edge.from === oldValue) {
+                edge.from = newValue;
+            }
+            if (edge.to === oldValue) {
+                edge.to = newValue;
+            }
+        });
+        
+        updateGraphInputFromCurrentGraph();
+        drawGraph(currentGraph);
+        return true;
+    }
+
+    function generateUniqueNodeValue(existingValues) {
+        // Try numeric values first
+        for (let i = 1; i <= 999; i++) {
+            if (!existingValues.has(i.toString())) {
+                return i.toString();
+            }
+        }
+        
+        // Try alphabetic values
+        const alphabet = 'ABCDEFGHIJKLMNOPQRSTUVWXYZ';
+        for (let i = 0; i < alphabet.length; i++) {
+            const char = alphabet[i];
+            if (!existingValues.has(char)) {
+                return char;
+            }
+        }
+        
+        // Try combinations
+        for (let i = 0; i < alphabet.length; i++) {
+            for (let j = 0; j < alphabet.length; j++) {
+                const combo = alphabet[i] + alphabet[j];
+                if (!existingValues.has(combo)) {
+                    return combo;
+                }
+            }
+        }
+        
+        // Fallback
+        return 'X' + Math.floor(Math.random() * 1000);
+    }
+
+    function addGraphNodeConnectedTo(existingNode) {
+        if (!currentGraph) return;
+        
+        // Get existing node values
+        const existingValues = new Set(currentGraph.nodes.map(n => n.value));
+        
+        // Generate unique value for new node
+        const newValue = generateUniqueNodeValue(existingValues);
+        
+        // Create new node
+        const newNode = new GraphNode(newValue);
+        currentGraph.nodes.push(newNode);
+        
+        // Add edge from existing node to new node
+        currentGraph.edges.push({ from: existingNode.value, to: newValue });
+        
+        // Update input field
+        updateGraphInputFromCurrentGraph();
+        
+        // Redraw graph
+        drawGraph(currentGraph);
+    }
+
+    function updateGraphInputFromCurrentGraph() {
+        if (!currentGraph) return;
+        
+        if (isEdgeListFormat) {
+            const edgeStrings = currentGraph.edges.map(edge => `${edge.from}-${edge.to}`);
+            treeInput.value = edgeStrings.join(', ');
+        } else {
+            // Create adjacency list
+            const adjacencyList = {};
+            currentGraph.nodes.forEach(node => {
+                adjacencyList[node.value] = [];
+            });
+            
+            currentGraph.edges.forEach(edge => {
+                adjacencyList[edge.from].push(edge.to);
+            });
+            
+            const adjacencyStrings = Object.entries(adjacencyList)
+                .map(([node, neighbors]) => `${node}: ${neighbors.join(', ')}`)
+                .join('\n');
+            
+                    treeInput.value = adjacencyStrings;
+        }
+    }
+
+    function deleteGraphNode(node) {
+        if (!currentGraph) return;
+        
+        // Remove the node from nodes array
+        const nodeIndex = currentGraph.nodes.findIndex(n => n.value === node.value);
+        if (nodeIndex > -1) {
+            currentGraph.nodes.splice(nodeIndex, 1);
+        }
+        
+        // Remove all edges connected to this node
+        currentGraph.edges = currentGraph.edges.filter(edge => 
+            edge.from !== node.value && edge.to !== node.value
+        );
+        
+        // Update input field
+        updateGraphInputFromCurrentGraph();
+        
+        // Redraw graph
+        drawGraph(currentGraph);
+    }
+
     // --- Mobile Node Edit Modal ---
     function openNodeEditModal(node) {
         currentlyEditingNode = node;
         nodeValueInput.value = node.value;
+
+        // Set input type based on data structure type
+        if (currentTreeType === 'GRAPH') {
+            nodeValueInput.type = 'text';
+            nodeValueInput.placeholder = 'Enter node value (max 3 chars)';
+        } else {
+            nodeValueInput.type = 'number';
+            nodeValueInput.placeholder = 'Enter node value';
+        }
 
         if (currentTreeType === 'BT') {
             addChildrenButtons.classList.remove('hidden');
@@ -1024,13 +1641,27 @@ document.addEventListener('DOMContentLoaded', () => {
         } else if (currentTreeType === 'MARY') {
             addChildrenButtons.classList.add('hidden');
             addMaryChildBtn.classList.remove('hidden');
+            addMaryChildBtn.textContent = 'Add Child';
             addMaryChildBtn.disabled = node.children.length >= currentMValue;
+        } else if (currentTreeType === 'GRAPH') {
+            addChildrenButtons.classList.add('hidden');
+            addMaryChildBtn.classList.remove('hidden');
+            addMaryChildBtn.textContent = 'Add Connected Node';
+            addMaryChildBtn.disabled = false;
+            deleteNodeBtn.textContent = 'Delete Node';
+            // For graphs, we allow editing the node value and adding connected nodes
         } else {
             addChildrenButtons.classList.add('hidden');
             addMaryChildBtn.classList.add('hidden');
         }
         
         nodeEditModal.classList.remove('hidden');
+        
+        // Focus the input field after modal is shown
+        setTimeout(() => {
+            nodeValueInput.focus();
+            nodeValueInput.select();
+        }, 100);
     }
 
     function closeNodeEditModal() {
@@ -1084,11 +1715,24 @@ document.addEventListener('DOMContentLoaded', () => {
     // Listeners for mobile edit modal
     saveNodeBtn.addEventListener('click', () => {
         if (!currentlyEditingNode) return;
-        const newValue = Number(nodeValueInput.value);
-        if (!isNaN(newValue) && currentlyEditingNode.value !== newValue) {
-            updateNodeValue(currentlyEditingNode, newValue);
+        
+        if (currentTreeType === 'GRAPH') {
+            const newValue = nodeValueInput.value.trim();
+            if (newValue !== '' && newValue.length <= 3 && currentlyEditingNode.value !== newValue) {
+                const success = updateGraphNodeValue(currentlyEditingNode, newValue);
+                if (success) {
+                    closeNodeEditModal();
+                }
+            } else if (newValue.length > 3) {
+                showToast('Node value must be 3 characters or less.', 'error');
+            }
+        } else {
+            const newValue = Number(nodeValueInput.value);
+            if (!isNaN(newValue) && currentlyEditingNode.value !== newValue) {
+                updateNodeValue(currentlyEditingNode, newValue);
+            }
+            closeNodeEditModal();
         }
-        closeNodeEditModal();
     });
 
     addLeftChildBtn.addEventListener('click', () => {
@@ -1109,6 +1753,8 @@ document.addEventListener('DOMContentLoaded', () => {
         if (currentlyEditingNode) {
             if (currentTreeType === 'MARY') {
                 deleteMaryNode(currentlyEditingNode);
+            } else if (currentTreeType === 'GRAPH') {
+                deleteGraphNode(currentlyEditingNode);
             } else {
                 deleteNodeAndDescendants(currentlyEditingNode);
             }
@@ -1117,8 +1763,12 @@ document.addEventListener('DOMContentLoaded', () => {
     });
 
     addMaryChildBtn.addEventListener('click', () => {
-        if (currentlyEditingNode && currentTreeType === 'MARY') {
-            addMaryChild(currentlyEditingNode);
+        if (currentlyEditingNode) {
+            if (currentTreeType === 'MARY') {
+                addMaryChild(currentlyEditingNode);
+            } else if (currentTreeType === 'GRAPH') {
+                addGraphNodeConnectedTo(currentlyEditingNode);
+            }
         }
         closeNodeEditModal();
     });
@@ -1209,6 +1859,16 @@ document.addEventListener('DOMContentLoaded', () => {
         } else if (currentTreeType === 'MARY') {
             currentRoot = buildMaryTreeFromLevelOrder(parsedArr, currentMValue);
             drawMaryTree(currentRoot, currentMValue);
+        } else if (currentTreeType === 'GRAPH') {
+            const format = isEdgeListFormat ? 'edge-list' : 'adjacency-list';
+            const validation = validateGraphInput(rawInput, format);
+            if (!validation.valid) {
+                showToast(validation.error, 'error');
+                currentGraph = null; clearCanvas(); generatePyBtn.classList.add('hidden'); return;
+            }
+            
+            currentGraph = isEdgeListFormat ? buildGraphFromEdgeList(rawInput) : buildGraphFromAdjacencyList(rawInput);
+            drawGraph(currentGraph);
         }
         
         if(currentRoot) {
@@ -1225,7 +1885,9 @@ document.addEventListener('DOMContentLoaded', () => {
             } else {
                 drawTree(currentRoot); 
             }
-        } 
+        } else if (currentGraph) {
+            drawGraph(currentGraph);
+        }
     });
 
     // Balance BST Logic
@@ -1266,97 +1928,151 @@ document.addEventListener('DOMContentLoaded', () => {
 
 
     // --- Python Code Generation ---
-    function generatePythonCode(root) {
-        if (!root) return { detailed: "# Tree is empty", oneliner: "# Tree is empty" };
+    function generatePythonCode(dataStructure) {
+        if (!dataStructure) return { detailed: "# Data structure is empty", oneliner: "# Data structure is empty" };
+        
+        if (currentTreeType === 'GRAPH') {
+            if (!currentGraph) return { detailed: "# Graph is empty", oneliner: "# Graph is empty" };
+            
+            let detailedCode = 'class GraphNode:\n';
+            detailedCode += '    def __init__(self, val):\n';
+            detailedCode += '        self.val = val\n';
+            detailedCode += '        self.neighbors = []\n\n';
+            
+            const nodeMap = new Map();
+            const creationLines = [];
+            const connectionLines = [];
+            
+            // Create nodes
+            currentGraph.nodes.forEach((node, index) => {
+                const nodeName = `node_${index}`;
+                nodeMap.set(node.value, nodeName);
+                creationLines.push(`${nodeName} = GraphNode("${node.value}")`);
+            });
+            
+            // Create adjacency list
+            const adjacencyList = {};
+            currentGraph.nodes.forEach(node => {
+                adjacencyList[node.value] = [];
+            });
+            
+            currentGraph.edges.forEach(edge => {
+                adjacencyList[edge.from].push(edge.to);
+            });
+            
+            // Add connections
+            Object.entries(adjacencyList).forEach(([nodeValue, neighbors]) => {
+                if (neighbors.length > 0) {
+                    const nodeName = nodeMap.get(nodeValue);
+                    const neighborNames = neighbors.map(n => nodeMap.get(n));
+                    connectionLines.push(`${nodeName}.neighbors = [${neighborNames.join(', ')}]`);
+                }
+            });
+            
+            detailedCode += '# Node definitions\n' + creationLines.join('\n') + '\n\n# Connections\n' + connectionLines.join('\n');
+            
+            // One-liner representation
+            const adjacencyStr = Object.entries(adjacencyList)
+                .map(([node, neighbors]) => `"${node}": [${neighbors.map(n => `"${n}"`).join(', ')}]`)
+                .join(', ');
+            const oneLiner = `graph = {${adjacencyStr}}`;
+            
+            return { detailed: detailedCode, oneliner: oneLiner };
+        }
+        
         let detailedCode = 'class TreeNode:\n';
 
-            if (currentTreeType === 'MARY') {
-        detailedCode = 'class MaryNode:\n';
-        detailedCode += '    def __init__(self, val=0, children=None):\n';
-        detailedCode += '        self.val = val\n';
-        detailedCode += '        self.children = children if children is not None else []\n\n';
-        
-        const nodesToProcess = [root];
-        const nodeMap = new Map();
-        nodeMap.set(root, 'root');
-        let nodeId = 0;
-        const creationLines = [`root = MaryNode(${root.value})`];
-        const connectionLines = [];
-        
-        while (nodesToProcess.length > 0) {
-            const currentNode = nodesToProcess.shift();
-            const parentName = nodeMap.get(currentNode);
+        if (currentTreeType === 'MARY') {
+            detailedCode = 'class MaryNode:\n';
+            detailedCode += '    def __init__(self, val=0, children=None):\n';
+            detailedCode += '        self.val = val\n';
+            detailedCode += '        self.children = children if children is not None else []\n\n';
             
-            if (currentNode.children && currentNode.children.length > 0) {
-                const childNames = [];
-                currentNode.children.forEach((child, index) => {
-                    nodeId++;
-                    const childName = `node_${nodeId}`;
-                    nodeMap.set(child, childName);
-                    creationLines.push(`${childName} = MaryNode(${child.value})`);
-                    childNames.push(childName);
-                    nodesToProcess.push(child);
-                });
-                connectionLines.push(`${parentName}.children = [${childNames.join(', ')}]`);
+            const nodesToProcess = [dataStructure];
+            const nodeMap = new Map();
+            nodeMap.set(dataStructure, 'root');
+            let nodeId = 0;
+            const creationLines = [`root = MaryNode(${dataStructure.value})`];
+            const connectionLines = [];
+            
+            while (nodesToProcess.length > 0) {
+                const currentNode = nodesToProcess.shift();
+                const parentName = nodeMap.get(currentNode);
+                
+                if (currentNode.children && currentNode.children.length > 0) {
+                    const childNames = [];
+                    currentNode.children.forEach((child, index) => {
+                        nodeId++;
+                        const childName = `node_${nodeId}`;
+                        nodeMap.set(child, childName);
+                        creationLines.push(`${childName} = MaryNode(${child.value})`);
+                        childNames.push(childName);
+                        nodesToProcess.push(child);
+                    });
+                    connectionLines.push(`${parentName}.children = [${childNames.join(', ')}]`);
+                }
             }
-        }
-        
-        detailedCode += '# Node definitions\n' + creationLines.join('\n') + '\n\n# Connections\n' + connectionLines.join('\n');
-        
-        function generateMaryOneLiner(node) {
-            if (!node.children || node.children.length === 0) return `MaryNode(${node.value})`;
-            const childrenStr = node.children.map(child => generateMaryOneLiner(child)).join(', ');
-            return `MaryNode(${node.value}, [${childrenStr}])`;
-        }
-        
-        const oneLiner = `root = ${generateMaryOneLiner(root)}`;
-        return { detailed: detailedCode, oneliner: oneLiner };
-    } else {
-        detailedCode += '    def __init__(self, val=0, left=None, right=None):\n';
-        detailedCode += '        self.val = val\n';
-        detailedCode += '        self.left = left\n';
-        detailedCode += '        self.right = right\n\n';
-        const nodesToProcess = [root];
-        const nodeMap = new Map();
-        nodeMap.set(root, 'root');
-        let nodeId = 0;
-        const creationLines = [`root = TreeNode(${root.value})`];
-        const connectionLines = [];
-        while (nodesToProcess.length > 0) {
-            const currentNode = nodesToProcess.shift();
-            const parentName = nodeMap.get(currentNode);
-            if (currentNode.left) {
-                nodeId++; const leftChildName = `node_${nodeId}`;
-                nodeMap.set(currentNode.left, leftChildName);
-                creationLines.push(`${leftChildName} = TreeNode(${currentNode.left.value})`);
-                connectionLines.push(`${parentName}.left = ${leftChildName}`);
-                nodesToProcess.push(currentNode.left);
+            
+            detailedCode += '# Node definitions\n' + creationLines.join('\n') + '\n\n# Connections\n' + connectionLines.join('\n');
+            
+            function generateMaryOneLiner(node) {
+                if (!node.children || node.children.length === 0) return `MaryNode(${node.value})`;
+                const childrenStr = node.children.map(child => generateMaryOneLiner(child)).join(', ');
+                return `MaryNode(${node.value}, [${childrenStr}])`;
             }
-            if (currentNode.right) {
-                nodeId++; const rightChildName = `node_${nodeId}`;
-                nodeMap.set(currentNode.right, rightChildName);
-                creationLines.push(`${rightChildName} = TreeNode(${currentNode.right.value})`);
-                connectionLines.push(`${parentName}.right = ${rightChildName}`);
-                nodesToProcess.push(currentNode.right);
+            
+            const oneLiner = `root = ${generateMaryOneLiner(dataStructure)}`;
+            return { detailed: detailedCode, oneliner: oneLiner };
+        } else {
+            detailedCode += '    def __init__(self, val=0, left=None, right=None):\n';
+            detailedCode += '        self.val = val\n';
+            detailedCode += '        self.left = left\n';
+            detailedCode += '        self.right = right\n\n';
+            const nodesToProcess = [dataStructure];
+            const nodeMap = new Map();
+            nodeMap.set(dataStructure, 'root');
+            let nodeId = 0;
+            const creationLines = [`root = TreeNode(${dataStructure.value})`];
+            const connectionLines = [];
+            while (nodesToProcess.length > 0) {
+                const currentNode = nodesToProcess.shift();
+                const parentName = nodeMap.get(currentNode);
+                if (currentNode.left) {
+                    nodeId++; const leftChildName = `node_${nodeId}`;
+                    nodeMap.set(currentNode.left, leftChildName);
+                    creationLines.push(`${leftChildName} = TreeNode(${currentNode.left.value})`);
+                    connectionLines.push(`${parentName}.left = ${leftChildName}`);
+                    nodesToProcess.push(currentNode.left);
+                }
+                if (currentNode.right) {
+                    nodeId++; const rightChildName = `node_${nodeId}`;
+                    nodeMap.set(currentNode.right, rightChildName);
+                    creationLines.push(`${rightChildName} = TreeNode(${currentNode.right.value})`);
+                    connectionLines.push(`${parentName}.right = ${rightChildName}`);
+                    nodesToProcess.push(currentNode.right);
+                }
             }
+            detailedCode += '# Node definitions\n' + creationLines.join('\n') + '\n\n# Connections\n' + connectionLines.join('\n');
+            function generateOneLiner(node) {
+                if (!node) return 'None';
+                if (!node.left && !node.right) return `TreeNode(${node.value})`;
+                return `TreeNode(${node.value}, ${generateOneLiner(node.left)}, ${generateOneLiner(node.right)})`;
+            }
+            const oneLiner = `root = ${generateOneLiner(dataStructure)}`;
+            return { detailed: detailedCode, oneliner: oneLiner };
         }
-        detailedCode += '# Node definitions\n' + creationLines.join('\n') + '\n\n# Connections\n' + connectionLines.join('\n');
-        function generateOneLiner(node) {
-            if (!node) return 'None';
-            if (!node.left && !node.right) return `TreeNode(${node.value})`;
-            return `TreeNode(${node.value}, ${generateOneLiner(node.left)}, ${generateOneLiner(node.right)})`;
-        }
-        const oneLiner = `root = ${generateOneLiner(root)}`;
-        return { detailed: detailedCode, oneliner: oneLiner };
-    }
     }
 
     generatePyBtn.addEventListener('click', () => {
-        if (!currentRoot || currentTreeType === 'TRIE') { 
-            showToast("Please visualize a tree first (Code gen not available for Tries).", "error"); 
+        if (!currentRoot && !currentGraph) { 
+            showToast("Please visualize a data structure first.", "error"); 
             return; 
         }
-        const { detailed, oneliner } = generatePythonCode(currentRoot);
+        if (currentTreeType === 'TRIE') {
+            showToast("Code generation not available for Tries.", "error");
+            return;
+        }
+        const { detailed, oneliner } = generatePythonCode(currentTreeType === 'GRAPH' ? currentGraph : currentRoot);
         pythonCodeDetailed.textContent = detailed;
         pythonCodeOneliner.textContent = oneliner;
         codeModal.classList.remove('hidden');

@@ -3,6 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <i class="fa-solid fa-code-merge"></i>
     <title>Data Structure Visualizer</title>
     <!-- Tailwind CSS -->
     <script src="https://cdn.tailwindcss.com"></script>
@@ -104,6 +105,17 @@
                             <p class="text-slate-400 mt-2">A tree where each node can have up to M children.</p>
                         </div>
                     </div>
+
+                    <!-- Graph Card -->
+                    <div class="card glass-panel rounded-xl overflow-hidden cursor-pointer" data-type="GRAPH">
+                        <div class="relative h-48 bg-slate-700/50 flex items-center justify-center">
+                            <img src="../images/graph.png" alt="Graph Thumbnail" class="w-full h-full object-cover" onerror="this.onerror=null;this.src='https://placehold.co/600x400/0f172a/e2e8f0?text=Graph';">
+                        </div>
+                        <div class="p-6">
+                            <h2 class="text-3xl font-bold text-slate-100 flex items-center gap-3"><i class="fa-solid fa-project-diagram text-cyan-400"></i>Graph</h2>
+                            <p class="text-slate-400 mt-2">A collection of nodes connected by edges.</p>
+                        </div>
+                    </div>
                 </div>
             </main>
         </div>
@@ -131,6 +143,27 @@
                             <label for="m-value-input" class="block text-sm font-medium text-slate-300">M Value (Max children per node)</label>
                             <input type="number" id="m-value-input" min="2" max="10" value="3" class="mt-1 block w-full bg-slate-900/70 border border-slate-700 rounded-lg px-3 py-2 focus:ring-2 focus:ring-cyan-500 outline-none transition-all placeholder-slate-500">
                             <p class="mt-1 text-xs text-slate-500">Choose between 2 and 10</p>
+                        </div>
+
+                        <!-- Graph controls -->
+                        <div id="graph-controls" class="hidden space-y-4">
+                            <!-- Directed/Undirected toggle -->
+                            <div>
+                                <label class="block text-sm font-medium text-slate-300 mb-2">Graph Type</label>
+                                <div class="flex gap-2">
+                                    <button id="undirected-btn" class="flex-1 bg-cyan-600/80 hover:bg-cyan-600 text-white font-bold py-2 px-4 rounded-lg transition-all text-sm">Undirected</button>
+                                    <button id="directed-btn" class="flex-1 bg-slate-700/80 hover:bg-slate-700 text-white font-bold py-2 px-4 rounded-lg transition-all text-sm">Directed</button>
+                                </div>
+                            </div>
+                            
+                            <!-- Input format selector -->
+                            <div>
+                                <label class="block text-sm font-medium text-slate-300 mb-2">Input Format</label>
+                                <div class="flex gap-2">
+                                    <button id="edge-list-btn" class="flex-1 bg-cyan-600/80 hover:bg-cyan-600 text-white font-bold py-2 px-4 rounded-lg transition-all text-sm">Edge List</button>
+                                    <button id="adjacency-list-btn" class="flex-1 bg-slate-700/80 hover:bg-slate-700 text-white font-bold py-2 px-4 rounded-lg transition-all text-sm">Adjacency List</button>
+                                </div>
+                            </div>
                         </div>
                         <div>
                             <label for="tree-input" class="block text-sm font-medium text-slate-300">Input</label>
