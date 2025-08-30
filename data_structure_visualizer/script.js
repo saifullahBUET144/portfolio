@@ -31,6 +31,9 @@ document.addEventListener('DOMContentLoaded', () => {
     const mobileAboutBtn = document.getElementById('mobile-about-btn');
     const closeAboutModalBtn = document.getElementById('close-about-modal');
     const toastContainer = document.getElementById('toast-container');
+    const mValueContainer = document.getElementById('m-value-container');
+    const mValueInput = document.getElementById('m-value-input');
+    const addMaryChildBtn = document.getElementById('add-mary-child-btn');
     
     // DS Info Modal elements
     const dsInfoModal = document.getElementById('ds-info-modal');
@@ -51,6 +54,7 @@ document.addEventListener('DOMContentLoaded', () => {
     let currentTreeType = null;
     let currentRoot = null;
     let currentlyEditingNode = null;
+    let currentMValue = 3;
 
     // --- Pan and Zoom State ---
     let scale = 1, translateX = 0, translateY = 0, isPanning = false, startX, startY;
@@ -104,6 +108,23 @@ document.addEventListener('DOMContentLoaded', () => {
                 <h4 class="font-semibold text-slate-100 mt-4">Input Format:</h4>
                 <p>Provide words separated by commas. The case will be standardized to lowercase.</p>
                 <p><strong>Example:</strong> <code class="bg-slate-700/50 px-1 rounded-md text-cyan-400">apple, app, apply, apt, ape</code></p>
+            `
+        },
+
+        MARY: {
+            title: `<i class="fa-solid fa-sitemap text-cyan-400 mr-3"></i>M-ary Tree`,
+            content: `
+                <p>An <strong>M-ary Tree</strong> is a generalization of a binary tree where each node can have up to M children. When M=2, it becomes a binary tree. This structure is useful for representing hierarchical data with variable branching factors.</p>
+                <h4 class="font-semibold text-slate-100 mt-4">Use Cases:</h4>
+                <ul class="list-disc list-inside space-y-1">
+                    <li>File systems where directories can contain multiple subdirectories.</li>
+                    <li>Organization charts with multiple direct reports.</li>
+                    <li>Game trees in AI for games with multiple possible moves.</li>
+                    <li>B-trees and B+ trees (special cases) used in databases and file systems.</li>
+                </ul>
+                <h4 class="font-semibold text-slate-100 mt-4">Input Format:</h4>
+                <p>First, set the M value (maximum children per node). Then provide numbers in <strong>level-order traversal</strong>, separated by commas. Use <code class="bg-slate-700/50 px-1 rounded-md text-cyan-400">null</code> for empty child positions.</p>
+                <p><strong>Example (M=3):</strong> <code class="bg-slate-700/50 px-1 rounded-md text-cyan-400">1, 2, 3, 4, 5, 6, 7, null, 8</code></p>
             `
         }
     };
@@ -260,6 +281,7 @@ document.addEventListener('DOMContentLoaded', () => {
             visualizerTitle.innerHTML = cardTitleHTML;
             
             balanceBstBtn.classList.add('hidden');
+            mValueContainer.classList.add('hidden');
             
             if (currentTreeType === 'BST') {
                 inputDescription.textContent = 'Input an array to convert to a BST.';
@@ -274,6 +296,11 @@ document.addEventListener('DOMContentLoaded', () => {
                 inputDescription.textContent = 'Input words to build the Trie.';
                 inputHelper.textContent = "Enter words separated by commas.";
                 treeInput.placeholder = "e.g., apple, app, apply";
+            } else if (currentTreeType === 'MARY') {
+                inputDescription.textContent = 'Input is level-by-level order for M-ary tree.';
+                inputHelper.textContent = "Enter numbers separated by commas. Use 'null' for empty nodes.";
+                treeInput.placeholder = "e.g., 1, 2, 3, 4, 5, 6, 7";
+                mValueContainer.classList.remove('hidden');
             }
 
             homePage.classList.add('hidden');
@@ -308,6 +335,17 @@ document.addEventListener('DOMContentLoaded', () => {
             this.value = value;
             this.children = {};
             this.isEndOfWord = false;
+            this.x = 0;
+            this.y = 0;
+            this.width = 0;
+        }
+    }
+
+    class MaryNode {
+        constructor(value) {
+            this.value = value;
+            this.children = [];
+            this.parent = null;
             this.x = 0;
             this.y = 0;
             this.width = 0;
@@ -404,6 +442,52 @@ document.addEventListener('DOMContentLoaded', () => {
                 lastNonNullIndex = result.length -1;
                 queue.push(node.left);
                 queue.push(node.right);
+            } else {
+                result.push(null);
+            }
+        }
+        return result.slice(0, lastNonNullIndex + 1);
+    }
+
+    function buildMaryTreeFromLevelOrder(arr, m) {
+        if (!arr || arr.length === 0 || arr[0] === null) return null;
+        const root = new MaryNode(arr[0]);
+        const queue = [root];
+        let i = 1;
+        
+        while (queue.length > 0 && i < arr.length) {
+            const currentNode = queue.shift();
+            for (let j = 0; j < m && i < arr.length; j++) {
+                if (arr[i] !== null && arr[i] !== undefined) {
+                    const child = new MaryNode(arr[i]);
+                    child.parent = currentNode;
+                    currentNode.children.push(child);
+                    queue.push(child);
+                }
+                i++;
+            }
+        }
+        return root;
+    }
+
+    function maryTreeToLevelOrderArray(root, m) {
+        if (!root) return [];
+        const queue = [root];
+        const result = [];
+        let lastNonNullIndex = 0;
+        
+        while(queue.length > 0) {
+            const node = queue.shift();
+            if (node) {
+                result.push(node.value);
+                lastNonNullIndex = result.length - 1;
+                for (let j = 0; j < m; j++) {
+                    if (j < node.children.length) {
+                        queue.push(node.children[j]);
+                    } else {
+                        queue.push(null);
+                    }
+                }
             } else {
                 result.push(null);
             }
@@ -535,6 +619,219 @@ document.addEventListener('DOMContentLoaded', () => {
             g.appendChild(text);
             masterGroup.appendChild(g);
         });
+    }
+
+    function drawMaryTree(root, m) {
+        clearCanvas();
+        if (!root) {
+            generatePyBtn.classList.add('hidden');
+            return;
+        }
+        generatePyBtn.classList.remove('hidden');
+
+        const svgNS = "http://www.w3.org/2000/svg";
+        masterGroup = document.createElementNS(svgNS, 'g');
+        canvas.appendChild(masterGroup);
+
+        const nodeRadius = 20;
+        const horizontalSpacing = 40;
+        const verticalSpacing = 80;
+        
+        const nodes = [];
+        const edges = [];
+
+        function calculateMaryLayout(node, depth = 0) {
+            if (node.children.length === 0) {
+                node.width = horizontalSpacing;
+                return;
+            }
+            
+            let subtreeWidth = 0;
+            node.children.forEach(child => {
+                calculateMaryLayout(child, depth + 1);
+                subtreeWidth += child.width;
+            });
+            
+            node.width = Math.max(subtreeWidth, horizontalSpacing);
+        }
+
+        function assignMaryCoordinates(node, x, y) {
+            node.x = x;
+            node.y = y;
+            nodes.push(node);
+            
+            const totalChildrenWidth = node.children.reduce((acc, child) => acc + child.width, 0);
+            let currentX = x - totalChildrenWidth / 2;
+            
+            node.children.forEach(child => {
+                const childX = currentX + child.width / 2;
+                assignMaryCoordinates(child, childX, y + verticalSpacing);
+                edges.push({ from: node, to: child });
+                currentX += child.width;
+            });
+        }
+        
+        calculateMaryLayout(root);
+        assignMaryCoordinates(root, 0, 0);
+
+        let minX = Infinity, maxX = -Infinity, minY = Infinity, maxY = -Infinity;
+        nodes.forEach(node => {
+            minX = Math.min(minX, node.x);
+            maxX = Math.max(maxX, node.x);
+            minY = Math.min(minY, node.y);
+            maxY = Math.max(maxY, node.y);
+        });
+        
+        const treeWidth = maxX - minX;
+        const treeHeight = maxY - minY;
+
+        const canvasWidth = canvasContainer.clientWidth;
+        const canvasHeight = canvasContainer.clientHeight;
+        const scaleX = canvasWidth / (treeWidth + horizontalSpacing * 2);
+        const scaleY = canvasHeight / (treeHeight + verticalSpacing * 2);
+        scale = Math.min(1, scaleX, scaleY);
+
+        translateX = (canvasWidth / 2) - ((minX + maxX) / 2) * scale;
+        translateY = (canvasHeight - treeHeight * scale) / 2 - minY * scale;
+        updateTransform();
+
+        edges.forEach(edge => {
+            const line = document.createElementNS(svgNS, 'line');
+            line.setAttribute('x1', edge.from.x);
+            line.setAttribute('y1', edge.from.y);
+            line.setAttribute('x2', edge.to.x);
+            line.setAttribute('y2', edge.to.y);
+            line.setAttribute('class', 'edge');
+            masterGroup.appendChild(line);
+        });
+
+        nodes.forEach(node => {
+            const g = document.createElementNS(svgNS, 'g');
+            g.setAttribute('class', 'node');
+            g.setAttribute('transform', `translate(${node.x}, ${node.y})`);
+
+            const circle = document.createElementNS(svgNS, 'circle');
+            circle.setAttribute('r', nodeRadius);
+            circle.setAttribute('fill', '#0f172a');
+
+            const text = document.createElementNS(svgNS, 'text');
+            text.setAttribute('dy', '.3em');
+            text.setAttribute('text-anchor', 'middle');
+            text.textContent = node.value;
+
+            g.appendChild(circle);
+            g.appendChild(text);
+            masterGroup.appendChild(g);
+
+            // Click listener
+            g.addEventListener('click', (event) => {
+                event.stopPropagation();
+                if (isMobile()) {
+                    openNodeEditModal(node);
+                } else {
+                    // Desktop in-place editing (same as binary tree)
+                    if (g.querySelector('foreignObject')) return;
+                    const textElement = g.querySelector('text');
+                    textElement.style.visibility = 'hidden';
+                    const fo = document.createElementNS(svgNS, 'foreignObject');
+                    fo.setAttribute('x', -nodeRadius);
+                    fo.setAttribute('y', -15);
+                    fo.setAttribute('width', nodeRadius * 2);
+                    fo.setAttribute('height', 30);
+                    const input = document.createElement('input');
+                    input.setAttribute('type', 'number');
+                    input.value = node.value;
+                    input.style.cssText = `width: 100%; height: 100%; background-color: #1e293b; border: 1px solid #6366f1; border-radius: 4px; color: #f1f5f9; text-align: center; font-size: 1rem; font-weight: 600; font-family: 'Poppins', sans-serif; outline: none;`;
+                    fo.appendChild(input);
+                    g.appendChild(fo);
+                    input.focus();
+                    input.select();
+                    const finishEdit = () => {
+                        const newValueRaw = input.value;
+                        if (g.contains(fo)) g.removeChild(fo);
+                        textElement.style.visibility = 'visible';
+                        if (newValueRaw === null || newValueRaw.trim() === '') return;
+                        const newValue = Number(newValueRaw);
+                        if (isNaN(newValue) || node.value === newValue) return;
+                        updateMaryNodeValue(node, newValue);
+                    };
+                    input.addEventListener('blur', finishEdit, { once: true });
+                    input.addEventListener('keydown', (e) => {
+                        if (e.key === 'Enter') input.blur();
+                        if (e.key === 'Escape') { if (g.contains(fo)) g.removeChild(fo); textElement.style.visibility = 'visible'; }
+                    });
+                }
+            });
+
+            if (!isMobile()) {
+                // Add child button for desktop (only if not at max children)
+                if (node.children.length < m) {
+                    const addBtn = document.createElementNS(svgNS, 'g');
+                    addBtn.setAttribute('class', 'action-btn add-btn');
+                    addBtn.setAttribute('transform', `translate(0, 35)`);
+                    const btnCircle = document.createElementNS(svgNS, 'circle');
+                    btnCircle.setAttribute('r', '10');
+                    const btnText = document.createElementNS(svgNS, 'text');
+                    btnText.setAttribute('dy', '.35em');
+                    btnText.setAttribute('text-anchor', 'middle');
+                    btnText.textContent = '+';
+                    addBtn.appendChild(btnCircle);
+                    addBtn.appendChild(btnText);
+                    g.appendChild(addBtn);
+                    addBtn.addEventListener('click', (e) => {
+                        e.stopPropagation();
+                        addMaryChild(node);
+                    });
+                }
+                
+                // Delete button
+                const deleteBtn = document.createElementNS(svgNS, 'g');
+                deleteBtn.setAttribute('class', 'action-btn delete-btn');
+                deleteBtn.setAttribute('transform', 'translate(0, -35)');
+                const btnCircle = document.createElementNS(svgNS, 'circle');
+                btnCircle.setAttribute('r', '10');
+                const btnText = document.createElementNS(svgNS, 'text');
+                btnText.setAttribute('dy', '.35em');
+                btnText.setAttribute('text-anchor', 'middle');
+                btnText.textContent = '×';
+                deleteBtn.appendChild(btnCircle);
+                deleteBtn.appendChild(btnText);
+                g.appendChild(deleteBtn);
+                deleteBtn.addEventListener('click', (e) => {
+                    e.stopPropagation();
+                    deleteMaryNode(node);
+                });
+            }
+        });
+    }
+
+    function updateMaryNodeValue(node, newValue) {
+        node.value = newValue;
+        const newArray = maryTreeToLevelOrderArray(currentRoot, currentMValue);
+        treeInput.value = newArray.map(v => v === null ? 'null' : v).join(', ');
+        visualizeBtn.click();
+    }
+
+    function addMaryChild(node) {
+        node.children.push(new MaryNode(0));
+        node.children[node.children.length - 1].parent = node;
+        const newArray = maryTreeToLevelOrderArray(currentRoot, currentMValue);
+        treeInput.value = newArray.map(v => v === null ? 'null' : v).join(', ');
+        visualizeBtn.click();
+    }
+
+    function deleteMaryNode(node) {
+        if (!node.parent) {
+            currentRoot = null;
+        } else {
+            const index = node.parent.children.indexOf(node);
+            if (index > -1) {
+                node.parent.children.splice(index, 1);
+            }
+        }
+        const newArray = maryTreeToLevelOrderArray(currentRoot, currentMValue);
+        treeInput.value = newArray.map(v => v === null ? 'null' : v).join(', ');
+        visualizeBtn.click();
     }
 
     function drawTree(root) {
@@ -721,10 +1018,16 @@ document.addEventListener('DOMContentLoaded', () => {
 
         if (currentTreeType === 'BT') {
             addChildrenButtons.classList.remove('hidden');
+            addMaryChildBtn.classList.add('hidden');
             addLeftChildBtn.disabled = node.left !== null;
             addRightChildBtn.disabled = node.right !== null;
+        } else if (currentTreeType === 'MARY') {
+            addChildrenButtons.classList.add('hidden');
+            addMaryChildBtn.classList.remove('hidden');
+            addMaryChildBtn.disabled = node.children.length >= currentMValue;
         } else {
             addChildrenButtons.classList.add('hidden');
+            addMaryChildBtn.classList.add('hidden');
         }
         
         nodeEditModal.classList.remove('hidden');
@@ -743,6 +1046,10 @@ document.addEventListener('DOMContentLoaded', () => {
             const index = bstValues.indexOf(node.value);
             if (index > -1) bstValues[index] = newValue;
             treeInput.value = bstValues.join(', ');
+        } else if (currentTreeType === 'MARY') {
+            node.value = newValue;
+            const newArray = maryTreeToLevelOrderArray(currentRoot, currentMValue);
+            treeInput.value = newArray.map(v => v === null ? 'null' : v).join(', ');
         } else {
             node.value = newValue;
             const newArray = treeToLevelOrderArray(currentRoot);
@@ -800,7 +1107,18 @@ document.addEventListener('DOMContentLoaded', () => {
 
     deleteNodeBtn.addEventListener('click', () => {
         if (currentlyEditingNode) {
-            deleteNodeAndDescendants(currentlyEditingNode);
+            if (currentTreeType === 'MARY') {
+                deleteMaryNode(currentlyEditingNode);
+            } else {
+                deleteNodeAndDescendants(currentlyEditingNode);
+            }
+        }
+        closeNodeEditModal();
+    });
+
+    addMaryChildBtn.addEventListener('click', () => {
+        if (currentlyEditingNode && currentTreeType === 'MARY') {
+            addMaryChild(currentlyEditingNode);
         }
         closeNodeEditModal();
     });
@@ -861,6 +1179,15 @@ document.addEventListener('DOMContentLoaded', () => {
     // --- Event Listeners ---
     visualizeBtn.addEventListener('click', () => {
         const rawInput = treeInput.value;
+        
+        if (currentTreeType === 'MARY') {
+            currentMValue = parseInt(mValueInput.value) || 3;
+            if (currentMValue < 2 || currentMValue > 10) {
+                showToast('M value must be between 2 and 10.', 'error');
+                return;
+            }
+        }
+        
         const parsedArr = parseInput(rawInput, currentTreeType);
         
         if (currentTreeType !== 'TRIE' && parsedArr.includes('error')) {
@@ -879,6 +1206,9 @@ document.addEventListener('DOMContentLoaded', () => {
         } else if (currentTreeType === 'TRIE') {
             currentRoot = buildTrie(parsedArr);
             drawTrie(currentRoot);
+        } else if (currentTreeType === 'MARY') {
+            currentRoot = buildMaryTreeFromLevelOrder(parsedArr, currentMValue);
+            drawMaryTree(currentRoot, currentMValue);
         }
         
         if(currentRoot) {
@@ -890,6 +1220,8 @@ document.addEventListener('DOMContentLoaded', () => {
         if(currentRoot) { 
             if (currentTreeType === 'TRIE') {
                 drawTrie(currentRoot);
+            } else if (currentTreeType === 'MARY') {
+                drawMaryTree(currentRoot, currentMValue);
             } else {
                 drawTree(currentRoot); 
             }
@@ -937,6 +1269,49 @@ document.addEventListener('DOMContentLoaded', () => {
     function generatePythonCode(root) {
         if (!root) return { detailed: "# Tree is empty", oneliner: "# Tree is empty" };
         let detailedCode = 'class TreeNode:\n';
+
+            if (currentTreeType === 'MARY') {
+        detailedCode = 'class MaryNode:\n';
+        detailedCode += '    def __init__(self, val=0, children=None):\n';
+        detailedCode += '        self.val = val\n';
+        detailedCode += '        self.children = children if children is not None else []\n\n';
+        
+        const nodesToProcess = [root];
+        const nodeMap = new Map();
+        nodeMap.set(root, 'root');
+        let nodeId = 0;
+        const creationLines = [`root = MaryNode(${root.value})`];
+        const connectionLines = [];
+        
+        while (nodesToProcess.length > 0) {
+            const currentNode = nodesToProcess.shift();
+            const parentName = nodeMap.get(currentNode);
+            
+            if (currentNode.children && currentNode.children.length > 0) {
+                const childNames = [];
+                currentNode.children.forEach((child, index) => {
+                    nodeId++;
+                    const childName = `node_${nodeId}`;
+                    nodeMap.set(child, childName);
+                    creationLines.push(`${childName} = MaryNode(${child.value})`);
+                    childNames.push(childName);
+                    nodesToProcess.push(child);
+                });
+                connectionLines.push(`${parentName}.children = [${childNames.join(', ')}]`);
+            }
+        }
+        
+        detailedCode += '# Node definitions\n' + creationLines.join('\n') + '\n\n# Connections\n' + connectionLines.join('\n');
+        
+        function generateMaryOneLiner(node) {
+            if (!node.children || node.children.length === 0) return `MaryNode(${node.value})`;
+            const childrenStr = node.children.map(child => generateMaryOneLiner(child)).join(', ');
+            return `MaryNode(${node.value}, [${childrenStr}])`;
+        }
+        
+        const oneLiner = `root = ${generateMaryOneLiner(root)}`;
+        return { detailed: detailedCode, oneliner: oneLiner };
+    } else {
         detailedCode += '    def __init__(self, val=0, left=None, right=None):\n';
         detailedCode += '        self.val = val\n';
         detailedCode += '        self.left = left\n';
@@ -973,6 +1348,7 @@ document.addEventListener('DOMContentLoaded', () => {
         }
         const oneLiner = `root = ${generateOneLiner(root)}`;
         return { detailed: detailedCode, oneliner: oneLiner };
+    }
     }
 
     generatePyBtn.addEventListener('click', () => {

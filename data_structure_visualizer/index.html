@@ -93,6 +93,17 @@
                             <p class="text-slate-400 mt-2">An efficient tree for storing and retrieving strings.</p>
                         </div>
                     </div>
+
+                    <!-- M-ary Tree Card -->
+                    <div class="card glass-panel rounded-xl overflow-hidden cursor-pointer" data-type="MARY">
+                        <div class="relative h-48 bg-slate-700/50 flex items-center justify-center">
+                            <img src="../images/mary_tree.png" alt="M-ary Tree Thumbnail" class="w-full h-full object-cover" onerror="this.onerror=null;this.src='https://placehold.co/600x400/0f172a/e2e8f0?text=M-ary+Tree';">
+                        </div>
+                        <div class="p-6">
+                            <h2 class="text-3xl font-bold text-slate-100 flex items-center gap-3"><i class="fa-solid fa-sitemap text-cyan-400"></i>M-ary Tree</h2>
+                            <p class="text-slate-400 mt-2">A tree where each node can have up to M children.</p>
+                        </div>
+                    </div>
                 </div>
             </main>
         </div>
@@ -101,8 +112,8 @@
         <div id="visualizer-page" class="hidden h-screen flex flex-col">
             <header class="glass-panel p-4 flex items-center justify-between sticky top-0 z-50 shrink-0">
                 <button id="back-btn" class="bg-slate-700/50 hover:bg-slate-700 text-white font-bold py-2 px-4 rounded-lg transition-colors">
-                    <span class="sm:hidden">&larr;</span>
-                    <span class="hidden sm:inline">&larr; Back to Home</span>
+                    <span class="sm:hidden"><i class="fa-solid fa-arrow-left"></i></span>
+                    <span class="hidden sm:inline"><i class="fa-solid fa-arrow-left"></i> Back to Home</span>
                 </button>
                 <div id="visualizer-title" class="text-xl md:text-3xl font-bold text-slate-100 flex items-center gap-3 absolute left-1/2 -translate-x-1/2 whitespace-nowrap"></div>
                 <button id="visualizer-info-btn" class="text-slate-300 hover:text-cyan-400 transition text-3xl pr-3">
@@ -115,6 +126,12 @@
                 <div class="w-full lg:w-80 glass-panel p-6 rounded-xl overflow-y-auto shrink-0">
                     <h3 class="text-lg font-semibold mb-4 flex items-center"><i class="fas fa-sliders-h mr-3 text-cyan-400"></i>Controls</h3>
                     <div class="space-y-4">
+                        <!-- M-value input -->
+                        <div id="m-value-container" class="hidden">
+                            <label for="m-value-input" class="block text-sm font-medium text-slate-300">M Value (Max children per node)</label>
+                            <input type="number" id="m-value-input" min="2" max="10" value="3" class="mt-1 block w-full bg-slate-900/70 border border-slate-700 rounded-lg px-3 py-2 focus:ring-2 focus:ring-cyan-500 outline-none transition-all placeholder-slate-500">
+                            <p class="mt-1 text-xs text-slate-500">Choose between 2 and 10</p>
+                        </div>
                         <div>
                             <label for="tree-input" class="block text-sm font-medium text-slate-300">Input</label>
                             <p id="input-description" class="text-xs text-slate-400 mt-1 mb-2"></p>
@@ -206,6 +223,7 @@
                         <button id="add-left-child-btn" class="w-full bg-green-600/50 hover:bg-green-600/70 text-white font-bold py-2 px-4 rounded-lg transition-all flex items-center justify-center gap-2 text-sm disabled:opacity-50 disabled:cursor-not-allowed"><i class="fas fa-plus"></i>Add Left</button>
                         <button id="add-right-child-btn" class="w-full bg-green-600/50 hover:bg-green-600/70 text-white font-bold py-2 px-4 rounded-lg transition-all flex items-center justify-center gap-2 text-sm disabled:opacity-50 disabled:cursor-not-allowed"><i class="fas fa-plus"></i>Add Right</button>
                     </div>
+                    <button id="add-mary-child-btn" class="hidden w-full bg-green-600/50 hover:bg-green-600/70 text-white font-bold py-2 px-4 rounded-lg transition-all flex items-center justify-center gap-2 disabled:opacity-50 disabled:cursor-not-allowed"><i class="fas fa-plus"></i>Add Child</button>
                     <button id="delete-node-btn" class="w-full bg-red-600/80 hover:bg-red-600 text-white font-bold py-2 px-4 rounded-lg transition-all flex items-center justify-center gap-2"><i class="fas fa-trash"></i>Delete Node</button>
                 </div>
                 <button id="save-node-btn" class="w-full bg-cyan-600/80 hover:bg-cyan-600 text-white font-bold py-2 px-4 rounded-lg transition-all">Save Changes</button>
