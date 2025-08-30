@@ -67,6 +67,13 @@ document.addEventListener('DOMContentLoaded', () => {
     // --- Pan and Zoom State ---
     let scale = 1, translateX = 0, translateY = 0, isPanning = false, startX, startY;
     let masterGroup = null;
+    
+    // --- Graph Drag State ---
+    let isDraggingNode = false;
+    let draggedGraphNode = null;
+    let dragOffsetX = 0;
+    let dragOffsetY = 0;
+    let didDragNode = false;
 
     // --- Utility ---
     const isMobile = () => window.innerWidth <= 768;
@@ -359,6 +366,7 @@ document.addEventListener('DOMContentLoaded', () => {
         directedBtn.className = 'flex-1 bg-slate-700/80 hover:bg-slate-700 text-white font-bold py-2 px-4 rounded-lg transition-all text-sm';
         if (currentGraph) {
             drawGraph(currentGraph);
+            updateGraphInputFromCurrentGraph();
         }
     });
 
@@ -368,6 +376,7 @@ document.addEventListener('DOMContentLoaded', () => {
         undirectedBtn.className = 'flex-1 bg-slate-700/80 hover:bg-slate-700 text-white font-bold py-2 px-4 rounded-lg transition-all text-sm';
         if (currentGraph) {
             drawGraph(currentGraph);
+            updateGraphInputFromCurrentGraph();
         }
     });
 
@@ -376,6 +385,7 @@ document.addEventListener('DOMContentLoaded', () => {
         edgeListBtn.className = 'flex-1 bg-cyan-600/80 hover:bg-cyan-600 text-white font-bold py-2 px-4 rounded-lg transition-all text-sm';
         adjacencyListBtn.className = 'flex-1 bg-slate-700/80 hover:bg-slate-700 text-white font-bold py-2 px-4 rounded-lg transition-all text-sm';
         updateGraphInputHelper();
+        if (currentGraph) updateGraphInputFromCurrentGraph();
     });
 
     adjacencyListBtn.addEventListener('click', () => {
@@ -383,6 +393,7 @@ document.addEventListener('DOMContentLoaded', () => {
         adjacencyListBtn.className = 'flex-1 bg-cyan-600/80 hover:bg-cyan-600 text-white font-bold py-2 px-4 rounded-lg transition-all text-sm';
         edgeListBtn.className = 'flex-1 bg-slate-700/80 hover:bg-slate-700 text-white font-bold py-2 px-4 rounded-lg transition-all text-sm';
         updateGraphInputHelper();
+        if (currentGraph) updateGraphInputFromCurrentGraph();
     });
 
     function updateGraphInputHelper() {
@@ -605,7 +616,17 @@ document.addEventListener('DOMContentLoaded', () => {
                     nodes.set(to, new GraphNode(to));
                 }
                 
-                edges.push({ from, to });
+                // Avoid duplicates for undirected graphs
+                if (isDirectedGraph) {
+                    edges.push({ from, to });
+                } else {
+                    const exists = edges.some(e =>
+                        (e.from === from && e.to === to) || (e.from === to && e.to === from)
+                    );
+                    if (!exists) {
+                        edges.push({ from, to });
+                    }
+                }
             }
         }
         
@@ -637,11 +658,10 @@ document.addEventListener('DOMContentLoaded', () => {
                     }
                     
                     // Add edge (avoid duplicates)
-                    const edgeExists = edges.some(e => 
+                    let edgeExists = edges.some(e => 
                         (e.from === nodeValue && e.to === neighbor) || 
                         (!isDirectedGraph && e.from === neighbor && e.to === nodeValue)
                     );
-                    
                     if (!edgeExists) {
                         edges.push({ from: nodeValue, to: neighbor });
                     }
@@ -1243,95 +1263,103 @@ document.addEventListener('DOMContentLoaded', () => {
         const nodes = graph.nodes;
         const edges = graph.edges;
         
-        // Initialize positions in a circle with better spacing
-        const centerX = 0;
-        const centerY = 0;
-        const radius = Math.min(canvasWidth, canvasHeight) * 0.25;
-        
-        nodes.forEach((node, index) => {
-            const angle = (2 * Math.PI * index) / nodes.length;
-            // Add some randomness to prevent perfect circle overlap
-            const randomOffset = (Math.random() - 0.5) * 50;
-            node.x = centerX + (radius + randomOffset) * Math.cos(angle);
-            node.y = centerY + (radius + randomOffset) * Math.sin(angle);
-        });
+        // Determine if positions are already initialized (from drag or prior draw)
+        const positionsInitialized = nodes.length > 0 && nodes.every(n => typeof n.x === 'number' && typeof n.y === 'number' && n._positionInitialized === true);
 
-        // Improved force simulation for better layout
-        const minDistance = 100; // Increased minimum distance between nodes
-        const maxIterations = 200; // More iterations for better convergence
-        
-        for (let iteration = 0; iteration < maxIterations; iteration++) {
-            // Repulsion between nodes with minimum distance enforcement
+        if (!positionsInitialized) {
+            // Initialize positions in a circle with better spacing
+            const centerX = 0;
+            const centerY = 0;
+            const radius = Math.min(canvasWidth, canvasHeight) * 0.25;
+            
+            nodes.forEach((node, index) => {
+                const angle = (2 * Math.PI * index) / nodes.length;
+                const randomOffset = (Math.random() - 0.5) * 50;
+                node.x = centerX + (radius + randomOffset) * Math.cos(angle);
+                node.y = centerY + (radius + randomOffset) * Math.sin(angle);
+            });
+
+            // Improved force simulation for better layout
+            const minDistance = 100; // Increased minimum distance between nodes
+            const maxIterations = 200; // More iterations for better convergence
+            
+            for (let iteration = 0; iteration < maxIterations; iteration++) {
+                // Repulsion between nodes with minimum distance enforcement
+                for (let i = 0; i < nodes.length; i++) {
+                    for (let j = i + 1; j < nodes.length; j++) {
+                        const dx = nodes[j].x - nodes[i].x;
+                        const dy = nodes[j].y - nodes[i].y;
+                        const distance = Math.sqrt(dx * dx + dy * dy);
+                        if (distance > 0) {
+                            let force = 0;
+                            if (distance < minDistance) {
+                                // Very strong repulsion when nodes are too close
+                                force = (minDistance - distance) * 2.0;
+                            } else {
+                                // Normal repulsion with distance falloff
+                                force = 2000 / (distance * distance);
+                            }
+                            const fx = (dx / distance) * force;
+                            const fy = (dy / distance) * force;
+                            nodes[i].x -= fx * 0.005;
+                            nodes[i].y -= fy * 0.005;
+                            nodes[j].x += fx * 0.005;
+                            nodes[j].y += fy * 0.005;
+                        }
+                    }
+                }
+                
+                // Attraction between connected nodes (weaker to prioritize separation)
+                edges.forEach(edge => {
+                    const fromNode = nodes.find(n => n.value === edge.from);
+                    const toNode = nodes.find(n => n.value === edge.to);
+                    if (fromNode && toNode) {
+                        const dx = toNode.x - fromNode.x;
+                        const dy = toNode.y - fromNode.y;
+                        const distance = Math.sqrt(dx * dx + dy * dy);
+                        if (distance > 0) {
+                            const targetDistance = 150; // Increased target distance
+                            const force = (distance - targetDistance) * 0.03; // Weaker attraction
+                            const fx = (dx / distance) * force;
+                            const fy = (dy / distance) * force;
+                            fromNode.x += fx;
+                            fromNode.y += fy;
+                            toNode.x -= fx;
+                            toNode.y -= fy;
+                        }
+                    }
+                });
+                
+                // Boundary constraints to keep nodes within canvas
+                const margin = 80;
+                nodes.forEach(node => {
+                    node.x = Math.max(margin, Math.min(canvasWidth - margin, node.x));
+                    node.y = Math.max(margin, Math.min(canvasHeight - margin, node.y));
+                });
+            }
+            
+            // Final pass to ensure no overlaps
             for (let i = 0; i < nodes.length; i++) {
                 for (let j = i + 1; j < nodes.length; j++) {
                     const dx = nodes[j].x - nodes[i].x;
                     const dy = nodes[j].y - nodes[i].y;
                     const distance = Math.sqrt(dx * dx + dy * dy);
-                    if (distance > 0) {
-                        let force = 0;
-                        if (distance < minDistance) {
-                            // Very strong repulsion when nodes are too close
-                            force = (minDistance - distance) * 2.0;
-                        } else {
-                            // Normal repulsion with distance falloff
-                            force = 2000 / (distance * distance);
-                        }
-                        const fx = (dx / distance) * force;
-                        const fy = (dy / distance) * force;
-                        nodes[i].x -= fx * 0.005;
-                        nodes[i].y -= fy * 0.005;
-                        nodes[j].x += fx * 0.005;
-                        nodes[j].y += fy * 0.005;
+                    const minDistance = 100;
+                    if (distance < minDistance) {
+                        // Force separation
+                        const separation = minDistance - distance;
+                        const fx = (dx / distance) * separation * 0.5;
+                        const fy = (dy / distance) * separation * 0.5;
+                        nodes[i].x -= fx;
+                        nodes[i].y -= fy;
+                        nodes[j].x += fx;
+                        nodes[j].y += fy;
                     }
                 }
             }
-            
-            // Attraction between connected nodes (weaker to prioritize separation)
-            edges.forEach(edge => {
-                const fromNode = nodes.find(n => n.value === edge.from);
-                const toNode = nodes.find(n => n.value === edge.to);
-                if (fromNode && toNode) {
-                    const dx = toNode.x - fromNode.x;
-                    const dy = toNode.y - fromNode.y;
-                    const distance = Math.sqrt(dx * dx + dy * dy);
-                    if (distance > 0) {
-                        const targetDistance = 150; // Increased target distance
-                        const force = (distance - targetDistance) * 0.03; // Weaker attraction
-                        const fx = (dx / distance) * force;
-                        const fy = (dy / distance) * force;
-                        fromNode.x += fx;
-                        fromNode.y += fy;
-                        toNode.x -= fx;
-                        toNode.y -= fy;
-                    }
-                }
-            });
-            
-            // Boundary constraints to keep nodes within canvas
-            const margin = 80;
-            nodes.forEach(node => {
-                node.x = Math.max(margin, Math.min(canvasWidth - margin, node.x));
-                node.y = Math.max(margin, Math.min(canvasHeight - margin, node.y));
-            });
-        }
-        
-        // Final pass to ensure no overlaps
-        for (let i = 0; i < nodes.length; i++) {
-            for (let j = i + 1; j < nodes.length; j++) {
-                const dx = nodes[j].x - nodes[i].x;
-                const dy = nodes[j].y - nodes[i].y;
-                const distance = Math.sqrt(dx * dx + dy * dy);
-                if (distance < minDistance) {
-                    // Force separation
-                    const separation = minDistance - distance;
-                    const fx = (dx / distance) * separation * 0.5;
-                    const fy = (dy / distance) * separation * 0.5;
-                    nodes[i].x -= fx;
-                    nodes[i].y -= fy;
-                    nodes[j].x += fx;
-                    nodes[j].y += fy;
-                }
-            }
+
+            // Mark positions initialized so we preserve them on future redraws
+            nodes.forEach(n => { n._positionInitialized = true; });
         }
 
         // Calculate bounds for scaling
@@ -1366,6 +1394,7 @@ document.addEventListener('DOMContentLoaded', () => {
                 line.setAttribute('y2', toNode.y);
                 line.setAttribute('class', 'edge');
                 masterGroup.appendChild(line);
+                edge.lineEl = line;
 
                 // Add arrow for directed graphs
                 if (isDirectedGraph) {
@@ -1386,6 +1415,7 @@ document.addEventListener('DOMContentLoaded', () => {
                     arrow.setAttribute('fill', '#475569');
                     arrow.setAttribute('class', 'edge');
                     masterGroup.appendChild(arrow);
+                    edge.arrowEl = arrow;
                 }
             }
         });
@@ -1395,6 +1425,8 @@ document.addEventListener('DOMContentLoaded', () => {
             const g = document.createElementNS(svgNS, 'g');
             g.setAttribute('class', 'node');
             g.setAttribute('transform', `translate(${node.x}, ${node.y})`);
+            g.dataset.value = node.value;
+            node.domRef = g;
 
             const circle = document.createElementNS(svgNS, 'circle');
             circle.setAttribute('r', nodeRadius);
@@ -1408,6 +1440,58 @@ document.addEventListener('DOMContentLoaded', () => {
             g.appendChild(circle);
             g.appendChild(text);
             masterGroup.appendChild(g);
+
+            // Drag handlers (desktop only)
+            if (!isMobile()) {
+                g.addEventListener('mousedown', (e) => {
+                    // Avoid starting drag when interacting with action buttons or text inputs
+                    if (e.button !== 0) return; // Left mouse only
+                    const isActionBtn = e.target.closest && e.target.closest('g.action-btn');
+                    if (isActionBtn) return;
+                    e.stopPropagation();
+                    canvasContainer.classList.add('dragging');
+                    const rect = canvasContainer.getBoundingClientRect();
+                    const screenX = e.clientX - rect.left;
+                    const screenY = e.clientY - rect.top;
+                    const worldX = (screenX - translateX) / scale;
+                    const worldY = (screenY - translateY) / scale;
+                    isDraggingNode = true;
+                    didDragNode = false;
+                    draggedGraphNode = node;
+                    dragOffsetX = worldX - node.x;
+                    dragOffsetY = worldY - node.y;
+
+                    const onMouseMove = (ev) => {
+                        if (!isDraggingNode || draggedGraphNode !== node) return;
+                        const r = canvasContainer.getBoundingClientRect();
+                        const sx = ev.clientX - r.left;
+                        const sy = ev.clientY - r.top;
+                        const wx = (sx - translateX) / scale;
+                        const wy = (sy - translateY) / scale;
+                        const newX = wx - dragOffsetX;
+                        const newY = wy - dragOffsetY;
+                        if (Math.abs(newX - node.x) > 0.5 || Math.abs(newY - node.y) > 0.5) didDragNode = true;
+                        node.x = newX;
+                        node.y = newY;
+                        node._positionInitialized = true;
+                        // Update this node and all edges positions without full redraw
+                        if (node.domRef) node.domRef.setAttribute('transform', `translate(${node.x}, ${node.y})`);
+                        updateGraphEdgesPositions(nodes, edges, nodeRadius);
+                    };
+
+                    const onMouseUp = () => {
+                        isDraggingNode = false;
+                        draggedGraphNode = null;
+                        canvasContainer.classList.remove('dragging');
+                        window.removeEventListener('mousemove', onMouseMove);
+                        window.removeEventListener('mouseup', onMouseUp);
+                        // Keep positions; nothing else to do
+                    };
+
+                    window.addEventListener('mousemove', onMouseMove);
+                    window.addEventListener('mouseup', onMouseUp, { once: true });
+                });
+            }
 
             // Add plus button for adding new connected nodes
             if (!isMobile()) {
@@ -1452,6 +1536,7 @@ document.addEventListener('DOMContentLoaded', () => {
             // Click listener for editing
             g.addEventListener('click', (event) => {
                 event.stopPropagation();
+                if (isDraggingNode || didDragNode) { didDragNode = false; return; }
                 if (isMobile()) {
                     openNodeEditModal(node);
                 } else {
@@ -1490,6 +1575,33 @@ document.addEventListener('DOMContentLoaded', () => {
                     });
                 }
             });
+        });
+    }
+
+    function updateGraphEdgesPositions(nodes, edges, nodeRadius) {
+        // Recompute line and arrow positions based on node coordinates
+        edges.forEach(edge => {
+            const fromNode = nodes.find(n => n.value === edge.from);
+            const toNode = nodes.find(n => n.value === edge.to);
+            if (!fromNode || !toNode) return;
+            if (edge.lineEl) {
+                edge.lineEl.setAttribute('x1', fromNode.x);
+                edge.lineEl.setAttribute('y1', fromNode.y);
+                edge.lineEl.setAttribute('x2', toNode.x);
+                edge.lineEl.setAttribute('y2', toNode.y);
+            }
+            if (edge.arrowEl) {
+                const angle = Math.atan2(toNode.y - fromNode.y, toNode.x - fromNode.x);
+                const arrowLength = 15;
+                const arrowAngle = Math.PI / 6;
+                const arrowX = toNode.x - (nodeRadius + arrowLength) * Math.cos(angle);
+                const arrowY = toNode.y - (nodeRadius + arrowLength) * Math.sin(angle);
+                const arrow1X = arrowX - arrowLength * Math.cos(angle - arrowAngle);
+                const arrow1Y = arrowY - arrowLength * Math.sin(angle - arrowAngle);
+                const arrow2X = arrowX - arrowLength * Math.cos(angle + arrowAngle);
+                const arrow2Y = arrowY - arrowLength * Math.sin(angle + arrowAngle);
+                edge.arrowEl.setAttribute('points', `${arrowX},${arrowY} ${arrow1X},${arrow1Y} ${arrow2X},${arrow2Y}`);
+            }
         });
     }
 
@@ -1561,6 +1673,14 @@ document.addEventListener('DOMContentLoaded', () => {
         
         // Create new node
         const newNode = new GraphNode(newValue);
+        // Initialize position near the existing node (preserve layout)
+        const angle = Math.random() * Math.PI * 2;
+        const distance = 140; // reasonable spacing
+        // Use world coordinates (masterGroup space)
+        newNode.x = existingNode.x + distance * Math.cos(angle);
+        newNode.y = existingNode.y + distance * Math.sin(angle);
+        newNode._positionInitialized = true;
+        
         currentGraph.nodes.push(newNode);
         
         // Add edge from existing node to new node
@@ -1576,25 +1696,53 @@ document.addEventListener('DOMContentLoaded', () => {
     function updateGraphInputFromCurrentGraph() {
         if (!currentGraph) return;
         
+        // Build adjacency list first from current graph edges
+        const adjacencyList = {};
+        currentGraph.nodes.forEach(node => {
+            adjacencyList[node.value] = [];
+        });
+        currentGraph.edges.forEach(edge => {
+            if (!adjacencyList[edge.from]) adjacencyList[edge.from] = [];
+            adjacencyList[edge.from].push(edge.to);
+            if (!isDirectedGraph) {
+                if (!adjacencyList[edge.to]) adjacencyList[edge.to] = [];
+                if (!adjacencyList[edge.to].includes(edge.from)) adjacencyList[edge.to].push(edge.from);
+            }
+        });
+
+        // Clean and sort
+        const nodeOrder = Object.keys(adjacencyList).sort((a, b) => a.localeCompare(b));
+        nodeOrder.forEach(node => {
+            const uniq = Array.from(new Set(adjacencyList[node]));
+            uniq.sort((a, b) => a.localeCompare(b));
+            adjacencyList[node] = uniq;
+        });
+
         if (isEdgeListFormat) {
-            const edgeStrings = currentGraph.edges.map(edge => `${edge.from}-${edge.to}`);
+            // Build edge list from adjacency (for undirected ensure canonical ordering)
+            const seen = new Set();
+            const edgeStrings = [];
+            nodeOrder.forEach(from => {
+                adjacencyList[from].forEach(to => {
+                    if (isDirectedGraph) {
+                        edgeStrings.push(`${from}-${to}`);
+                    } else {
+                        const a = from <= to ? from : to;
+                        const b = from <= to ? to : from;
+                        const key = `${a}-${b}`;
+                        if (!seen.has(key)) {
+                            seen.add(key);
+                            edgeStrings.push(key);
+                        }
+                    }
+                });
+            });
             treeInput.value = edgeStrings.join(', ');
         } else {
-            // Create adjacency list
-            const adjacencyList = {};
-            currentGraph.nodes.forEach(node => {
-                adjacencyList[node.value] = [];
-            });
-            
-            currentGraph.edges.forEach(edge => {
-                adjacencyList[edge.from].push(edge.to);
-            });
-            
-            const adjacencyStrings = Object.entries(adjacencyList)
-                .map(([node, neighbors]) => `${node}: ${neighbors.join(', ')}`)
+            const adjacencyStrings = nodeOrder
+                .map(node => `${node}: ${adjacencyList[node].join(', ')}`)
                 .join('\n');
-            
-                    treeInput.value = adjacencyStrings;
+            treeInput.value = adjacencyStrings;
         }
     }
 
@@ -1868,6 +2016,10 @@ document.addEventListener('DOMContentLoaded', () => {
             }
             
             currentGraph = isEdgeListFormat ? buildGraphFromEdgeList(rawInput) : buildGraphFromAdjacencyList(rawInput);
+            // For undirected graphs, normalize and reflect reciprocity in the input box
+            if (!isDirectedGraph) {
+                updateGraphInputFromCurrentGraph();
+            }
             drawGraph(currentGraph);
         }
         
@@ -1950,18 +2102,28 @@ document.addEventListener('DOMContentLoaded', () => {
                 creationLines.push(`${nodeName} = GraphNode("${node.value}")`);
             });
             
-            // Create adjacency list
+            // Create adjacency list (reflect reciprocity for undirected graphs)
             const adjacencyList = {};
             currentGraph.nodes.forEach(node => {
                 adjacencyList[node.value] = [];
             });
-            
             currentGraph.edges.forEach(edge => {
+                if (!adjacencyList[edge.from]) adjacencyList[edge.from] = [];
                 adjacencyList[edge.from].push(edge.to);
+                if (!isDirectedGraph) {
+                    if (!adjacencyList[edge.to]) adjacencyList[edge.to] = [];
+                    adjacencyList[edge.to].push(edge.from);
+                }
+            });
+            // Deduplicate and sort neighbors for stable output
+            Object.keys(adjacencyList).forEach(node => {
+                const uniq = Array.from(new Set(adjacencyList[node]));
+                uniq.sort((a, b) => a.localeCompare(b));
+                adjacencyList[node] = uniq;
             });
             
             // Add connections
-            Object.entries(adjacencyList).forEach(([nodeValue, neighbors]) => {
+            Object.entries(adjacencyList).sort((a, b) => a[0].localeCompare(b[0])).forEach(([nodeValue, neighbors]) => {
                 if (neighbors.length > 0) {
                     const nodeName = nodeMap.get(nodeValue);
                     const neighborNames = neighbors.map(n => nodeMap.get(n));
@@ -1973,6 +2135,7 @@ document.addEventListener('DOMContentLoaded', () => {
             
             // One-liner representation
             const adjacencyStr = Object.entries(adjacencyList)
+                .sort((a, b) => a[0].localeCompare(b[0]))
                 .map(([node, neighbors]) => `"${node}": [${neighbors.map(n => `"${n}"`).join(', ')}]`)
                 .join(', ');
             const oneLiner = `graph = {${adjacencyStr}}`;
