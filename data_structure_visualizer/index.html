@@ -116,6 +116,55 @@
                         </div>
                     </div>
                 </div>
+                <!-- Algorithms Section -->
+                <section class="mt-16">
+                    <header class="text-center mb-8">
+                        <h2 class="text-3xl sm:text-4xl md:text-6xl font-bold bg-gradient-to-r from-cyan-400 to-purple-500 bg-clip-text text-transparent floating">Visualize Algorithms</h2>
+                        <p class="text-lg sm:text-xl md:text-2xl text-slate-300 mt-3 font-bold subtitle-glow">An interactive way to understand algorithms. Choose one to get started.</p>
+                    </header>
+                    <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-8">
+                        <!-- Binary Search Card -->
+                        <div class="card glass-panel rounded-xl overflow-hidden cursor-pointer" data-type="ALG" data-alg="BINARY_SEARCH">
+                            <div class="relative h-48 bg-slate-700/50 flex items-center justify-center">
+                                <img src="../images/binary_search.png" alt="Binary Search Thumbnail" class="w-full h-full object-cover" onerror="this.onerror=null;this.src='https://placehold.co/600x400/0f172a/e2e8f0?text=Binary+Search';">
+                            </div>
+                            <div class="p-6">
+                                <h2 class="text-3xl font-bold text-slate-100 flex items-center gap-3"><i class="fa-solid fa-magnifying-glass text-cyan-400"></i>Binary Search</h2>
+                                <p class="text-slate-400 mt-2">Animated step-by-step search on a sorted array.</p>
+                            </div>
+                        </div>
+                        <!-- Depth First Search Card -->
+                        <div class="card glass-panel rounded-xl overflow-hidden cursor-pointer" data-type="ALG" data-alg="DFS">
+                            <div class="relative h-48 bg-slate-700/50 flex items-center justify-center">
+                                <img src="../images/dfs.png" alt="DFS Thumbnail" class="w-full h-full object-cover" onerror="this.onerror=null;this.src='https://placehold.co/600x400/0f172a/e2e8f0?text=DFS';">
+                            </div>
+                            <div class="p-6">
+                                <h2 class="text-3xl font-bold text-slate-100 flex items-center gap-3"><i class="fa-solid fa-route text-cyan-400"></i>Depth First Search</h2>
+                                <p class="text-slate-400 mt-2">Pre-order traversal simulation with highlighting.</p>
+                            </div>
+                        </div>
+                        <!-- Breadth First Search Card -->
+                        <div class="card glass-panel rounded-xl overflow-hidden cursor-pointer" data-type="ALG" data-alg="BFS">
+                            <div class="relative h-48 bg-slate-700/50 flex items-center justify-center">
+                                <img src="../images/bfs.png" alt="BFS Thumbnail" class="w-full h-full object-cover" onerror="this.onerror=null;this.src='https://placehold.co/600x400/0f172a/e2e8f0?text=BFS';">
+                            </div>
+                            <div class="p-6">
+                                <h2 class="text-3xl font-bold text-slate-100 flex items-center gap-3"><i class="fa-solid fa-arrows-split-up-and-left text-cyan-400"></i>Breadth First Search</h2>
+                                <p class="text-slate-400 mt-2">Level-order traversal simulation with highlighting.</p>
+                            </div>
+                        </div>
+                        <!-- Tree Traversals Card -->
+                        <div class="card glass-panel rounded-xl overflow-hidden cursor-pointer" data-type="ALG" data-alg="TRAVERSAL">
+                            <div class="relative h-48 bg-slate-700/50 flex items-center justify-center">
+                                <img src="../images/traversal.png" alt="Tree Traversal Thumbnail" class="w-full h-full object-cover" onerror="this.onerror=null;this.src='https://placehold.co/600x400/0f172a/e2e8f0?text=Traversals';">
+                            </div>
+                            <div class="p-6">
+                                <h2 class="text-3xl font-bold text-slate-100 flex items-center gap-3"><i class="fa-solid fa-shuffle text-cyan-400"></i>Tree Traversals</h2>
+                                <p class="text-slate-400 mt-2">Animate preorder, inorder, and postorder traversals.</p>
+                            </div>
+                        </div>
+                    </div>
+                </section>
             </main>
         </div>
 
@@ -170,6 +219,23 @@
                             <textarea id="tree-input" rows="4" class="mt-1 block w-full bg-slate-900/70 border border-slate-700 rounded-lg px-3 py-2 focus:ring-2 focus:ring-cyan-500 outline-none transition-all placeholder-slate-500"></textarea>
                             <p id="input-helper" class="mt-1 text-xs text-slate-500"></p>
                         </div>
+                        <!-- Algorithm-only controls -->
+                        <div id="algo-target-container" class="hidden">
+                            <label for="algo-target-input" class="block text-sm font-medium text-slate-300">Target Value</label>
+                            <input type="number" id="algo-target-input" class="mt-1 block w-full bg-slate-900/70 border border-slate-700 rounded-lg px-3 py-2 focus:ring-2 focus:ring-cyan-500 outline-none transition-all placeholder-slate-500">
+                        </div>
+                        <!-- Traversal controls -->
+                        <div id="traversal-controls" class="hidden space-y-2">
+                            <label class="block text-sm font-medium text-slate-300">Traversal Order</label>
+                            <div class="flex gap-2">
+                                <button id="preorder-btn" class="flex-1 bg-cyan-600/80 hover:bg-cyan-600 text-white font-bold py-1 px-2 rounded-md transition-all text-[11px]">Preorder</button>
+                                <button id="inorder-btn" class="flex-1 bg-slate-700/80 hover:bg-slate-700 text-white font-bold py-1 px-2 rounded-md transition-all text-[11px]">Inorder</button>
+                                <button id="postorder-btn" class="flex-1 bg-slate-700/80 hover:bg-slate-700 text-white font-bold py-1 px-2 rounded-md transition-all text-[11px]">Postorder</button>
+                            </div>
+                        </div>
+                        <button id="generate-default-array-btn" class="hidden w-full bg-purple-600/80 hover:bg-purple-600 text-white font-bold py-2 px-4 rounded-lg transition-all flex items-center justify-center gap-2">
+                            <i class="fas fa-dice"></i> Generate Default
+                        </button>
                         <button id="visualize-btn" class="w-full bg-cyan-600/80 hover:bg-cyan-600 text-white font-bold py-2 px-4 rounded-lg transition-all flex items-center justify-center gap-2">
                             <i class="fas fa-play"></i> Visualize
                         </button>
@@ -178,6 +244,9 @@
                         </button>
                         <button id="generate-py-btn" class="w-full bg-slate-700/80 hover:bg-slate-700 text-white font-bold py-2 px-4 rounded-lg transition-all hidden">
                             Generate Python Code
+                        </button>
+                        <button id="start-simulation-btn" class="hidden w-full bg-cyan-600/80 hover:bg-cyan-600 text-white font-bold py-2 px-4 rounded-lg transition-all flex items-center justify-center gap-2">
+                            <i class="fas fa-play"></i> Start Simulation
                         </button>
                     </div>
                 </div>
@@ -233,6 +302,18 @@
                     <h4 class="text-md font-semibold text-slate-300 mb-2">One-Liner Representation</h4>
                     <button id="copy-oneliner-btn" class="absolute top-4 right-4 bg-slate-700 hover:bg-slate-600 text-white text-xs font-bold py-1 px-2 rounded">Copy</button>
                     <pre><code id="python-code-oneliner" class="text-sm text-slate-300"></code></pre>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Algorithm Step Modal -->
+    <div id="algo-step-modal" class="fixed inset-0 bg-black/70 hidden items-center justify-center p-4 z-[1500]">
+        <div class="glass-panel rounded-lg shadow-xl w-full max-w-xl">
+            <div class="p-5 text-center">
+                <div id="algo-step-modal-content" class="text-slate-200 text-lg leading-relaxed"></div>
+                <div class="mt-5 flex justify-center">
+                    <button id="algo-step-modal-ok" class="hidden bg-cyan-600/80 hover:bg-cyan-600 text-white font-bold py-2 px-4 rounded-lg transition-all">OKAY</button>
                 </div>
             </div>
         </div>

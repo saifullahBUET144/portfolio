@@ -31,6 +31,8 @@ document.addEventListener('DOMContentLoaded', () => {
     const mobileAboutBtn = document.getElementById('mobile-about-btn');
     const closeAboutModalBtn = document.getElementById('close-about-modal');
     const toastContainer = document.getElementById('toast-container');
+    const algoStepModal = document.getElementById('algo-step-modal');
+    const algoStepModalContent = document.getElementById('algo-step-modal-content');
     const mValueContainer = document.getElementById('m-value-container');
     const mValueInput = document.getElementById('m-value-input');
     const addMaryChildBtn = document.getElementById('add-mary-child-btn');
@@ -39,6 +41,15 @@ document.addEventListener('DOMContentLoaded', () => {
     const directedBtn = document.getElementById('directed-btn');
     const edgeListBtn = document.getElementById('edge-list-btn');
     const adjacencyListBtn = document.getElementById('adjacency-list-btn');
+    // Algorithm controls
+    const algoTargetContainer = document.getElementById('algo-target-container');
+    const algoTargetInput = document.getElementById('algo-target-input');
+    const generateDefaultArrayBtn = document.getElementById('generate-default-array-btn');
+    const startSimulationBtn = document.getElementById('start-simulation-btn');
+    const traversalControls = document.getElementById('traversal-controls');
+    const preorderBtn = document.getElementById('preorder-btn');
+    const inorderBtn = document.getElementById('inorder-btn');
+    const postorderBtn = document.getElementById('postorder-btn');
     
     // DS Info Modal elements
     const dsInfoModal = document.getElementById('ds-info-modal');
@@ -63,6 +74,8 @@ document.addEventListener('DOMContentLoaded', () => {
     let currentGraph = null;
     let isDirectedGraph = false;
     let isEdgeListFormat = true;
+    let currentAlgorithm = null; // e.g., 'BINARY_SEARCH'
+    let currentArray = [];
 
     // --- Pan and Zoom State ---
     let scale = 1, translateX = 0, translateY = 0, isPanning = false, startX, startY;
@@ -158,6 +171,60 @@ document.addEventListener('DOMContentLoaded', () => {
                 <p>Choose between <strong>Edge List</strong> or <strong>Adjacency List</strong> format. Node values can be numbers or characters (up to 3 characters long). Maximum 100 nodes allowed.</p>
                 <p><strong>Edge List Example:</strong> <code class="bg-slate-700/50 px-1 rounded-md text-cyan-400">A-B, B-C, C-D, D-A</code></p>
                 <p><strong>Adjacency List Example:</strong> <code class="bg-slate-700/50 px-1 rounded-md text-cyan-400"><br>A: B, C, D<br>C: A, D<br>B: C</code></p>
+            `
+        },
+        ALG_BINARY_SEARCH: {
+            title: `<i class="fa-solid fa-magnifying-glass text-cyan-400 mr-3"></i>Binary Search`,
+            content: `
+                <p><strong>Binary Search</strong> finds a target value in a <em>sorted</em> array by repeatedly halving the search range.</p>
+                <h4 class="font-semibold text-slate-100 mt-4">How it works:</h4>
+                <ol class="list-decimal list-inside space-y-1">
+                    <li>Check the middle element of the current range.</li>
+                    <li>If it's equal to the target, we're done.</li>
+                    <li>If it's smaller than the target, discard the left half.</li>
+                    <li>If it's larger, discard the right half.</li>
+                    <li>Repeat until found or the range is empty.</li>
+                </ol>
+                <h4 class="font-semibold text-slate-100 mt-4">Complexity:</h4>
+                <p>Time complexity is <code class="bg-slate-700/50 px-1 rounded-md text-cyan-400">O(log n)</code>, requiring at most <code class="bg-slate-700/50 px-1 rounded-md text-cyan-400">⌈log₂(n)⌉</code> comparisons.</p>
+                <h4 class="font-semibold text-slate-100 mt-4">Input Format:</h4>
+                <p>Provide a
+                 list of numbers separated by commas, and a target number to find. Or generate a default sorted array.</p>
+            `
+        },
+        ALG_DFS: {
+            title: `<i class="fa-solid fa-route text-cyan-400 mr-3"></i>Depth First Search`,
+            content: `
+                <p><strong>DFS</strong> explores as far as possible along each branch before backtracking. We'll show pre-order traversal (Node, Left, Right).</p>
+                <h4 class="font-semibold text-slate-100 mt-4">Input Format:</h4>
+                <p>Provide a tree as level-order traversal (use 'null' for missing children), or generate the default tree.</p>
+                <h4 class="font-semibold text-slate-100 mt-4">Complexity:</h4>
+                <p>Time complexity: <code class="bg-slate-700/50 px-1 rounded-md text-cyan-400">O(n)</code>; Space: up to <code class="bg-slate-700/50 px-1 rounded-md text-cyan-400">O(h)</code> where h is height.</p>
+            `
+        },
+        ALG_BFS: {
+            title: `<i class="fa-solid fa-arrows-split-up-and-left text-cyan-400 mr-3"></i>Breadth First Search`,
+            content: `
+                <p><strong>BFS</strong> explores the tree level by level from the root using a queue. It visits all nodes at the current depth before moving to the next depth.</p>
+                <h4 class="font-semibold text-slate-100 mt-4">Input Format:</h4>
+                <p>Provide a tree as level-order traversal (use 'null' for missing children), or generate the default tree. Values should be unique for clarity.</p>
+                <h4 class="font-semibold text-slate-100 mt-4">Complexity:</h4>
+                <p>Time: <code class="bg-slate-700/50 px-1 rounded-md text-cyan-400">O(n)</code>; Space: up to <code class="bg-slate-700/50 px-1 rounded-md text-cyan-400">O(w)</code> where w is max width.</p>
+            `
+        },
+        ALG_TRAVERSAL: {
+            title: `<i\"fa-solid fa-shuffle text-cyan-400 mr-3\"></i>Tree Traversals`,
+            content: `
+                <p><strong>Tree Traversals</strong> systematically visit all nodes of a tree. They are foundational for algorithms such as evaluating expressions, serialization, and tree-based searching.</p>
+                <ul class="list-disc list-inside space-y-1">
+                    <li><strong>Preorder</strong>: Node → Left → Right</li>
+                    <li><strong>Inorder</strong>: Left → Node → Right</li>
+                    <li><strong>Postorder</strong>: Left → Right → Node</li>
+                </ul>
+                <h4 class="font-semibold text-slate-100 mt-4">Visualization:</h4>
+                <p>As nodes are visited, their values fill the boxes above the tree in order. Use the buttons to choose the order and click Start Simulation.</p>
+                <h4 class="font-semibold text-slate-100 mt-4">Complexity:</h4>
+                <p>All traversals visit each node exactly once: <code class=\"bg-slate-700/50 px-1 rounded-md text-cyan-400\">O(n)</code> time, with space proportional to recursion depth (tree height).</p>
             `
         }
     };
@@ -310,12 +377,20 @@ document.addEventListener('DOMContentLoaded', () => {
     cards.forEach(card => {
         card.addEventListener('click', () => {
             currentTreeType = card.dataset.type;
+            currentAlgorithm = null;
+            if (currentTreeType === 'ALG') {
+                currentAlgorithm = card.dataset.alg;
+            }
             const cardTitleHTML = card.querySelector('h2').innerHTML;
             visualizerTitle.innerHTML = cardTitleHTML;
             
             balanceBstBtn.classList.add('hidden');
             mValueContainer.classList.add('hidden');
             graphControls.classList.add('hidden');
+            algoTargetContainer.classList.add('hidden');
+            generateDefaultArrayBtn.classList.add('hidden');
+            startSimulationBtn.classList.add('hidden');
+            if (traversalControls) traversalControls.classList.add('hidden');
             
             if (currentTreeType === 'BST') {
                 inputDescription.textContent = 'Input an array to convert to a BST.';
@@ -341,6 +416,65 @@ document.addEventListener('DOMContentLoaded', () => {
                 treeInput.placeholder = "e.g., A-B, B-C, C-D, D-A";
                 graphControls.classList.remove('hidden');
                 updateGraphInputHelper();
+            } else if (currentTreeType === 'ALG' && currentAlgorithm === 'BINARY_SEARCH') {
+                inputDescription.textContent = 'Input a sorted array.';
+                inputHelper.textContent = "Enter numbers separated by commas, or generate default.";
+                treeInput.placeholder = "e.g., 1, 3, 5, 7, 9, 11";
+                algoTargetContainer.classList.remove('hidden');
+                generateDefaultArrayBtn.classList.remove('hidden');
+                startSimulationBtn.classList.remove('hidden');
+                generatePyBtn.classList.add('hidden');
+                // Hook info button to algorithm info
+                visualizerInfoBtn.onclick = () => {
+                    const info = dsInfoData.ALG_BINARY_SEARCH;
+                    if (info) {
+                        dsInfoTitle.innerHTML = info.title;
+                        dsInfoContent.innerHTML = info.content;
+                        dsInfoModal.classList.remove('opacity-0', 'pointer-events-none');
+                        requestAnimationFrame(() => dsInfoModal.classList.add('show'));
+                    }
+                };
+            } else if (currentTreeType === 'ALG' && (currentAlgorithm === 'DFS' || currentAlgorithm === 'BFS')) {
+                inputDescription.textContent = 'Input is level-by-level order.';
+                inputHelper.textContent = "Enter numbers separated by commas. Use 'null' for empty nodes.";
+                treeInput.placeholder = "e.g., 1, 2, 3, 4, 5, 6, 7";
+                algoTargetContainer.classList.remove('hidden');
+                generateDefaultArrayBtn.classList.remove('hidden');
+                startSimulationBtn.classList.remove('hidden');
+                generatePyBtn.classList.add('hidden');
+                visualizerInfoBtn.onclick = () => {
+                    const info = currentAlgorithm === 'DFS' ? dsInfoData.ALG_DFS : dsInfoData.ALG_BFS;
+                    if (info) {
+                        dsInfoTitle.innerHTML = info.title;
+                        dsInfoContent.innerHTML = info.content;
+                        dsInfoModal.classList.remove('opacity-0', 'pointer-events-none');
+                        requestAnimationFrame(() => dsInfoModal.classList.add('show'));
+                    }
+                };
+            } else if (currentTreeType === 'ALG' && currentAlgorithm === 'TRAVERSAL') {
+                inputDescription.textContent = 'Input is level-by-level order.';
+                inputHelper.textContent = "Enter numbers separated by commas. Use 'null' for empty nodes.";
+                treeInput.placeholder = "e.g., 1, 2, 3, 4, 5, 6, 7";
+                algoTargetContainer.classList.add('hidden');
+                generateDefaultArrayBtn.classList.remove('hidden');
+                startSimulationBtn.classList.remove('hidden');
+                generatePyBtn.classList.add('hidden');
+                traversalControls.classList.remove('hidden');
+                // default selection preorder
+                if (preorderBtn && inorderBtn && postorderBtn) {
+                    preorderBtn.className = 'flex-1 bg-cyan-600/80 hover:bg-cyan-600 text-white font-bold py-2 px-4 rounded-lg transition-all text-sm';
+                    inorderBtn.className = 'flex-1 bg-slate-700/80 hover:bg-slate-700 text-white font-bold py-2 px-4 rounded-lg transition-all text-sm';
+                    postorderBtn.className = 'flex-1 bg-slate-700/80 hover:bg-slate-700 text-white font-bold py-2 px-4 rounded-lg transition-all text-sm';
+                }
+                visualizerInfoBtn.onclick = () => {
+                    const info = dsInfoData.ALG_TRAVERSAL;
+                    if (info) {
+                        dsInfoTitle.innerHTML = info.title;
+                        dsInfoContent.innerHTML = info.content;
+                        dsInfoModal.classList.remove('opacity-0', 'pointer-events-none');
+                        requestAnimationFrame(() => dsInfoModal.classList.add('show'));
+                    }
+                };
             }
 
             homePage.classList.add('hidden');
@@ -355,6 +489,7 @@ document.addEventListener('DOMContentLoaded', () => {
         treeInput.value = '';
         currentRoot = null;
         currentGraph = null;
+        currentArray = [];
         generatePyBtn.classList.add('hidden');
         balanceBstBtn.classList.add('hidden');
     });
@@ -624,7 +759,7 @@ document.addEventListener('DOMContentLoaded', () => {
                         (e.from === from && e.to === to) || (e.from === to && e.to === from)
                     );
                     if (!exists) {
-                        edges.push({ from, to });
+                edges.push({ from, to });
                     }
                 }
             }
@@ -737,6 +872,209 @@ document.addEventListener('DOMContentLoaded', () => {
         translateY = 0;
     }
     
+    // --- Algorithms: Binary Search ---
+    function showAlgoModal(message, { showOk = false } = {}) {
+        if (!algoStepModal || !algoStepModalContent) return;
+        algoStepModalContent.innerHTML = message;
+        algoStepModal.classList.remove('hidden');
+        algoStepModal.classList.add('show');
+        const okBtn = document.getElementById('algo-step-modal-ok');
+        if (okBtn) {
+            okBtn.classList.toggle('hidden', !showOk);
+        }
+    }
+    function hideAlgoModal() {
+        if (!algoStepModal) return;
+        algoStepModal.classList.remove('show');
+        setTimeout(() => { algoStepModal.classList.add('hidden'); }, 0);
+    }
+    
+    function generateDefaultSortedArray(len = 50) {
+        const arr = [];
+        let current = Math.floor(Math.random() * 5);
+        for (let i = 0; i < len; i++) {
+            current += Math.floor(Math.random() * 3) + 1;
+            arr.push(current);
+        }
+        return arr;
+    }
+
+    function generateDefaultTraversalTreeArray() {
+        // Level-order for the provided default tree
+        return [
+            1,
+            2, 3,
+            4, 5, 6, 7,
+            8, null, 9, 10, null, 11, 12, 13,
+            null, 14, 15, null, 16, null, null, null, 17
+        ];
+    }
+    
+    function parseNumberArray(input) {
+        if (!input.trim()) return [];
+        const arr = input.split(',').map(s => s.trim()).filter(s => s.length);
+        const nums = [];
+        for (const x of arr) {
+            const n = Number(x);
+            if (isNaN(n)) return null;
+            nums.push(n);
+        }
+        return nums;
+    }
+    
+    function drawArrayGrid(array, highlight = {}) {
+        // highlight: { leftIndex, rightIndex, midIndex, discardRange: [l, r], keepRange: [l, r] }
+        clearCanvas();
+        const svgNS = "http://www.w3.org/2000/svg";
+        masterGroup = document.createElementNS(svgNS, 'g');
+        canvas.appendChild(masterGroup);
+        
+        const elemWidth = 40;
+        const elemHeight = 40;
+        const gap = 8;
+        const canvasWidth = canvasContainer.clientWidth;
+        const canvasHeight = canvasContainer.clientHeight;
+        
+        const perRow = Math.max(1, Math.floor((canvasWidth - 40) / (elemWidth + gap)));
+        const numRows = Math.ceil(array.length / perRow);
+        
+        const totalGridWidth = Math.min(array.length, perRow) * (elemWidth + gap) - gap;
+        const totalGridHeight = numRows * (elemHeight + gap) - gap;
+        const startX = -totalGridWidth / 2;
+        const startY = -totalGridHeight / 2;
+        
+        // Center group
+        translateX = canvasWidth / 2;
+        translateY = canvasHeight / 2;
+        scale = 1;
+        updateTransform();
+        
+        for (let i = 0; i < array.length; i++) {
+            const row = Math.floor(i / perRow);
+            const col = i % perRow;
+            const x = startX + col * (elemWidth + gap);
+            const y = startY + row * (elemHeight + gap);
+            
+            const g = document.createElementNS(svgNS, 'g');
+            g.setAttribute('transform', `translate(${x}, ${y})`);
+            g.setAttribute('class', 'array-cell');
+            g.dataset.idx = i;
+            
+            const rect = document.createElementNS(svgNS, 'rect');
+            rect.setAttribute('width', elemWidth);
+            rect.setAttribute('height', elemHeight);
+            rect.setAttribute('rx', 6);
+            rect.setAttribute('ry', 6);
+            rect.setAttribute('fill', '#0f172a');
+            rect.setAttribute('stroke', '#6366f1');
+            rect.setAttribute('stroke-width', '2');
+            
+            // Highlight logic
+            if (highlight) {
+                const { leftIndex, rightIndex, midIndex, discardRange, keepRange } = highlight;
+                if (i === leftIndex || i === rightIndex || i === midIndex) {
+                    rect.setAttribute('fill', '#854d0e');
+                    rect.setAttribute('stroke', '#fbbf24');
+                }
+                if (discardRange && i >= discardRange[0] && i <= discardRange[1]) {
+                    rect.setAttribute('fill', '#7f1d1d');
+                    rect.setAttribute('stroke', '#ef4444');
+                }
+                if (keepRange && i >= keepRange[0] && i <= keepRange[1]) {
+                    rect.setAttribute('fill', '#064e3b');
+                    rect.setAttribute('stroke', '#10b981');
+                }
+            }
+            
+            const text = document.createElementNS(svgNS, 'text');
+            text.setAttribute('x', elemWidth / 2);
+            text.setAttribute('y', elemHeight / 2);
+            text.setAttribute('dy', '.3em');
+            text.setAttribute('text-anchor', 'middle');
+            text.textContent = array[i];
+            text.setAttribute('fill', '#f1f5f9');
+            
+            g.appendChild(rect);
+            g.appendChild(text);
+            masterGroup.appendChild(g);
+            
+            // Floating index labels for L/R/M
+            if (highlight && (i === highlight.leftIndex || i === highlight.rightIndex || i === highlight.midIndex)) {
+                const label = document.createElementNS(svgNS, 'g');
+                label.setAttribute('transform', `translate(${x + elemWidth / 2}, ${y - 20})`);
+                const circle = document.createElementNS(svgNS, 'circle');
+                circle.setAttribute('r', 12);
+                circle.setAttribute('fill', '#1e293b');
+                circle.setAttribute('stroke', '#fbbf24');
+                circle.setAttribute('stroke-width', '2');
+                const t = document.createElementNS(svgNS, 'text');
+                t.setAttribute('text-anchor', 'middle');
+                t.setAttribute('dy', '.35em');
+                label.setAttribute('class', 'array-index-label');
+                t.textContent = `${i}`;
+                label.appendChild(circle);
+                label.appendChild(t);
+                masterGroup.appendChild(label);
+            }
+        }
+    }
+    
+    function sleep(ms) { return new Promise(res => setTimeout(res, ms)); }
+    
+    async function runBinarySearchSimulation(array, target) {
+        let left = 0, right = array.length - 1;
+        let steps = 0;
+        while (left <= right) {
+            steps++;
+            drawArrayGrid(array, { leftIndex: left, rightIndex: right });
+            await sleep(1000);
+            showAlgoModal(`The left position is <strong>${left}</strong> and the right position is <strong>${right}</strong>, so we check the middle position: <strong>${Math.floor((left + right) / 2)}</strong>.`);
+            await sleep(1000);
+            hideAlgoModal();
+            
+            const mid = Math.floor((left + right) / 2);
+            drawArrayGrid(array, { midIndex: mid });
+            await sleep(1000);
+            
+            if (array[mid] === target) {
+                showAlgoModal(`Found it! <strong>${array[mid]}</strong> equals the target <strong>${target}</strong>.`);
+                await sleep(1000);
+                hideAlgoModal();
+                drawArrayGrid(array, { keepRange: [mid, mid] });
+                await sleep(1000);
+                showAlgoModal(`Completed in <strong>${steps}</strong> steps (≤ ⌈log₂(${array.length})⌉). Position: <strong>${mid}</strong>.`, { showOk: true });
+                await new Promise(resolve => {
+                    const okBtn = document.getElementById('algo-step-modal-ok');
+                    if (!okBtn) { resolve(); return; }
+                    const handler = () => { okBtn.removeEventListener('click', handler); hideAlgoModal(); resolve(); };
+                    okBtn.addEventListener('click', handler);
+                });
+                return;
+            } else if (array[mid] < target) {
+                showAlgoModal(`<strong>${array[mid]}</strong> is smaller than target <strong>${target}</strong>. Discard left half.`);
+                await sleep(1000);
+                hideAlgoModal();
+                drawArrayGrid(array, { discardRange: [left, mid], keepRange: [mid + 1, right] });
+                await sleep(1000);
+                left = mid + 1;
+            } else {
+                showAlgoModal(`<strong>${array[mid]}</strong> is greater than target <strong>${target}</strong>. Discard right half.`);
+                await sleep(1000);
+                hideAlgoModal();
+                drawArrayGrid(array, { discardRange: [mid, right], keepRange: [left, mid - 1] });
+                await sleep(1000);
+                right = mid - 1;
+            }
+        }
+        showAlgoModal(`Not found after <strong>${steps}</strong> steps (≤ ⌈log₂(${array.length})⌉).`, { showOk: true });
+        await new Promise(resolve => {
+            const okBtn = document.getElementById('algo-step-modal-ok');
+            if (!okBtn) { resolve(); return; }
+            const handler = () => { okBtn.removeEventListener('click', handler); hideAlgoModal(); resolve(); };
+            okBtn.addEventListener('click', handler);
+        });
+    }
+    
     function getTreeDepth(node) {
         if (!node) return 0;
         return 1 + Math.max(getTreeDepth(node.left), getTreeDepth(node.right));
@@ -754,7 +1092,7 @@ document.addEventListener('DOMContentLoaded', () => {
         masterGroup = document.createElementNS(svgNS, 'g');
         canvas.appendChild(masterGroup);
 
-        const nodeRadius = 20;
+        const nodeRadius = isMobile() ? 14 : 20;
         const horizontalSpacing = 50;
         const verticalSpacing = 80;
         
@@ -859,13 +1197,13 @@ document.addEventListener('DOMContentLoaded', () => {
             generatePyBtn.classList.add('hidden');
             return;
         }
-        generatePyBtn.classList.remove('hidden');
+        if (currentTreeType !== 'ALG') generatePyBtn.classList.remove('hidden'); else generatePyBtn.classList.add('hidden');
 
         const svgNS = "http://www.w3.org/2000/svg";
         masterGroup = document.createElementNS(svgNS, 'g');
         canvas.appendChild(masterGroup);
 
-        const nodeRadius = 20;
+        const nodeRadius = isMobile() ? 14 : 20;
         const horizontalSpacing = 40;
         const verticalSpacing = 80;
         
@@ -1072,7 +1410,7 @@ document.addEventListener('DOMContentLoaded', () => {
             generatePyBtn.classList.add('hidden');
             return;
         }
-        generatePyBtn.classList.remove('hidden');
+        if (currentTreeType !== 'ALG') generatePyBtn.classList.remove('hidden'); else generatePyBtn.classList.add('hidden');
 
         const svgNS = "http://www.w3.org/2000/svg";
         masterGroup = document.createElementNS(svgNS, 'g');
@@ -1249,6 +1587,7 @@ document.addEventListener('DOMContentLoaded', () => {
             generatePyBtn.classList.add('hidden');
             return;
         }
+        // Hide for algorithm tabs only; but graphs are DS; keep button visible for graphs
         generatePyBtn.classList.remove('hidden');
 
         const svgNS = "http://www.w3.org/2000/svg";
@@ -1267,95 +1606,133 @@ document.addEventListener('DOMContentLoaded', () => {
         const positionsInitialized = nodes.length > 0 && nodes.every(n => typeof n.x === 'number' && typeof n.y === 'number' && n._positionInitialized === true);
 
         if (!positionsInitialized) {
-            // Initialize positions in a circle with better spacing
-            const centerX = 0;
-            const centerY = 0;
-            const radius = Math.min(canvasWidth, canvasHeight) * 0.25;
-            
-            nodes.forEach((node, index) => {
-                const angle = (2 * Math.PI * index) / nodes.length;
-                const randomOffset = (Math.random() - 0.5) * 50;
-                node.x = centerX + (radius + randomOffset) * Math.cos(angle);
-                node.y = centerY + (radius + randomOffset) * Math.sin(angle);
-            });
-
-            // Improved force simulation for better layout
-            const minDistance = 100; // Increased minimum distance between nodes
-            const maxIterations = 200; // More iterations for better convergence
-            
-            for (let iteration = 0; iteration < maxIterations; iteration++) {
-                // Repulsion between nodes with minimum distance enforcement
-                for (let i = 0; i < nodes.length; i++) {
-                    for (let j = i + 1; j < nodes.length; j++) {
-                        const dx = nodes[j].x - nodes[i].x;
-                        const dy = nodes[j].y - nodes[i].y;
-                        const distance = Math.sqrt(dx * dx + dy * dy);
-                        if (distance > 0) {
-                            let force = 0;
-                            if (distance < minDistance) {
-                                // Very strong repulsion when nodes are too close
-                                force = (minDistance - distance) * 2.0;
-                            } else {
-                                // Normal repulsion with distance falloff
-                                force = 2000 / (distance * distance);
-                            }
-                            const fx = (dx / distance) * force;
-                            const fy = (dy / distance) * force;
-                            nodes[i].x -= fx * 0.005;
-                            nodes[i].y -= fy * 0.005;
-                            nodes[j].x += fx * 0.005;
-                            nodes[j].y += fy * 0.005;
-                        }
+            function computeStd(values) {
+                if (!values.length) return 0;
+                const mean = values.reduce((a, b) => a + b, 0) / values.length;
+                const variance = values.reduce((sum, v) => sum + (v - mean) * (v - mean), 0) / values.length;
+                return Math.sqrt(variance);
+            }
+            function initializePositions(variant) {
+                const centerX = 0;
+                const centerY = 0;
+                const baseRadius = Math.min(canvasWidth, canvasHeight) * (isMobile() ? 0.28 : 0.25);
+                nodes.forEach((node, index) => {
+                    const angle = (2 * Math.PI * index) / Math.max(1, nodes.length);
+                    let r = baseRadius * (0.9 + Math.random() * 0.2);
+                    let x, y;
+                    if (variant === 0) {
+                        x = centerX + r * Math.cos(angle);
+                        y = centerY + r * Math.sin(angle);
+                    } else if (variant === 1) {
+                        x = centerX + r * Math.cos(angle) * 1.2;
+                        y = centerY + r * Math.sin(angle) * 0.8;
+                    } else {
+                        const ring = (index % 3);
+                        const rr = r * (0.7 + ring * 0.15);
+                        x = centerX + rr * Math.cos(angle + ring * 0.4);
+                        y = centerY + rr * Math.sin(angle + ring * 0.2);
                     }
-                }
-                
-                // Attraction between connected nodes (weaker to prioritize separation)
-                edges.forEach(edge => {
-                    const fromNode = nodes.find(n => n.value === edge.from);
-                    const toNode = nodes.find(n => n.value === edge.to);
-                    if (fromNode && toNode) {
-                        const dx = toNode.x - fromNode.x;
-                        const dy = toNode.y - fromNode.y;
-                        const distance = Math.sqrt(dx * dx + dy * dy);
-                        if (distance > 0) {
-                            const targetDistance = 150; // Increased target distance
-                            const force = (distance - targetDistance) * 0.03; // Weaker attraction
-                            const fx = (dx / distance) * force;
-                            const fy = (dy / distance) * force;
-                            fromNode.x += fx;
-                            fromNode.y += fy;
-                            toNode.x -= fx;
-                            toNode.y -= fy;
-                        }
-                    }
-                });
-                
-                // Boundary constraints to keep nodes within canvas
-                const margin = 80;
-                nodes.forEach(node => {
-                    node.x = Math.max(margin, Math.min(canvasWidth - margin, node.x));
-                    node.y = Math.max(margin, Math.min(canvasHeight - margin, node.y));
+                    x += (Math.random() - 0.5) * 40;
+                    y += (Math.random() - 0.5) * 40;
+                    node.x = x;
+                    node.y = y;
                 });
             }
-            
-            // Final pass to ensure no overlaps
+            let attempt = 0;
+            let layoutOk = false;
+            while (attempt < 3 && !layoutOk) {
+                initializePositions(attempt);
+
+        // Improved force simulation for better layout
+        const minDistance = isMobile() ? 80 : 100; // tighter on mobile to spread better
+        const maxIterations = isMobile() ? 300 : 200; // a few more iterations on mobile
+        
+        for (let iteration = 0; iteration < maxIterations; iteration++) {
+            // Repulsion between nodes with minimum distance enforcement
             for (let i = 0; i < nodes.length; i++) {
                 for (let j = i + 1; j < nodes.length; j++) {
                     const dx = nodes[j].x - nodes[i].x;
                     const dy = nodes[j].y - nodes[i].y;
                     const distance = Math.sqrt(dx * dx + dy * dy);
-                    const minDistance = 100;
-                    if (distance < minDistance) {
-                        // Force separation
-                        const separation = minDistance - distance;
-                        const fx = (dx / distance) * separation * 0.5;
-                        const fy = (dy / distance) * separation * 0.5;
-                        nodes[i].x -= fx;
-                        nodes[i].y -= fy;
-                        nodes[j].x += fx;
-                        nodes[j].y += fy;
+                    if (distance > 0) {
+                        let force = 0;
+                        if (distance < minDistance) {
+                            // Very strong repulsion when nodes are too close
+                            force = (minDistance - distance) * 2.0;
+                        } else {
+                            // Normal repulsion with distance falloff
+                            force = 2000 / (distance * distance);
+                        }
+                        const fx = (dx / distance) * force;
+                        const fy = (dy / distance) * force;
+                        nodes[i].x -= fx * 0.005;
+                        nodes[i].y -= fy * 0.005;
+                        nodes[j].x += fx * 0.005;
+                        nodes[j].y += fy * 0.005;
                     }
                 }
+            }
+            
+            // Attraction between connected nodes (weaker to prioritize separation)
+            edges.forEach(edge => {
+                const fromNode = nodes.find(n => n.value === edge.from);
+                const toNode = nodes.find(n => n.value === edge.to);
+                if (fromNode && toNode) {
+                    const dx = toNode.x - fromNode.x;
+                    const dy = toNode.y - fromNode.y;
+                    const distance = Math.sqrt(dx * dx + dy * dy);
+                    if (distance > 0) {
+                        const targetDistance = 150; // Increased target distance
+                        const force = (distance - targetDistance) * 0.03; // Weaker attraction
+                        const fx = (dx / distance) * force;
+                        const fy = (dy / distance) * force;
+                        fromNode.x += fx;
+                        fromNode.y += fy;
+                        toNode.x -= fx;
+                        toNode.y -= fy;
+                    }
+                }
+            });
+            
+            // Boundary constraints to keep nodes within canvas
+            const margin = 80;
+            nodes.forEach(node => {
+                node.x = Math.max(margin, Math.min(canvasWidth - margin, node.x));
+                node.y = Math.max(margin, Math.min(canvasHeight - margin, node.y));
+            });
+        }
+        
+        // Final pass to ensure no overlaps
+        for (let i = 0; i < nodes.length; i++) {
+            for (let j = i + 1; j < nodes.length; j++) {
+                const dx = nodes[j].x - nodes[i].x;
+                const dy = nodes[j].y - nodes[i].y;
+                const distance = Math.sqrt(dx * dx + dy * dy);
+                    const minDistance = isMobile() ? 80 : 100;
+                if (distance < minDistance) {
+                    // Force separation
+                    const separation = minDistance - distance;
+                    const fx = (dx / distance) * separation * 0.5;
+                    const fy = (dy / distance) * separation * 0.5;
+                    nodes[i].x -= fx;
+                    nodes[i].y -= fy;
+                    nodes[j].x += fx;
+                    nodes[j].y += fy;
+                }
+            }
+            }
+
+            // Check orientation variance; if too collinear, try another initialization
+            const xs = nodes.map(n => n.x);
+            const ys = nodes.map(n => n.y);
+            const meanX = xs.reduce((a,b)=>a+b,0)/xs.length;
+            const meanY = ys.reduce((a,b)=>a+b,0)/ys.length;
+            const stdX = Math.sqrt(xs.reduce((s,v)=>s+(v-meanX)*(v-meanX),0)/xs.length);
+            const stdY = Math.sqrt(ys.reduce((s,v)=>s+(v-meanY)*(v-meanY),0)/ys.length);
+            const minStdX = canvasWidth * 0.08;
+            const minStdY = canvasHeight * 0.08;
+            layoutOk = (stdX >= minStdX && stdY >= minStdY);
+            attempt++;
             }
 
             // Mark positions initialized so we preserve them on future redraws
@@ -1697,13 +2074,13 @@ document.addEventListener('DOMContentLoaded', () => {
         if (!currentGraph) return;
         
         // Build adjacency list first from current graph edges
-        const adjacencyList = {};
-        currentGraph.nodes.forEach(node => {
-            adjacencyList[node.value] = [];
-        });
-        currentGraph.edges.forEach(edge => {
+            const adjacencyList = {};
+            currentGraph.nodes.forEach(node => {
+                adjacencyList[node.value] = [];
+            });
+            currentGraph.edges.forEach(edge => {
             if (!adjacencyList[edge.from]) adjacencyList[edge.from] = [];
-            adjacencyList[edge.from].push(edge.to);
+                adjacencyList[edge.from].push(edge.to);
             if (!isDirectedGraph) {
                 if (!adjacencyList[edge.to]) adjacencyList[edge.to] = [];
                 if (!adjacencyList[edge.to].includes(edge.from)) adjacencyList[edge.to].push(edge.from);
@@ -1742,7 +2119,7 @@ document.addEventListener('DOMContentLoaded', () => {
             const adjacencyStrings = nodeOrder
                 .map(node => `${node}: ${adjacencyList[node].join(', ')}`)
                 .join('\n');
-            treeInput.value = adjacencyStrings;
+                    treeInput.value = adjacencyStrings;
         }
     }
 
@@ -2021,6 +2398,22 @@ document.addEventListener('DOMContentLoaded', () => {
                 updateGraphInputFromCurrentGraph();
             }
             drawGraph(currentGraph);
+        } else if (currentTreeType === 'ALG' && (currentAlgorithm === 'DFS' || currentAlgorithm === 'BFS' || currentAlgorithm === 'TRAVERSAL')) {
+            const arr = parseInput(rawInput, 'BT');
+            if (!arr || arr.length === 0 || arr[0] === null || arr.includes('error')) {
+                showToast('Please enter a valid level-order tree.', 'error');
+                currentRoot = null; clearCanvas(); generatePyBtn.classList.add('hidden'); return;
+            }
+            currentRoot = buildTreeFromLevelOrder(arr);
+            drawTreeTraversal(currentRoot, null);
+            showToast('Tree ready for simulation.', 'success');
+        } else if (currentTreeType === 'ALG' && currentAlgorithm === 'BINARY_SEARCH') {
+            const arr = parseNumberArray(rawInput);
+            if (arr === null || arr.length === 0) { showToast('Please enter a valid number array.', 'error'); return; }
+            const sorted = [...arr].sort((a, b) => a - b);
+            currentArray = sorted;
+            drawArrayGrid(sorted, {});
+            showToast('Array ready for simulation.', 'success');
         }
         
         if(currentRoot) {
@@ -2034,6 +2427,9 @@ document.addEventListener('DOMContentLoaded', () => {
                 drawTrie(currentRoot);
             } else if (currentTreeType === 'MARY') {
                 drawMaryTree(currentRoot, currentMValue);
+            } else if (currentTreeType === 'ALG') {
+                // For algorithm modes that use a tree, redraw traversal-aware view
+                drawTreeTraversal(currentRoot, null);
             } else {
                 drawTree(currentRoot); 
             }
@@ -2295,5 +2691,333 @@ document.addEventListener('DOMContentLoaded', () => {
     }
     copyDetailedBtn.addEventListener('click', () => copyToClipboard(pythonCodeDetailed.textContent, copyDetailedBtn));
     copyOnelinerBtn.addEventListener('click', () => copyToClipboard(pythonCodeOneliner.textContent, copyOnelinerBtn));
+    
+    // --- Algorithms: Binary Search bindings ---
+    if (generateDefaultArrayBtn) {
+        generateDefaultArrayBtn.addEventListener('click', () => {
+            if (currentTreeType === 'ALG' && currentAlgorithm === 'BINARY_SEARCH') {
+                const arr = generateDefaultSortedArray(50);
+                currentArray = arr;
+                treeInput.value = arr.join(', ');
+                showToast('Generated a default sorted array of length 50.', 'success');
+                if (algoTargetInput) algoTargetInput.value = '12';
+            } else if (currentTreeType === 'ALG' && (currentAlgorithm === 'DFS' || currentAlgorithm === 'BFS')) {
+                const arr = generateDefaultTraversalTreeArray();
+                treeInput.value = arr.map(v => v === null ? 'null' : v).join(', ');
+                showToast('Loaded default tree.', 'success');
+                if (algoTargetInput) algoTargetInput.value = '12';
+            } else if (currentTreeType === 'ALG' && currentAlgorithm === 'TRAVERSAL') {
+                const arr = generateDefaultTraversalTreeArray();
+                treeInput.value = arr.map(v => v === null ? 'null' : v).join(', ');
+                showToast('Loaded default tree.', 'success');
+            }
+        });
+    }
+    if (startSimulationBtn) {
+        startSimulationBtn.addEventListener('click', async () => {
+            if (currentTreeType !== 'ALG') return;
+            if (currentAlgorithm === 'BINARY_SEARCH') {
+                const arr = parseNumberArray(treeInput.value);
+                if (arr === null || arr.length === 0) { showToast('Please enter a valid number array.', 'error'); return; }
+                const targetRaw = (algoTargetInput && typeof algoTargetInput.value === 'string') ? algoTargetInput.value.trim() : '';
+                if (targetRaw === '' || isNaN(Number(targetRaw))) { showAlgoModal('Please enter a target value.', { showOk: true }); return; }
+                const target = Number(targetRaw);
+                const sorted = [...arr].sort((a, b) => a - b);
+                currentArray = sorted;
+                drawArrayGrid(sorted, {});
+                await new Promise(r => setTimeout(r, 500));
+                await runBinarySearchSimulation(sorted, target);
+            } else if (currentAlgorithm === 'DFS' || currentAlgorithm === 'BFS') {
+                const arr = parseInput(treeInput.value, 'BT');
+                if (!arr || arr.length === 0 || arr[0] === null || arr.includes('error')) { showToast('Please enter a valid level-order tree.', 'error'); return; }
+                const root = buildTreeFromLevelOrder(arr);
+                currentRoot = root;
+                drawTreeTraversal(root, null);
+                const targetRaw = (algoTargetInput && typeof algoTargetInput.value === 'string') ? algoTargetInput.value.trim() : '';
+                if (targetRaw === '' || isNaN(Number(targetRaw))) { showAlgoModal('Please enter a target value.', { showOk: true }); return; }
+                const target = Number(targetRaw);
+                await new Promise(r => setTimeout(r, 500));
+                if (currentAlgorithm === 'DFS') await runDfsSimulation(root, target);
+                else await runBfsSimulation(root, target);
+            } else if (currentAlgorithm === 'TRAVERSAL') {
+                const arr = parseInput(treeInput.value, 'BT');
+                if (!arr || arr.length === 0 || arr[0] === null || arr.includes('error')) { showToast('Please enter a valid level-order tree.', 'error'); return; }
+                if (arr.filter(v => v !== null).length > 30) { showToast('Maximum 30 nodes allowed for traversal.', 'error'); return; }
+                const root = buildTreeFromLevelOrder(arr);
+                currentRoot = root;
+                drawTreeTraversal(root, null);
+                await new Promise(r => setTimeout(r, 500));
+                await runTraversalSimulation(root);
+            }
+        });
+    }
+
+    // Traversal buttons
+    if (preorderBtn) preorderBtn.addEventListener('click', () => {
+        currentTraversalType = 'PRE';
+        preorderBtn.className = 'flex-1 bg-cyan-600/80 hover:bg-cyan-600 text-white font-bold py-2 px-4 rounded-lg transition-all text-sm';
+        inorderBtn.className = 'flex-1 bg-slate-700/80 hover:bg-slate-700 text-white font-bold py-2 px-4 rounded-lg transition-all text-sm';
+        postorderBtn.className = 'flex-1 bg-slate-700/80 hover:bg-slate-700 text-white font-bold py-2 px-4 rounded-lg transition-all text-sm';
+    });
+    if (inorderBtn) inorderBtn.addEventListener('click', () => {
+        currentTraversalType = 'IN';
+        inorderBtn.className = 'flex-1 bg-cyan-600/80 hover:bg-cyan-600 text-white font-bold py-2 px-4 rounded-lg transition-all text-sm';
+        preorderBtn.className = 'flex-1 bg-slate-700/80 hover:bg-slate-700 text-white font-bold py-2 px-4 rounded-lg transition-all text-sm';
+        postorderBtn.className = 'flex-1 bg-slate-700/80 hover:bg-slate-700 text-white font-bold py-2 px-4 rounded-lg transition-all text-sm';
+    });
+    if (postorderBtn) postorderBtn.addEventListener('click', () => {
+        currentTraversalType = 'POST';
+        postorderBtn.className = 'flex-1 bg-cyan-600/80 hover:bg-cyan-600 text-white font-bold py-2 px-4 rounded-lg transition-all text-sm';
+        preorderBtn.className = 'flex-1 bg-slate-700/80 hover:bg-slate-700 text-white font-bold py-2 px-4 rounded-lg transition-all text-sm';
+        inorderBtn.className = 'flex-1 bg-slate-700/80 hover:bg-slate-700 text-white font-bold py-2 px-4 rounded-lg transition-all text-sm';
+    });
+
+    function getNodePath(root, targetValue) {
+        const path = [];
+        let found = false;
+        function dfs(node) {
+            if (!node || found) return false;
+            if (node.value === targetValue) { found = true; return true; }
+            path.push('left');
+            if (dfs(node.left)) return true;
+            path.pop();
+            path.push('right');
+            if (dfs(node.right)) return true;
+            path.pop();
+            return false;
+        }
+        dfs(root);
+        return 'root' + (path.length ? '.' + path.join('.') : '');
+    }
+
+    function drawTreeTraversal(root, highlightValue, traversalVisitedValues = null) {
+        // Reuse drawTree but color by value highlight
+        clearCanvas();
+        if (!root) return;
+        const originalGenerateBtnState = generatePyBtn.classList.contains('hidden');
+        // Hide code button for algorithm modes; only show for DS (except graph already disabled elsewhere)
+        if (currentTreeType === 'ALG') {
+            generatePyBtn.classList.add('hidden');
+        }
+        const svgNS = "http://www.w3.org/2000/svg";
+        masterGroup = document.createElementNS(svgNS, 'g');
+        canvas.appendChild(masterGroup);
+        const nodeRadius = 20;
+        const horizontalSpacing = 50;
+        const verticalSpacing = 80;
+        const depth = getTreeDepth(root);
+        const requiredWidth = Math.pow(2, depth - 1) * horizontalSpacing;
+        const nodes = [];
+        const edges = [];
+        function assign(node, level, index) {
+            if (!node) return;
+            node.y = level * verticalSpacing;
+            const nodesAtLevel = Math.pow(2, level);
+            const segmentWidth = requiredWidth / nodesAtLevel;
+            node.x = segmentWidth * (index - (nodesAtLevel - 1) / 2);
+            nodes.push(node);
+            if (node.left) { edges.push({ from: node, to: node.left }); assign(node.left, level + 1, index * 2); }
+            if (node.right) { edges.push({ from: node, to: node.right }); assign(node.right, level + 1, index * 2 + 1); }
+        }
+        assign(root, 0, 0);
+        let minX = Infinity, maxX = -Infinity, maxY = -Infinity;
+        nodes.forEach(n => { minX = Math.min(minX, n.x); maxX = Math.max(maxX, n.x); maxY = Math.max(maxY, n.y); });
+        const treeWidth = maxX - minX;
+        const treeHeight = maxY;
+        const canvasWidth = canvasContainer.clientWidth;
+        const canvasHeight = canvasContainer.clientHeight;
+        const scaleX = canvasWidth / (treeWidth + horizontalSpacing * 2);
+        const scaleY = canvasHeight / (treeHeight + verticalSpacing * 2);
+        scale = Math.min(1, scaleX, scaleY);
+        translateX = (canvasWidth / 2) - (minX * scale + treeWidth * scale / 2);
+        translateY = (canvasHeight - treeHeight * scale) / 2;
+        updateTransform();
+
+        // Optional traversal output row at top (only for traversal algorithm)
+        if (currentTreeType === 'ALG' && currentAlgorithm === 'TRAVERSAL') {
+            const outputGroup = document.createElementNS(svgNS, 'g');
+            outputGroup.setAttribute('class', 'traversal-output-row');
+            // Align midpoint between 4th and 5th box above the root (screen coords)
+            const rootScreenX = translateX + scale * 0 + scale * 0 + scale * 0 + scale * (0 + (root && typeof root.x === 'number' ? root.x : 0));
+            outputGroup.setAttribute('transform', `translate(${rootScreenX}, ${50}) scale(1)`);
+            canvas.appendChild(outputGroup);
+            // Build list of nodes in level order just to count; we'll fill externally during simulation
+            const nodesList = [];
+            (function collect(n){ if(!n) return; nodesList.push(n); collect(n.left); collect(n.right);} )(root);
+            const boxW = 30, boxH = 30, gap = 6;
+            const perRow = isMobile() ? 8 : nodesList.length;
+            const rows = Math.ceil(nodesList.length / perRow);
+            for (let i = 0; i < nodesList.length; i++) {
+                const row = Math.floor(i / perRow);
+                const col = i % perRow;
+                const isLastRow = row === rows - 1;
+                const columnsInThisRow = isLastRow ? (nodesList.length - row * perRow) : perRow;
+                const rowWidth = columnsInThisRow * (boxW + gap) - gap;
+                const rowStartX = -rowWidth / 2;
+                const x = rowStartX + col * (boxW + gap);
+                const y = row * (boxH + gap);
+
+                const cell = document.createElementNS(svgNS, 'g');
+                cell.setAttribute('class', 'array-cell traversal-output');
+                cell.setAttribute('transform', `translate(${x}, ${y})`);
+                const rect = document.createElementNS(svgNS, 'rect');
+                rect.setAttribute('width', boxW);
+                rect.setAttribute('height', boxH);
+                rect.setAttribute('rx', 6);
+                rect.setAttribute('ry', 6);
+                rect.setAttribute('fill', '#0b1220');
+                rect.setAttribute('stroke', '#6366f1');
+                rect.setAttribute('stroke-width', '2');
+                const t = document.createElementNS(svgNS, 'text');
+                t.setAttribute('x', boxW/2);
+                t.setAttribute('y', boxH/2);
+                t.setAttribute('dy', '.3em');
+                t.setAttribute('text-anchor', 'middle');
+                t.setAttribute('fill', '#f1f5f9');
+                if (Array.isArray(traversalVisitedValues) && i < traversalVisitedValues.length) {
+                    t.textContent = String(traversalVisitedValues[i]);
+                } else {
+                    t.textContent = '';
+                }
+                cell.appendChild(rect); cell.appendChild(t);
+                outputGroup.appendChild(cell);
+            }
+            canvas.dataset.traversalCells = nodesList.length;
+        }
+        edges.forEach(edge => {
+            const line = document.createElementNS(svgNS, 'line');
+            line.setAttribute('x1', edge.from.x);
+            line.setAttribute('y1', edge.from.y);
+            line.setAttribute('x2', edge.to.x);
+            line.setAttribute('y2', edge.to.y);
+            line.setAttribute('class', 'edge');
+            masterGroup.appendChild(line);
+        });
+        nodes.forEach(node => {
+            const g = document.createElementNS(svgNS, 'g');
+            g.setAttribute('class', 'node');
+            g.setAttribute('transform', `translate(${node.x}, ${node.y})`);
+            const circle = document.createElementNS(svgNS, 'circle');
+            circle.setAttribute('r', nodeRadius);
+            let fillColor = '#0f172a';
+            if (highlightValue && highlightValue.value === node.value) {
+                fillColor = highlightValue.color === 'found' ? '#064e3b' : '#854d0e';
+            } else if (highlightValue === node.value) {
+                fillColor = '#854d0e';
+            }
+            circle.setAttribute('fill', fillColor);
+            const text = document.createElementNS(svgNS, 'text');
+            text.setAttribute('dy', '.3em');
+            text.setAttribute('text-anchor', 'middle');
+            text.textContent = node.value;
+            g.appendChild(circle);
+            g.appendChild(text);
+            masterGroup.appendChild(g);
+        });
+        if (!originalGenerateBtnState && currentTreeType !== 'ALG') generatePyBtn.classList.remove('hidden');
+    }
+
+    async function runDfsSimulation(root, target) {
+        const stack = [root];
+        const visited = new Set();
+        while (stack.length) {
+            const node = stack.pop();
+            if (!node || visited.has(node)) continue;
+            visited.add(node);
+            drawTreeTraversal(root, node.value);
+            await sleep(1000);
+            if (node.value === target) {
+                drawTreeTraversal(root, { value: node.value, color: 'found' });
+                await sleep(1000);
+                const pathStr = getNodePath(root, target);
+                showAlgoModal(`Found target <strong>${target}</strong> at node <strong>${pathStr}</strong>.`, { showOk: true });
+                await new Promise(resolve => {
+                    const okBtn = document.getElementById('algo-step-modal-ok');
+                    if (!okBtn) { resolve(); return; }
+                    const handler = () => { okBtn.removeEventListener('click', handler); hideAlgoModal(); resolve(); };
+                    okBtn.addEventListener('click', handler);
+                });
+                return;
+            }
+            if (node.right) stack.push(node.right);
+            if (node.left) stack.push(node.left);
+        }
+        showAlgoModal(`Target <strong>${target}</strong> not found.`, { showOk: true });
+        await new Promise(resolve => {
+            const okBtn = document.getElementById('algo-step-modal-ok');
+            if (!okBtn) { resolve(); return; }
+            const handler = () => { okBtn.removeEventListener('click', handler); hideAlgoModal(); resolve(); };
+            okBtn.addEventListener('click', handler);
+        });
+    }
+
+    async function runBfsSimulation(root, target) {
+        const queue = [root];
+        const visited = new Set();
+        while (queue.length) {
+            const node = queue.shift();
+            if (!node || visited.has(node)) continue;
+            visited.add(node);
+            drawTreeTraversal(root, node.value);
+            await sleep(1000);
+            if (node.value === target) {
+                drawTreeTraversal(root, { value: node.value, color: 'found' });
+                await sleep(1000);
+                const pathStr = getNodePath(root, target);
+                showAlgoModal(`Found target <strong>${target}</strong> at node <strong>${pathStr}</strong>.`, { showOk: true });
+                await new Promise(resolve => {
+                    const okBtn = document.getElementById('algo-step-modal-ok');
+                    if (!okBtn) { resolve(); return; }
+                    const handler = () => { okBtn.removeEventListener('click', handler); hideAlgoModal(); resolve(); };
+                    okBtn.addEventListener('click', handler);
+                });
+                return;
+            }
+            if (node.left) queue.push(node.left);
+            if (node.right) queue.push(node.right);
+        }
+        showAlgoModal(`Target <strong>${target}</strong> not found.`, { showOk: true });
+        await new Promise(resolve => {
+            const okBtn = document.getElementById('algo-step-modal-ok');
+            if (!okBtn) { resolve(); return; }
+            const handler = () => { okBtn.removeEventListener('click', handler); hideAlgoModal(); resolve(); };
+            okBtn.addEventListener('click', handler);
+        });
+    }
+
+    let currentTraversalType = 'PRE';
+    function getTraversalOrder(root, type) {
+        const result = [];
+        const visit = (n) => { if (!n) return; result.push(n.value); };
+        function pre(n){ if(!n) return; result.push(n.value); pre(n.left); pre(n.right);} 
+        function ino(n){ if(!n) return; ino(n.left); result.push(n.value); ino(n.right);} 
+        function post(n){ if(!n) return; post(n.left); post(n.right); result.push(n.value);} 
+        if (type === 'PRE') pre(root); else if (type === 'IN') ino(root); else post(root);
+        return result;
+    }
+
+    async function runTraversalSimulation(root) {
+        // Ask user for type via simple buttons if not present; reuse three buttons in a mini prompt modal
+        let type = 'PRE';
+        // Prefer a quick prompt for now
+        type = currentTraversalType;
+        const order = getTraversalOrder(root, type);
+        // Fill output boxes above
+        const svg = canvas; // root svg
+        const cells = svg.querySelectorAll('.traversal-output');
+        const visited = [];
+        for (let i = 0; i < order.length; i++) {
+            visited.push(order[i]);
+            drawTreeTraversal(root, order[i], visited);
+            await sleep(1000);
+        }
+        showAlgoModal(`Traversal result: [${order.join(', ')}]`, { showOk: true });
+        await new Promise(resolve => {
+            const okBtn = document.getElementById('algo-step-modal-ok');
+            if (!okBtn) { resolve(); return; }
+            const handler = () => { okBtn.removeEventListener('click', handler); hideAlgoModal(); resolve(); };
+            okBtn.addEventListener('click', handler);
+        });
+    }
 });
 
