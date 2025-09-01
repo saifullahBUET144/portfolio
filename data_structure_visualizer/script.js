@@ -29,7 +29,13 @@ document.addEventListener('DOMContentLoaded', () => {
     const aboutModal = document.getElementById('about-modal');
     const homeAboutBtn = document.getElementById('home-about-btn');
     const mobileAboutBtn = document.getElementById('mobile-about-btn');
+    const homeSearchBtn = document.getElementById('home-search-btn');
+    const mobileSearchBtn = document.getElementById('mobile-search-btn');
     const closeAboutModalBtn = document.getElementById('close-about-modal');
+    const searchModal = document.getElementById('search-modal');
+    const searchInput = document.getElementById('search-input');
+    const searchCloseBtn = document.getElementById('search-close-btn');
+    const searchResults = document.getElementById('search-results');
     const toastContainer = document.getElementById('toast-container');
     const algoStepModal = document.getElementById('algo-step-modal');
     const algoStepModalContent = document.getElementById('algo-step-modal-content');
@@ -372,6 +378,27 @@ document.addEventListener('DOMContentLoaded', () => {
             mobileMenu.classList.add('hidden');
         }
     });
+
+    // --- Navbar Scroll Buttons ---
+    const dsSectionTop = () => document.getElementById('home-page').querySelector('main').offsetTop - 20;
+    const algoHeader = () => Array.from(document.querySelectorAll('h2')).find(h => h.textContent.includes('Visualize Algorithms'));
+    function scrollToDS() { window.scrollTo({ top: dsSectionTop(), behavior: 'smooth' }); }
+    function scrollToAlgo() {
+        const header = algoHeader();
+        if (header) {
+            const rect = header.getBoundingClientRect();
+            const top = window.pageYOffset + rect.top - 20;
+            window.scrollTo({ top, behavior: 'smooth' });
+        }
+    }
+    const navDsBtn = document.getElementById('nav-ds-btn');
+    const navAlgoBtn = document.getElementById('nav-algo-btn');
+    const mobileDsBtn = document.getElementById('mobile-ds-btn');
+    const mobileAlgoBtn = document.getElementById('mobile-algo-btn');
+    if (navDsBtn) navDsBtn.addEventListener('click', scrollToDS);
+    if (navAlgoBtn) navAlgoBtn.addEventListener('click', scrollToAlgo);
+    if (mobileDsBtn) mobileDsBtn.addEventListener('click', () => { scrollToDS(); mobileMenu.classList.add('hidden'); });
+    if (mobileAlgoBtn) mobileAlgoBtn.addEventListener('click', () => { scrollToAlgo(); mobileMenu.classList.add('hidden'); });
 
     // --- Simple Client-side Router (History API with hash fallback for file://) ---
     const useHashRouting = window.location.protocol === 'file:';
@@ -2758,6 +2785,68 @@ document.addEventListener('DOMContentLoaded', () => {
 
     homeAboutBtn.addEventListener('click', showAboutModal);
     mobileAboutBtn.addEventListener('click', showAboutModal);
+    function openSearch() {
+        searchModal.classList.remove('hidden');
+        searchModal.classList.add('show');
+        setTimeout(() => { searchInput.focus(); }, 50);
+    }
+    function closeSearch() {
+        searchModal.classList.remove('show');
+        searchModal.classList.add('hidden');
+        searchResults.innerHTML = '';
+        searchInput.value = '';
+    }
+    if (homeSearchBtn) homeSearchBtn.addEventListener('click', openSearch);
+    if (mobileSearchBtn) mobileSearchBtn.addEventListener('click', () => { openSearch(); mobileMenu.classList.add('hidden'); });
+    if (searchCloseBtn) searchCloseBtn.addEventListener('click', closeSearch);
+    if (searchModal) searchModal.addEventListener('click', (e) => { if (e.target === searchModal) closeSearch(); });
+
+    const SEARCH_INDEX = [
+        { label: 'Binary Tree', path: '/binarytree', keywords: ['bt','binary tree','tree'] },
+        { label: 'Binary Search Tree', path: '/binarysearchtree', keywords: ['bst','binary search tree','search'] },
+        { label: 'Trie', path: '/trie', keywords: ['trie','prefix','string'] },
+        { label: 'M-ary Tree', path: '/marytree', keywords: ['mary','m-ary','n-ary','multi'] },
+        { label: 'Graph', path: '/graph', keywords: ['graph','nodes','edges'] },
+        { label: 'Binary Search (Algorithm)', path: '/binarysearch', keywords: ['binary search','search array','algorithm'] },
+        { label: 'Depth First Search (Algorithm)', path: '/depthfirstsearch', keywords: ['dfs','depth first search','algorithm'] },
+        { label: 'Breadth First Search (Algorithm)', path: '/breadthfirstsearch', keywords: ['bfs','breadth first search','algorithm'] },
+        { label: 'Tree Traversals (Algorithm)', path: '/treetraversals', keywords: ['traversal','preorder','inorder','postorder','algorithm'] }
+    ];
+    function renderSearchResults(items) {
+        searchResults.innerHTML = '';
+        if (!items.length) {
+            const empty = document.createElement('div');
+            empty.className = 'text-slate-400 text-sm py-2';
+            empty.textContent = 'No matches';
+            searchResults.appendChild(empty);
+            return;
+        }
+        items.forEach(item => {
+            const row = document.createElement('div');
+            row.className = 'result-item px-3 py-2 text-slate-200';
+            row.textContent = item.label;
+            row.addEventListener('click', () => {
+                closeSearch();
+                // Navigate via router
+                setRoutePath(item.path);
+                applyRoute(getCurrentRoutePath());
+            });
+            searchResults.appendChild(row);
+        });
+    }
+    if (searchInput) {
+        searchInput.addEventListener('input', () => {
+            const q = searchInput.value.trim().toLowerCase();
+            if (!q) { searchResults.innerHTML = ''; return; }
+            const matches = SEARCH_INDEX.filter(it =>
+                it.label.toLowerCase().includes(q) || it.keywords.some(k => k.includes(q))
+            );
+            renderSearchResults(matches);
+        });
+        searchInput.addEventListener('keydown', (e) => {
+            if (e.key === 'Escape') closeSearch();
+        });
+    }
     closeAboutModalBtn.addEventListener('click', hideAboutModal);
     aboutModal.addEventListener('click', (e) => { if (e.target === aboutModal) hideAboutModal(); });
     

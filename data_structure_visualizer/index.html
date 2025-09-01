@@ -4,6 +4,26 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Data Structure Visualizer</title>
+
+    <!-- Standard favicon sizes -->
+    <link rel="icon" type="image/png" sizes="32x32" href="/favicon-32x32.png">
+    <link rel="icon" type="image/png" sizes="96x96" href="/favicon-96x96.png">
+    <link rel="icon" type="image/png" sizes="16x16" href="/favicon-16x16.png">
+
+    <!-- Apple touch icons (for iOS homescreen) -->
+    <link rel="apple-touch-icon" sizes="180x180" href="/apple-icon-180x180.png">
+    <link rel="apple-touch-icon" sizes="152x152" href="/apple-icon-152x152.png">
+    <link rel="apple-touch-icon" sizes="144x144" href="/apple-icon-144x144.png">
+    <link rel="apple-touch-icon" sizes="120x120" href="/apple-icon-120x120.png">
+    <link rel="apple-touch-icon" sizes="114x114" href="/apple-icon-114x114.png">
+
+    <!-- Android icon -->
+    <link rel="icon" type="image/png" sizes="192x192" href="/android-icon-192x192.png">
+
+    <!-- Manifest and theme color (optional but good for PWA) -->
+    <link rel="manifest" href="/manifest.json">
+    <meta name="theme-color" content="#ffffff">
+
     <!-- Tailwind CSS -->
     <script src="https://cdn.tailwindcss.com"></script>
     <!-- Google Fonts -->
@@ -32,9 +52,11 @@
                 
                 <!-- Desktop Nav -->
                 <div class="hidden sm:flex flex-1 justify-end items-center space-x-6 pr-4">
+                    <button id="home-search-btn" class="text-slate-300 hover:text-cyan-400 transition text-lg"><i class="fa-solid fa-magnifying-glass"></i></button>
                     <button id="home-about-btn" class="text-slate-300 hover:text-cyan-400 transition text-lg">About</button>
+                    <button id="nav-ds-btn" class="text-slate-300 hover:text-cyan-400 transition text-lg">DS</button>
+                    <button id="nav-algo-btn" class="text-slate-300 hover:text-cyan-400 transition text-lg">Algo</button>
                     <a href="https://github.com/saifullahBUET144" target="_blank" class="text-slate-300 hover:text-cyan-400 transition"><i class="fab fa-github fa-xl"></i></a>
-                    <a href="https://www.linkedin.com/in/saifullah-bin-yusuf-3647b71a4/" target="_blank" class="text-slate-300 hover:text-cyan-400 transition"><i class="fab fa-linkedin fa-xl"></i></a>
                 </div>
                 
                 <!-- Mobile Nav -->
@@ -43,8 +65,11 @@
                         <i class="fas fa-bars fa-lg"></i>
                     </button>
                 </div>
-                 <div id="mobile-menu" class="hidden sm:hidden absolute top-full right-0 mt-2 w-48 bg-slate-900 rounded-lg shadow-lg p-2 border border-slate-700 z-50">
+                 <div id="mobile-menu" class="hidden sm:hidden absolute top-full right-0 mt-2 w-56 bg-slate-900 rounded-lg shadow-lg p-2 border border-slate-700 z-50">
+                    <button id="mobile-search-btn" class="w-full text-left text-slate-300 hover:bg-slate-700/50 hover:text-cyan-400 transition rounded px-3 py-2 flex items-center gap-2"><i class="fa-solid fa-magnifying-glass"></i> Search</button>
                     <button id="mobile-about-btn" class="w-full text-left text-slate-300 hover:bg-slate-700/50 hover:text-cyan-400 transition rounded px-3 py-2">About</button>
+                    <button id="mobile-ds-btn" class="w-full text-left text-slate-300 hover:bg-slate-700/50 hover:text-cyan-400 transition rounded px-3 py-2">Data Structures</button>
+                    <button id="mobile-algo-btn" class="w-full text-left text-slate-300 hover:bg-slate-700/50 hover:text-cyan-400 transition rounded px-3 py-2">Algorithms</button>
                     <a href="https://github.com/saifullahBUET144" target="_blank" class="block text-slate-300 hover:bg-slate-700/50 hover:text-cyan-400 transition rounded px-3 py-2">GitHub</a>
                     <a href="https://www.linkedin.com/in/saifullah-bin-yusuf-3647b71a4/" target="_blank" class="block text-slate-300 hover:bg-slate-700/50 hover:text-cyan-400 transition rounded px-3 py-2">LinkedIn</a>
                 </div>
@@ -263,8 +288,15 @@
     <div id="about-modal" class="fixed inset-0 bg-black/70 flex items-center justify-center p-4 z-[1000] opacity-0 pointer-events-none">
         <div class="glass-panel rounded-xl p-6 md:p-8 max-w-lg w-full mx-4">
              <h2 class="text-xl md:text-2xl font-bold text-cyan-300 mb-4 flex items-center"><i class="fas fa-info-circle mr-3"></i>About This Visualizer</h2>
-             <p class="text-slate-300 mb-3 text-sm md:text-base">This tool is designed to help you visualize and interact with tree data structures. You can build, edit, and manipulate Binary Trees and Binary Search Trees in real-time.</p>
-             <p class="text-slate-300 mb-4 text-sm md:text-base">Features include node creation, editing, deletion, BST balancing, and Python code generation. It's built with HTML, Tailwind CSS, and vanilla JavaScript.</p>
+             <p class="text-slate-300 mb-3 text-sm md:text-base">This interactive playground helps you learn data structures and algorithms by <strong>seeing</strong> them. Build and edit trees/graphs, simulate traversals and searches, and explore step-by-step animations.</p>
+             <ul class="list-disc list-inside text-slate-300 space-y-1 text-sm md:text-base mb-3">
+                 <li>Binary Tree & Binary Search Tree with live editing and balancing</li>
+                 <li>Trie visualization for strings</li>
+                 <li>M-ary Trees</li>
+                 <li>Graph editor with directed/undirected and edge/adjacency inputs</li>
+                 <li>Algorithms: Binary Search, DFS, BFS, and Tree Traversals</li>
+             </ul>
+             <p class="text-slate-300 mb-4 text-sm md:text-base">Use the top navigation to jump to sections, and share URLs (e.g. <code class="bg-slate-700/50 px-1 rounded">/binarytree</code>) to deep-link a visualizer.</p>
              <button id="close-about-modal" class="py-2 px-4 bg-slate-700/80 hover:bg-slate-700 rounded-lg transition-all text-sm md:text-base">Close</button>
         </div>
     </div>
@@ -307,6 +339,15 @@
         </div>
     </div>
 
+    <footer class="container mx-auto px-6 py-6 flex flex-col sm:flex-row items-center justify-between text-slate-400 border-t border-slate-800">
+        <span class="text-sm">© 2025 Saifullah Bin Yusuf. All rights reserved.</span>
+        <div class="flex items-center gap-4 mt-3 sm:mt-0">
+            <a href="https://github.com/saifullahBUET144" target="_blank" class="hover:text-cyan-400 transition" aria-label="GitHub"><i class="fab fa-github fa-lg"></i></a>
+            <a href="https://www.linkedin.com/in/saifullah-bin-yusuf-3647b71a4/" target="_blank" class="hover:text-cyan-400 transition" aria-label="LinkedIn"><i class="fab fa-linkedin fa-lg"></i></a>
+            <a href="https://leetcode.com/u/saifullahbinyusuf/" target="_blank" class="hover:text-cyan-400 transition" aria-label="LeetCode"><i class="fa-solid fa-code"></i></a>
+            <a href="mailto:saifsearcher@gmail.com" class="hover:text-cyan-400 transition" aria-label="Email"><i class="fa-solid fa-envelope"></i></a>
+        </div>
+    </footer>
     <!-- Algorithm Step Modal -->
     <div id="algo-step-modal" class="fixed inset-0 bg-black/70 hidden items-center justify-center p-4 z-[1500]">
         <div class="glass-panel rounded-lg shadow-xl w-full max-w-xl">
@@ -315,6 +356,20 @@
                 <div class="mt-5 flex justify-center">
                     <button id="algo-step-modal-ok" class="hidden bg-cyan-600/80 hover:bg-cyan-600 text-white font-bold py-2 px-4 rounded-lg transition-all">OKAY</button>
                 </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Search Modal -->
+    <div id="search-modal" class="fixed inset-0 bg-black/70 hidden items-center justify-center p-4 z-[1600]">
+        <div class="glass-panel rounded-lg shadow-xl w-full max-w-lg">
+            <div class="p-4">
+                <div class="flex items-center gap-2">
+                    <i class="fa-solid fa-magnifying-glass text-cyan-400"></i>
+                    <input id="search-input" type="text" placeholder="Search data structures and algorithms..." class="flex-1 bg-slate-900/70 border border-slate-700 rounded-lg px-3 py-2 focus:ring-2 focus:ring-cyan-500 outline-none text-slate-200" />
+                    <button id="search-close-btn" class="text-slate-400 hover:text-white text-xl leading-none">&times;</button>
+                </div>
+                <div id="search-results" class="mt-4 max-h-64 overflow-y-auto divide-y divide-slate-800"></div>
             </div>
         </div>
     </div>
