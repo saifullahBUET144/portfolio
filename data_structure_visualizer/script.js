@@ -373,6 +373,89 @@ document.addEventListener('DOMContentLoaded', () => {
         }
     });
 
+    // --- Simple Client-side Router (History API with hash fallback for file://) ---
+    const useHashRouting = window.location.protocol === 'file:';
+    let suppressRoutePush = false;
+
+    // Descriptive paths
+    function getPathForSelection(type, alg) {
+        if (type === 'ALG') {
+            const a = (alg || '').toUpperCase();
+            if (a === 'BINARY_SEARCH') return '/binarysearch';
+            if (a === 'DFS') return '/depthfirstsearch';
+            if (a === 'BFS') return '/breadthfirstsearch';
+            if (a === 'TRAVERSAL') return '/treetraversals';
+            return '/';
+        }
+        if (type === 'BT') return '/binarytree';
+        if (type === 'BST') return '/binarysearchtree';
+        if (type === 'TRIE') return '/trie';
+        if (type === 'MARY') return '/marytree';
+        if (type === 'GRAPH') return '/graph';
+        return '/';
+    }
+    const PATH_TO_CARD_SELECTOR = {
+        '/binarytree': '.card[data-type="BT"]',
+        '/binarysearchtree': '.card[data-type="BST"]',
+        '/trie': '.card[data-type="TRIE"]',
+        '/marytree': '.card[data-type="MARY"]',
+        '/graph': '.card[data-type="GRAPH"]',
+        '/binarysearch': '.card[data-type="ALG"][data-alg="BINARY_SEARCH"]',
+        '/depthfirstsearch': '.card[data-type="ALG"][data-alg="DFS"]',
+        '/breadthfirstsearch': '.card[data-type="ALG"][data-alg="BFS"]',
+        '/treetraversals': '.card[data-type="ALG"][data-alg="TRAVERSAL"]'
+    };
+
+    function getCurrentRoutePath() {
+        if (useHashRouting) {
+            const h = window.location.hash || '';
+            const p = h.replace(/^#/, '');
+            return p || '/';
+        }
+        return window.location.pathname || '/';
+    }
+    function setRoutePath(path) {
+        if (useHashRouting) {
+            if (('#' + path) !== window.location.hash) {
+                window.location.hash = path;
+            }
+        } else {
+            if (path !== window.location.pathname) {
+                history.pushState({ path }, '', path);
+            }
+        }
+    }
+    function showHomeView() {
+        visualizerPage.classList.add('hidden');
+        homePage.classList.remove('hidden');
+        clearCanvas();
+        treeInput.value = '';
+        currentRoot = null;
+        currentGraph = null;
+        generatePyBtn.classList.add('hidden');
+        balanceBstBtn.classList.add('hidden');
+    }
+    function applyRoute(path) {
+        if (!path || path === '/') { showHomeView(); return; }
+        const selector = PATH_TO_CARD_SELECTOR[path];
+        if (!selector) { showHomeView(); return; }
+        const card = document.querySelector(selector);
+        if (card) {
+            suppressRoutePush = true;
+            card.click();
+            suppressRoutePush = false;
+        } else {
+            showHomeView();
+        }
+    }
+
+    // Initialize router listeners
+    window.addEventListener(useHashRouting ? 'hashchange' : 'popstate', () => {
+        applyRoute(getCurrentRoutePath());
+    });
+    // On initial load, apply current route
+    applyRoute(getCurrentRoutePath());
+
 
     cards.forEach(card => {
         card.addEventListener('click', () => {
@@ -479,6 +562,12 @@ document.addEventListener('DOMContentLoaded', () => {
 
             homePage.classList.add('hidden');
             visualizerPage.classList.remove('hidden');
+
+            // Router: push descriptive path for both DS and algorithms
+            const path = getPathForSelection(currentTreeType, currentAlgorithm) || '/';
+            if (!suppressRoutePush && path && path !== getCurrentRoutePath()) {
+                setRoutePath(path);
+            }
         });
     });
 
@@ -492,6 +581,9 @@ document.addEventListener('DOMContentLoaded', () => {
         currentArray = [];
         generatePyBtn.classList.add('hidden');
         balanceBstBtn.classList.add('hidden');
+        if (!suppressRoutePush && getCurrentRoutePath() !== '/') {
+            setRoutePath('/');
+        }
     });
 
     // Graph control event listeners
@@ -1613,10 +1705,10 @@ document.addEventListener('DOMContentLoaded', () => {
                 return Math.sqrt(variance);
             }
             function initializePositions(variant) {
-                const centerX = 0;
-                const centerY = 0;
+        const centerX = 0;
+        const centerY = 0;
                 const baseRadius = Math.min(canvasWidth, canvasHeight) * (isMobile() ? 0.28 : 0.25);
-                nodes.forEach((node, index) => {
+        nodes.forEach((node, index) => {
                     const angle = (2 * Math.PI * index) / Math.max(1, nodes.length);
                     let r = baseRadius * (0.9 + Math.random() * 0.2);
                     let x, y;
